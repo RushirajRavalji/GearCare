@@ -33,6 +33,7 @@ class _HomepageState extends State<Homepage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              SizedBox(height: 10),
               //! Container 1 - Search Bar
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -60,21 +61,8 @@ class _HomepageState extends State<Homepage> {
                 width: 400,
                 height: 310,
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(
-                        context,
-                      ).colorScheme.secondary, // Outer background
-                  borderRadius: BorderRadius.circular(
-                    15,
-                  ), // Rounded outer corners
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 5,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  color: Theme.of(context).colorScheme.secondary,
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Container(
                   width: 360,
@@ -91,7 +79,6 @@ class _HomepageState extends State<Homepage> {
                   child: Stack(
                     alignment: Alignment.bottomCenter,
                     children: [
-                      // 🔹 Sliding Images
                       cs.CarouselSlider(
                         carouselController: _controller,
                         options: cs.CarouselOptions(
