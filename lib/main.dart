@@ -20,10 +20,7 @@ class Main extends StatelessWidget {
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xffFFF2E1),
-          titleTextStyle: TextStyle(
-            color: const Color(0xffAF8F6F),
-            fontSize: 20,
-          ),
+          titleTextStyle: TextStyle(color: Color(0xffAF8F6F), fontSize: 20),
         ),
         iconTheme: IconThemeData(color: Colors.brown),
       ),
