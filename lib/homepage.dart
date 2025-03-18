@@ -138,7 +138,7 @@ class _HomepageState extends State<Homepage> {
               const SizedBox(height: 20),
 
               //! Container 3 - Horizontally Scrollable Circles
-              Container(
+              SizedBox(
                 height: 60,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
