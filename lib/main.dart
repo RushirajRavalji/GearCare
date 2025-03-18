@@ -13,19 +13,21 @@ class Main extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Color(0xffFFF2E1),
+        primaryColor: Colors.white,
         colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: Color(0xffFFF2E1),
-          secondary: const Color(0xffD1BB9E),
-          // secondary: const Color(0xffAF8F6F),
+          primary: const Color(0xffE8F4FC),
+          secondary: const Color(0xffC3E2F6),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xffFFF2E1),
-          titleTextStyle: TextStyle(color: Color(0xffAF8F6F), fontSize: 20),
+          titleTextStyle: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+            fontSize: 20,
+          ),
         ),
-        iconTheme: IconThemeData(color: Colors.brown),
+        iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
       ),
-      home: Layout(),
+      home: const Layout(),
     );
   }
 }
