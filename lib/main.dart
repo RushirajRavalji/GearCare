@@ -17,7 +17,6 @@ class Main extends StatelessWidget {
         colorScheme: ColorScheme.fromSwatch().copyWith(
           primary: Color(0xffFFF2E1),
           secondary: const Color(0xffD1BB9E),
-          // secondary: const Color(0xffAF8F6F),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xffFFF2E1),

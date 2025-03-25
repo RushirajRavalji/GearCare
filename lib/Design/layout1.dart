@@ -14,7 +14,7 @@ class CustomDrawer extends StatelessWidget {
         padding: const EdgeInsets.only(right: 70),
         child: Container(
           decoration: BoxDecoration(
-            color: Color.fromRGBO(232, 244, 252, 1),
+            color: Color.fromARGB(255, 212, 235, 250),
             borderRadius: BorderRadius.only(topRight: Radius.circular(70)),
           ),
           padding: EdgeInsets.symmetric(vertical: 40, horizontal: 15),
@@ -27,18 +27,12 @@ class CustomDrawer extends StatelessWidget {
                 child: Icon(Icons.menu, color: Colors.black),
               ),
               SizedBox(height: 50),
-
               //! Drawer Items with Navigation
               //! Navigate on Homescreen
               drawerItem(context, Icons.home, "Home", Home()),
-              SizedBox(height: 25), 
-            //! Navigate on Category page
-              drawerItem(
-                context,
-                Icons.grid_view,
-                "Categories",
-                Category(),
-              ),
+              SizedBox(height: 25),
+              //! Navigate on Category page
+              drawerItem(context, Icons.grid_view, "Categories", Category()),
               SizedBox(height: 25),
               //! Navigate on add product
               drawerItem(
@@ -102,8 +96,8 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 }
-//!--------------------------------------------------------------
 
+//!--------------------------------------------------------------
 class AddProductScreen extends StatelessWidget {
   const AddProductScreen({super.key});
 
