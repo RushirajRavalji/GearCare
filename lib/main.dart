@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gearcare/Design/home.dart';
 import 'package:gearcare/layout.dart';
 
 void main() {
@@ -13,21 +14,19 @@ class Main extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.white,
+        primaryColor: Color(0xffFFF2E1),
         colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: const Color(0xffE8F4FC),
-          secondary: const Color(0xffC3E2F6),
+          primary: Color(0xffFFF2E1),
+          secondary: const Color(0xffD1BB9E),
+          // secondary: const Color(0xffAF8F6F),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xffFFF2E1),
-          titleTextStyle: TextStyle(
-            color: Color.fromARGB(255, 0, 0, 0),
-            fontSize: 20,
-          ),
+          titleTextStyle: TextStyle(color: Color(0xffAF8F6F), fontSize: 20),
         ),
-        iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
+        iconTheme: IconThemeData(color: Colors.brown),
       ),
-      home: const Layout(),
+      home: Home(),
     );
   }
 }

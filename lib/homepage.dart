@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart' as cs;
-import 'package:gearcare/assets/herosection.dart';
+import 'package:gearcare/assets/herosection.dart'; // Aliased import
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -12,8 +12,9 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  int _currentIndex = 0;
-  final cs.CarouselSliderController _controller = cs.CarouselSliderController();
+  int _currentIndex = 0; // Tracks the active image
+  final cs.CarouselSliderController _controller =
+      cs.CarouselSliderController(); // Use correct controller class
 
   final List<String> imageList = [
     "assets/image1.jpg",
@@ -52,6 +53,7 @@ class _HomepageState extends State<Homepage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               //! Container 2 - Background & Sliding Images
@@ -65,6 +67,7 @@ class _HomepageState extends State<Homepage> {
                 child: Container(
                   width: 360,
                   height: 260,
+
                   margin: const EdgeInsets.symmetric(
                     vertical: 25,
                     horizontal: 20,
@@ -103,6 +106,7 @@ class _HomepageState extends State<Homepage> {
                               );
                             }).toList(),
                       ),
+
                       Positioned(
                         bottom: 10,
                         child: Row(
@@ -123,7 +127,7 @@ class _HomepageState extends State<Homepage> {
                                       shape: BoxShape.circle,
                                       color:
                                           _currentIndex == entry.key
-                                              ? Colors.black
+                                              ? Colors.brown
                                               : Colors.grey,
                                     ),
                                   ),
@@ -165,8 +169,6 @@ class _HomepageState extends State<Homepage> {
                 margin: const EdgeInsets.symmetric(vertical: 1),
               ),
               const SizedBox(height: 20),
-
-              //! container 4 - Hero Section
               Herosection(),
             ],
           ),

@@ -98,7 +98,7 @@ class Herosection extends StatelessWidget {
                                   child: Container(
                                     padding: const EdgeInsets.all(8.0),
                                     decoration: const BoxDecoration(
-                                      color: Color(0xFFE8F4FC),
+                                      color: Color(0xFFA79277),
                                     ),
                                     child: Row(
                                       crossAxisAlignment:
