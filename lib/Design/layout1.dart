@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gearcare/Design/addproduct.dart';
 import 'package:gearcare/Design/categotry.dart';
 import 'package:gearcare/Design/home.dart';
 
@@ -39,7 +40,7 @@ class CustomDrawer extends StatelessWidget {
                 context,
                 Icons.add_circle_outline,
                 "Add your product",
-                AddProductScreen(),
+                Addproduct(),
               ),
               SizedBox(height: 25),
               //! Navigate on request product
@@ -104,8 +105,11 @@ class AddProductScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Add Product")),
-      body: Center(child: Text("Add Product Screen")),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        title: Text("Add Product", style: TextStyle(color: Colors.black)),
+      ),
+      body: Center(child: Text("Add Your product")),
     );
   }
 }
@@ -116,8 +120,12 @@ class RequestProductScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Request Product")),
-      body: Center(child: Text("Request Product Screen")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        title: Text("Add Product", style: TextStyle(color: Colors.black)),
+      ),
+      body: Center(child: Text("Request your product")),
     );
   }
 }
@@ -128,8 +136,12 @@ class HelpSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Help & Support")),
-      body: Center(child: Text("Help & Support Screen")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        title: Text("Add Product", style: TextStyle(color: Colors.black)),
+      ),
+      body: Center(child: Text("Help and support page")),
     );
   }
 }
@@ -140,8 +152,12 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("About")),
-      body: Center(child: Text("About Screen")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        title: Text("Add Product", style: TextStyle(color: Colors.black)),
+      ),
+      body: Center(child: Text("About screen")),
     );
   }
 }

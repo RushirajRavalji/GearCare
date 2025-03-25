@@ -1,30 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/Design/home.dart';
+import 'theme.dart';
 
-void main() {
-  runApp(const Main());
-}
+void main() => runApp(const MainApp());
 
-class Main extends StatelessWidget {
-  const Main({super.key});
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: Color(0xffFFF2E1),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: Color(0xffFFF2E1),
-          secondary: const Color(0xffD1BB9E),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xffFFF2E1),
-          titleTextStyle: TextStyle(color: Color(0xffAF8F6F), fontSize: 20),
-        ),
-        iconTheme: IconThemeData(color: Colors.brown),
-      ),
-      home: Home(),
+      theme: AppTheme.lightTheme,
+      home: const Home(),
     );
   }
 }

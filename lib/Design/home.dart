@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:gearcare/Design/addproduct.dart';
 import 'package:gearcare/Design/rentscreen.dart';
 import 'package:gearcare/Design/compny.dart';
 import 'package:gearcare/Design/profile.dart';
@@ -239,7 +238,7 @@ class _HomeState extends State {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: InkWell(
-                          //! Navigate by circle
+                          // Navigate by circle
                           onTap: () {
                             Navigator.push(
                               context,
@@ -315,7 +314,10 @@ class _HomeState extends State {
                         ),
                       ),
                       onTap: () {
-                        Navigator.push(context, SlideUpPageRoute(page: Rent()));
+                        Navigator.push(
+                          context,
+                          SlideUpPageRoute(page: RentScreen()),
+                        );
                       },
                     ),
                   ),

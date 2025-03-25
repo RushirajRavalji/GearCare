@@ -1,119 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:gearcare/theme.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Color c1 = const Color.fromRGBO(211, 232, 246, 1);
-  double w = 0;
-
-  // List to store switch states
-  List<bool> switchValues = List.generate(8, (index) => false);
+  final List<bool> _switchValues = List.generate(8, (index) => false);
 
   @override
   Widget build(BuildContext context) {
-    w = MediaQuery.of(context).size.width;
+    final appColors = Theme.of(context).extension<AppColors>()!;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 25),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           "Your Profile",
           style: TextStyle(color: Colors.black, fontSize: 22),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(18),
+        padding: const EdgeInsets.all(18),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            //! Profile Section
-            _buildProfileSection(),
-
-            SizedBox(height: 15),
+            _buildProfileSection(appColors),
+            const SizedBox(height: 15),
             _buildDivider(),
-            SizedBox(height: 15),
-
-            //! Subscription Box with Progress
-            _buildSubscriptionBox(),
-
-            SizedBox(height: 15),
-
-            //! Rewards Section
-            _buildRewardsSection(),
-
-            SizedBox(height: 15),
-
-            //! Settings Section (with Toggles)
-            _buildSettingsSection(),
-
-            SizedBox(height: 20),
-
-            //! Logout Button
-            SizedBox(
-              width: 170,
-              height: 40,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: EdgeInsets.only(),
-                ),
-                onPressed: () {},
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Logout",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    SizedBox(width: 10),
-                    Icon(Icons.logout, color: Colors.white, size: 18),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 15),
+            _buildSubscriptionBox(appColors),
+            const SizedBox(height: 15),
+            _buildRewardsSection(appColors),
+            const SizedBox(height: 15),
+            _buildSettingsSection(appColors),
+            const SizedBox(height: 20),
+            const _LogoutButton(),
           ],
         ),
       ),
     );
   }
 
-  //! Profile Section
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(AppColors appColors) {
     return Container(
-      padding: EdgeInsets.all(10),
-      width: w,
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: c1,
+        color: appColors.lightBlue,
         borderRadius: BorderRadius.circular(11),
       ),
       child: Row(
         children: [
-          CircleAvatar(radius: 50, backgroundColor: Colors.white),
-          SizedBox(width: 15),
+          const CircleAvatar(radius: 50, backgroundColor: Colors.white),
+          const SizedBox(width: 15),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildPlaceholderBox(height: 30),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               _buildPlaceholderBox(),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               _buildPlaceholderBox(),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               _buildPlaceholderBox(),
             ],
           ),
@@ -122,33 +78,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  //! Subscription Section
-  Widget _buildSubscriptionBox() {
+  Widget _buildSubscriptionBox(AppColors appColors) {
     return Container(
-      padding: EdgeInsets.all(15),
-      width: w,
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: c1,
+        color: appColors.lightBlue,
         borderRadius: BorderRadius.circular(11),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildPlaceholderBox(height: 30),
-          SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 80),
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.only(left: 80),
             child: Column(
               children: [
-                _buildPlaceholderBox(),
+                _PlaceholderBox(),
                 SizedBox(height: 5),
-                _buildPlaceholderBox(),
+                _PlaceholderBox(),
                 SizedBox(height: 5),
-                _buildPlaceholderBox(),
+                _PlaceholderBox(),
               ],
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Container(
             width: 120,
             height: 20,
@@ -156,11 +110,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Center(
-              child: Text("Time Remaining", style: TextStyle(fontSize: 12)),
-            ),
+            child: const Center(child: Text("Time Remaining")),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
@@ -171,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: LinearProgressIndicator(
                 value: 0.7,
                 backgroundColor: Colors.white,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
                 minHeight: 8,
               ),
             ),
@@ -181,31 +133,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  //! Rewards Section
-  Widget _buildRewardsSection() {
+  Widget _buildRewardsSection(AppColors appColors) {
     return Container(
-      padding: EdgeInsets.all(11),
-      width: w,
+      padding: const EdgeInsets.all(11),
       height: 130,
       decoration: BoxDecoration(
-        color: c1,
+        color: appColors.lightBlue,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.star, size: 120, color: Colors.white),
-
+          const Icon(Icons.star, size: 120, color: Colors.white),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               _buildPlaceholderBox(height: 30),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               _buildPlaceholderBox(),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               _buildPlaceholderBox(),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               _buildPlaceholderBox(),
             ],
           ),
@@ -214,13 +163,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  //! Settings Section (with Switches)
-  Widget _buildSettingsSection() {
+  Widget _buildSettingsSection(AppColors appColors) {
     return Container(
-      padding: EdgeInsets.all(15),
-      width: w,
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: c1,
+        color: appColors.lightBlue,
         borderRadius: BorderRadius.circular(11),
       ),
       child: Column(
@@ -233,77 +180,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(11),
             ),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 5, left: 15),
-              child: Text("Settings", style: TextStyle(fontSize: 12)),
+            child: const Padding(
+              padding: EdgeInsets.only(top: 5, left: 15),
+              child: Text("Settings"),
             ),
           ),
-          SizedBox(height: 10),
-          //! ListView for switches
+          const SizedBox(height: 10),
           ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: switchValues.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    // Toggle switch
-                    Transform.scale(
-                      scale: 0.5,
-                      child: Switch(
-                        value: switchValues[index],
-                        onChanged: (value) {
-                          setState(() {
-                            switchValues[index] = value;
-                          });
-                        },
-                        activeColor: Colors.grey,
-                        activeTrackColor: Colors.white,
-                        inactiveThumbColor: Colors.grey,
-                        inactiveTrackColor: Colors.white,
-                      ),
-                    ),
-
-                    SizedBox(width: 10),
-                    //! White placeholder bar
-                    Column(
-                      children: [
-                        Container(
-                          height: 10,
-                          width: 180,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(11),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _switchValues.length,
+            itemBuilder: (context, index) => _buildSwitchRow(index),
           ),
         ],
       ),
     );
   }
 
-  //! Helper: Divider
-  Widget _buildDivider() {
-    return Container(
-      width: w / 1.3,
-      height: 1,
-      color: Colors.black.withOpacity(0.2),
+  Widget _buildSwitchRow(int index) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Transform.scale(
+            scale: 0.5,
+            child: Switch(
+              value: _switchValues[index],
+              onChanged:
+                  (value) => setState(() => _switchValues[index] = value),
+              activeColor: Colors.grey,
+              activeTrackColor: Colors.white,
+              inactiveThumbColor: Colors.grey,
+              inactiveTrackColor: Colors.white,
+            ),
+          ),
+          const Column(children: [_PlaceholderBox(width: 180, height: 10)]),
+        ],
+      ),
     );
   }
 
-  //! Helper: Placeholder Box
   Widget _buildPlaceholderBox({double height = 10}) {
     return Container(
       height: height,
       width: 160,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(11),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: MediaQuery.of(context).size.width / 1.3,
+      height: 1,
+      color: Colors.black.withOpacity(0.2),
+    );
+  }
+}
+
+class _LogoutButton extends StatelessWidget {
+  const _LogoutButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {},
+      style: ElevatedButton.styleFrom(fixedSize: const Size(170, 40)),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Logout"),
+          SizedBox(width: 10),
+          Icon(Icons.logout, size: 18),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlaceholderBox extends StatelessWidget {
+  final double width;
+  final double height;
+
+  const _PlaceholderBox({this.width = 160, this.height = 10});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: width,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(11),

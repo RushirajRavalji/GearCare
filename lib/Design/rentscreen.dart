@@ -1,171 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:gearcare/theme.dart';
+import 'package:gearcare/theme.dart';
 
-class Rent extends StatefulWidget {
-  const Rent({super.key});
+class RentScreen extends StatelessWidget {
+  const RentScreen({super.key});
 
-  @override
-  _RentState createState() => _RentState();
-}
-
-class _RentState extends State<Rent> {
   @override
   Widget build(BuildContext context) {
-    Color c1 = const Color.fromRGBO(211, 232, 246, 1);
-    double w = MediaQuery.of(context).size.width;
-    double h = MediaQuery.of(context).size.height;
+    final appColors = Theme.of(context).extension<AppColors>()!;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: appColors.darkColor,
       body: Column(
         children: [
-          //! Top Black Section with Back Navigation
           GestureDetector(
-            onTap: () {
-              // Go back to the previous screen
-              Navigator.of(context).pop();
-            },
+            onTap: () => Navigator.pop(context),
             child: Container(
-              width: w,
+              width: size.width,
               height: 220,
-              color: Colors.black,
+              color: appColors.darkColor,
               child: SafeArea(
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16),
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-
-          //! Main Content
           Expanded(
-            child: Container(
-              width: w,
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color.fromRGBO(238, 248, 255, 1),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
                 ),
+                color: Theme.of(context).colorScheme.background,
               ),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    SizedBox(height: 45),
-
-                    //! Main Container
-                    Container(
-                      width: w / 1.1,
-                      height: 275,
-                      decoration: BoxDecoration(
-                        color: c1,
-                        borderRadius: BorderRadius.circular(11),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(11),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(
-                                5,
-                                (index) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 2,
-                                  ),
-                                  child: Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade400,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20),
-
-                    //! Second Container with partial blue section
-                    Container(
-                      width: w / 1.1,
-                      height: 175,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(11),
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 7, left: 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 180,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(11),
-                                color: c1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 8),
-
-                    //! Rent it button
-                    InkWell(
-                      onTap: () {},
-                      child: Container(
-                        width: 170,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: Center(
-                          child: Text(
-                            "Rent It",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20), // Bottom Spacing
+                    const SizedBox(height: 45),
+                    _buildMainContainer(context, size),
+                    const SizedBox(height: 20),
+                    _buildSecondaryContainer(context),
+                    const SizedBox(height: 8),
+                    const _RentButton(),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -173,6 +59,95 @@ class _RentState extends State<Rent> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMainContainer(BuildContext context, Size size) {
+    return Container(
+      width: size.width / 1.1,
+      height: 275,
+      decoration: BoxDecoration(
+        color: Theme.of(context).extension<AppColors>()!.lightBlue,
+        borderRadius: BorderRadius.circular(11),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                5,
+                (index) => const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 2),
+                  child: CircleAvatar(radius: 3, backgroundColor: Colors.grey),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryContainer(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width / 1.1,
+      height: 175,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(11),
+        color: Colors.white,
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 7, left: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 180,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(11),
+                color: Theme.of(context).extension<AppColors>()!.lightBlue,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RentButton extends StatelessWidget {
+  const _RentButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {},
+      style: ElevatedButton.styleFrom(fixedSize: const Size(170, 40)),
+      child: const Text("Rent It"),
     );
   }
 }
