@@ -125,6 +125,12 @@ class _HomeState extends State<Home> {
                 children: [
                   SizedBox(width: 15),
                   Container(
+                    width: w / 1.3,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: Colors.black, width: 3),
+                    ),
                     child: TextField(
                       cursorColor: Colors.black,
                       textAlignVertical: TextAlignVertical.center,
@@ -136,13 +142,6 @@ class _HomeState extends State<Home> {
                           left: 15,
                         ), // Adjust padding
                       ),
-                    ),
-
-                    width: w / 1.3,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(40),
-                      border: Border.all(color: Colors.black, width: 3),
                     ),
                   ),
                   const Icon(Icons.search, color: Colors.black, size: 40),
@@ -234,7 +233,7 @@ class _HomeState extends State<Home> {
             ),
             const SizedBox(height: 20),
             //! Circle scroll row with InkWell (Clickable Items)
-            Container(
+            SizedBox(
               width: w / 1.1,
               child: SizedBox(
                 height: 55,
@@ -286,7 +285,7 @@ class _HomeState extends State<Home> {
                         left: 22,
                       ),
                       child: InkWell(
-                        child: Container(
+                        child: SizedBox(
                           height: 270,
                           child: Column(
                             children: [
@@ -341,7 +340,7 @@ class _HomeState extends State<Home> {
                         right: 22,
                         left: 22,
                       ),
-                      child: Container(
+                      child: SizedBox(
                         height: 270,
                         child: Column(
                           children: [
@@ -388,7 +387,7 @@ class _HomeState extends State<Home> {
                         left: 22,
                       ),
                       child: InkWell(
-                        child: Container(
+                        child: SizedBox(
                           height: 270,
                           child: Column(
                             children: [
@@ -444,7 +443,7 @@ class _HomeState extends State<Home> {
                         left: 22,
                       ),
                       child: InkWell(
-                        child: Container(
+                        child: SizedBox(
                           height: 270,
                           child: Column(
                             children: [

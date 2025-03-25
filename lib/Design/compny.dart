@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CustomListScreen extends StatelessWidget {
+  const CustomListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width;

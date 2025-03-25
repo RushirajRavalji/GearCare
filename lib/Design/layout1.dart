@@ -4,6 +4,8 @@ import 'package:gearcare/Design/home.dart';
 
 //! Custom Drawer (UI Matches Screenshot)
 class CustomDrawer extends StatelessWidget {
+  const CustomDrawer({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -103,6 +105,8 @@ class CustomDrawer extends StatelessWidget {
 //!--------------------------------------------------------------
 
 class AddProductScreen extends StatelessWidget {
+  const AddProductScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,6 +117,8 @@ class AddProductScreen extends StatelessWidget {
 }
 
 class RequestProductScreen extends StatelessWidget {
+  const RequestProductScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,6 +129,8 @@ class RequestProductScreen extends StatelessWidget {
 }
 
 class HelpSupportScreen extends StatelessWidget {
+  const HelpSupportScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,6 +141,8 @@ class HelpSupportScreen extends StatelessWidget {
 }
 
 class AboutScreen extends StatelessWidget {
+  const AboutScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

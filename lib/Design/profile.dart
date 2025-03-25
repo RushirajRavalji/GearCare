@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
@@ -59,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 20),
 
             //! Logout Button
-            Container(
+            SizedBox(
               width: 170,
               height: 40,
               child: ElevatedButton(

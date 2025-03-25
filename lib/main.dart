@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/Design/home.dart';
-import 'package:gearcare/layout.dart';
 
 void main() {
   runApp(const Main());

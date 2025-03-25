@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class Rent extends StatefulWidget {
+  const Rent({super.key});
+
   @override
   _RentState createState() => _RentState();
 }
