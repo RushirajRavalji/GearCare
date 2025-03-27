@@ -5,7 +5,7 @@ import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/pages/compny.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  const Home({super.key});
 
   @override
   _HomeState createState() => _HomeState();
@@ -292,7 +292,7 @@ class SlideUpPageRoute extends PageRouteBuilder {
 
 class DetailScreen extends StatelessWidget {
   final String title;
-  const DetailScreen({Key? key, required this.title}) : super(key: key);
+  const DetailScreen({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

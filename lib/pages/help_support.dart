@@ -24,7 +24,7 @@ class _HelpSupportState extends State<HelpSupport> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 1,
         title: const Text(
-          "Help and Support",
+          "Help and Support", 
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,

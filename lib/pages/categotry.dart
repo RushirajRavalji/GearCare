@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Category extends StatefulWidget {
-  const Category({Key? key}) : super(key: key);
+  const Category({super.key});
 
   @override
   State<Category> createState() => _CategoryState();
@@ -56,7 +56,7 @@ class _CategoryState extends State<Category> {
 // Category Card Widget
 class CategoryCard extends StatelessWidget {
   final Color cardColor;
-  const CategoryCard(this.cardColor, {Key? key}) : super(key: key);
+  const CategoryCard(this.cardColor, {super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RequestProduct extends StatefulWidget {
-  const RequestProduct({Key? key}) : super(key: key);
+  const RequestProduct({super.key});
 
   @override
   _RequestProductState createState() => _RequestProductState();
