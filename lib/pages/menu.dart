@@ -74,7 +74,7 @@ class _CustomDrawerState extends State<CustomDrawer>
               children: [
                 // Blue background container
                 Positioned(
-                  top: 100,
+                  top: 95,
                   left: 0,
                   right: 50,
                   bottom: 0,
