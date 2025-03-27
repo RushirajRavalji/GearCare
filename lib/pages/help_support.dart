@@ -8,7 +8,7 @@ class HelpSupport extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         title: Text("Help and Support", style: TextStyle(color: Colors.black)),
       ),
       body: Center(child: Text("Help and support page")),

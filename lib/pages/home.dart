@@ -120,13 +120,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               height: 45,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(40),
-                border: Border.all(color: Colors.black, width: 2),
+                border: Border.all(color: Colors.black, width: 3),
               ),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: "Search...",
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 15),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 10,
+                  ),
                 ),
               ),
             ),
@@ -295,11 +298,16 @@ class DetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(
-          "Welcome to $title",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
+      body: Column(
+        children: [
+          const SizedBox(height: 10),
+          Center(
+            child: Text(
+              "Welcome to $title",
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }

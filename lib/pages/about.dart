@@ -8,7 +8,7 @@ class About extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         title: Text("about", style: TextStyle(color: Colors.black)),
       ),
       body: Center(child: Text("About screen")),
