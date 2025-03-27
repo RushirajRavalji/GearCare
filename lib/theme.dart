@@ -1,59 +1,45 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFFC3E2F6);
-  static const Color secondaryColor = Color(0xFF2E576C);
-  static const Color lightBlue = Color(0xFFEBF4FC);
-  static const Color backgroundLight = Color(0xFFFCFCFC);
-  static const Color darkColor = Color(0xFF232628);
-  static const Color buttonColor = Color(0xFF2E576C);
-  static const Color buttonTextColor = Color(0xFFFFFFFF);
-  static const Color iconColor = Color(0xFF43423D);
-  static const Color progressIndicatorColor = Color(0xFF2E576C);
-  static const Color disabledColor = Color(0x40000000); // 25% opacity black
-  static const Color black = Color(0xFF000000);
-  static const Color white = Color(0xFFFFFFFF);
-
-  static ThemeData get lightTheme {
-    return ThemeData(
-      colorScheme: const ColorScheme.light(
-        primary: primaryColor,
-        secondary: secondaryColor,
-        background: backgroundLight,
-        surface: white,
+  static final ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
+    primarySwatch: Colors.blue,
+    colorScheme: ColorScheme.light(
+      primary: Colors.blue,
+      secondary: Color.fromRGBO(211, 232, 246, 1),
+      background: Colors.white,
+    ),
+    fontFamily: 'Roboto',
+    textTheme: TextTheme(
+      titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      bodyMedium: TextStyle(fontSize: 16),
+    ),
+    appBarTheme: AppBarTheme(
+      color: Colors.white,
+      elevation: 0,
+      iconTheme: IconThemeData(color: Colors.black),
+      titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
+    ),
+    extensions: {
+      AppColors(
+        darkColor: Color.fromRGBO(0, 0, 0, 1),
+        lightBlue: Color.fromRGBO(211, 232, 246, 1),
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: primaryColor,
-        titleTextStyle: TextStyle(color: black, fontSize: 20),
-      ),
-      iconTheme: const IconThemeData(color: iconColor),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: buttonColor,
-          foregroundColor: buttonTextColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(11),
-          ),
-        ),
-      ),
-      extensions: const <ThemeExtension<dynamic>>[
-        AppColors(lightBlue: lightBlue, darkColor: darkColor),
-      ],
-    );
-  }
+    },
+  );
 }
 
 class AppColors extends ThemeExtension<AppColors> {
-  final Color lightBlue;
   final Color darkColor;
+  final Color lightBlue;
 
-  const AppColors({required this.lightBlue, required this.darkColor});
+  AppColors({required this.darkColor, required this.lightBlue});
 
   @override
-  ThemeExtension<AppColors> copyWith({Color? lightBlue, Color? darkColor}) {
+  ThemeExtension<AppColors> copyWith({Color? darkColor, Color? lightBlue}) {
     return AppColors(
-      lightBlue: lightBlue ?? this.lightBlue,
       darkColor: darkColor ?? this.darkColor,
+      lightBlue: lightBlue ?? this.lightBlue,
     );
   }
 
@@ -63,8 +49,8 @@ class AppColors extends ThemeExtension<AppColors> {
       return this;
     }
     return AppColors(
-      lightBlue: Color.lerp(lightBlue, other.lightBlue, t)!,
       darkColor: Color.lerp(darkColor, other.darkColor, t)!,
+      lightBlue: Color.lerp(lightBlue, other.lightBlue, t)!,
     );
   }
 }

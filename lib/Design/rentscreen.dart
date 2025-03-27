@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/theme.dart';
-import 'package:gearcare/theme.dart';
 
 class RentScreen extends StatelessWidget {
   const RentScreen({super.key});
@@ -12,49 +11,37 @@ class RentScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: appColors.darkColor,
-      body: Column(
+      body: ListView(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: size.width,
-              height: 220,
-              color: appColors.darkColor,
-              child: SafeArea(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 16),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ),
+          SafeArea(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 20,
+                height: 160,
+                color: appColors.darkColor,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 16),
               ),
             ),
           ),
-          Expanded(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(30),
-                ),
-                color: Theme.of(context).colorScheme.background,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(30),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 45),
-                    _buildMainContainer(context, size),
-                    const SizedBox(height: 20),
-                    _buildSecondaryContainer(context),
-                    const SizedBox(height: 8),
-                    const _RentButton(),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
+              color: Theme.of(context).colorScheme.background,
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 45),
+                _buildMainContainer(context, size),
+                const SizedBox(height: 20),
+                _buildSecondaryContainer(context),
+                const SizedBox(height: 8),
+                const _RentButton(),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
         ],
@@ -64,7 +51,7 @@ class RentScreen extends StatelessWidget {
 
   Widget _buildMainContainer(BuildContext context, Size size) {
     return Container(
-      width: size.width / 1.1,
+      width: 350,
       height: 275,
       decoration: BoxDecoration(
         color: Theme.of(context).extension<AppColors>()!.lightBlue,
@@ -86,18 +73,6 @@ class RentScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(11),
             border: Border.all(color: Colors.grey.shade300),
           ),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                5,
-                (index) => const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 2),
-                  child: CircleAvatar(radius: 3, backgroundColor: Colors.grey),
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );
@@ -105,7 +80,7 @@ class RentScreen extends StatelessWidget {
 
   Widget _buildSecondaryContainer(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width / 1.1,
+      width: 350,
       height: 175,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(11),
@@ -120,12 +95,12 @@ class RentScreen extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.only(top: 7, left: 10),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 180,
+              width: 150,
               height: 40,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(11),

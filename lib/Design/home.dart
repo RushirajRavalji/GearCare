@@ -1,334 +1,52 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:gearcare/Design/rentscreen.dart';
-import 'package:gearcare/Design/compny.dart';
-import 'package:gearcare/Design/profile.dart';
-import 'package:gearcare/Design/layout1.dart';
+import 'package:gearcare/design/rentscreen.dart';
+import 'package:gearcare/design/profile.dart';
+import 'package:gearcare/design/layout1.dart';
+import 'package:gearcare/design/compny.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  const Home({Key? key}) : super(key: key);
 
   @override
-  State createState() => _HomeState();
+  _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State {
-  Color c1 = Color.fromARGB(255, 212, 235, 250);
-  final PageController _pageController = PageController();
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+  late PageController _pageController;
   int _currentPage = 0;
-  final int _totalPages = 5;
-  final List circleItems = [
-    'Page 1',
-    'Page 2',
-    'Page 3',
-    'Page 4',
-    'Page 5',
-    'Page 6',
-    'Page 7',
+  static const int _totalPages = 5;
+  final List<String> _circleItems = [
+    'Electronics',
+    'Furniture',
+    'Vehicles',
+    'Tools',
+    'Sports',
+    'Cameras',
+    'Musical Instruments',
   ];
 
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 3), (Timer timer) {
-      if (_currentPage < _totalPages - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0; // Reset to first page
-      }
-      _pageController.animateToPage(
-        _currentPage,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    });
+    _pageController = PageController(initialPage: _currentPage);
+    _startAutoScroll();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    double w = MediaQuery.of(context).size.width;
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 50),
-            //! Menu bar
-            Row(
-              children: [
-                Container(
-                  width: w,
-                  height: 55,
-                  color: c1,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          SizedBox(width: 10),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CustomDrawer(),
-                                ),
-                              );
-                            },
-                            //! Menu Icon
-                            child: Icon(
-                              Icons.menu_sharp,
-                              color: Colors.black.withOpacity(0.7),
-                            ),
-                          ),
-                          //! Location Icon
-                          SizedBox(width: 5),
-                          Icon(
-                            Icons.location_on,
-                            color: Colors.black.withOpacity(0.9),
-                          ),
-                        ],
-                      ),
-                      //! profile
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProfileScreen(),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 15),
-                          child: CircleAvatar(
-                            backgroundColor: Colors.white,
-                            maxRadius: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            //! Search Bar
-            Padding(
-              padding: const EdgeInsets.only(),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  SizedBox(width: 15),
-                  Container(
-                    width: w / 1.3,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(40),
-                      border: Border.all(color: Colors.black, width: 3),
-                    ),
-                    child: TextField(
-                      cursorColor: Colors.black,
-                      textAlignVertical: TextAlignVertical.center,
-                      decoration: InputDecoration(
-                        hintText: "Search...",
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.only(
-                          bottom: 10,
-                          left: 15,
-                        ), // Adjust padding
-                      ),
-                    ),
-                  ),
-                  const Icon(Icons.search, color: Colors.black, size: 40),
-                  SizedBox(width: 7),
-                ],
-              ),
-            ),
-            const SizedBox(height: 15),
-            //! Scrollable Container with Auto Scroll
-            Container(
-              width: w * 0.9,
-              height: 270,
-              decoration: BoxDecoration(
-                color: c1,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: [
-                  PageView.builder(
-                    controller: _pageController,
-                    itemCount: _totalPages,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          top: 18,
-                          left: 18,
-                          right: 18,
-                          bottom: 25,
-                        ),
-                        child: InkWell(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "Page ${index + 1}",
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          //! Navigate by first Container
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CustomListScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                  //! Dots Indicator
-                  Positioned(
-                    bottom: 8,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_totalPages, (index) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: _currentPage == index ? 10 : 8,
-                          height: _currentPage == index ? 10 : 8,
-                          decoration: BoxDecoration(
-                            color:
-                                _currentPage == index
-                                    ? Colors.black
-                                    : Colors.black38,
-                            shape: BoxShape.circle,
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            //! Circle scroll row with InkWell (Clickable Items)
-            SizedBox(
-              width: w / 1.1,
-              child: SizedBox(
-                height: 55,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(circleItems.length, (index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: InkWell(
-                          // Navigate by circle
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        DetailScreen(title: circleItems[index]),
-                              ),
-                            );
-                          },
-                          child: CircleAvatar(radius: 22, backgroundColor: c1),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 15),
-            Container(width: w / 1.2, height: 0.7, color: Colors.grey),
-            SizedBox(height: 15),
-            //! Last Container
-            Container(
-              width: w / 1.1,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(11),
-                color: c1,
-              ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 30,
-                      right: 22,
-                      left: 22,
-                    ),
-                    child: InkWell(
-                      child: SizedBox(
-                        height: 270,
-                        child: Column(
-                          children: [
-                            Container(
-                              height: 185,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(11),
-                                  topRight: Radius.circular(11),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: w,
-                              height: 85,
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(232, 244, 252, 1),
-                                borderRadius: const BorderRadius.only(
-                                  bottomLeft: Radius.circular(11),
-                                  bottomRight: Radius.circular(11),
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Icon(Icons.star, color: Colors.black),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          SlideUpPageRoute(page: RentScreen()),
-                        );
-                      },
-                    ),
-                  ),
-                  // ... (rest of the containers remain the same)
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _startAutoScroll() {
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 3));
+      if (!mounted) return false;
+
+      setState(() {
+        _currentPage = (_currentPage + 1) % _totalPages;
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      });
+      return true;
+    });
   }
 
   @override
@@ -336,18 +54,225 @@ class _HomeState extends State {
     _pageController.dispose();
     super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final Color lightBlueColor = Color.fromRGBO(212, 235, 250, 1);
+
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildTopBar(context),
+              _buildSearchBar(screenWidth),
+              _buildScrollableContainer(screenWidth),
+              _buildCircleCategories(screenWidth, lightBlueColor),
+              _buildLastContainer(screenWidth, lightBlueColor),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    return Container(
+      height: 55,
+      color: Color.fromRGBO(212, 235, 250, 1),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.menu_sharp),
+                onPressed:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CustomDrawer()),
+                    ),
+              ),
+              Icon(Icons.location_on),
+            ],
+          ),
+          IconButton(
+            icon: CircleAvatar(backgroundColor: Colors.white),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfileScreen()),
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(double screenWidth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 45,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(40),
+                border: Border.all(color: Colors.black, width: 2),
+              ),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: "Search...",
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 15),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 10),
+          Icon(Icons.search, size: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScrollableContainer(double screenWidth) {
+    return Container(
+      width: screenWidth * 0.9,
+      height: 270,
+      decoration: BoxDecoration(
+        color: Color.fromRGBO(212, 235, 250, 1),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: PageView.builder(
+        controller: _pageController,
+        itemCount: _totalPages,
+        itemBuilder: (context, index) => _buildPageItem(context, index),
+      ),
+    );
+  }
+
+  Widget _buildPageItem(BuildContext context, int index) {
+    return Padding(
+      padding: const EdgeInsets.all(18),
+      child: InkWell(
+        onTap:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CustomListScreen()),
+            ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Center(
+            child: Text(
+              "Page ${index + 1}",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleCategories(double screenWidth, Color lightBlueColor) {
+    return SizedBox(
+      width: screenWidth / 1.1,
+      height: 70,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _circleItems.length,
+        itemBuilder: (context, index) => _buildCircleItem(context, index),
+      ),
+    );
+  }
+
+  Widget _buildCircleItem(BuildContext context, int index) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: InkWell(
+        onTap:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailScreen(title: _circleItems[index]),
+              ),
+            ),
+        child: CircleAvatar(
+          radius: 30,
+          backgroundColor: Color.fromRGBO(212, 235, 250, 1),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLastContainer(double screenWidth, Color lightBlueColor) {
+    return Container(
+      width: screenWidth / 1.1,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(11),
+        color: lightBlueColor,
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: InkWell(
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    SlideUpPageRoute(page: RentScreen()),
+                  ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 185,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(11),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: 85,
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(232, 244, 252, 1),
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(11),
+                      ),
+                    ),
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(Icons.star, color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// Custom PageRoute for Slide Up Animation
+// Custom page route for slide-up transition remains the same
 class SlideUpPageRoute extends PageRouteBuilder {
   final Widget page;
-
   SlideUpPageRoute({required this.page})
     : super(
         pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = const Offset(0.0, 1.0); // Start from bottom
-          var end = Offset.zero; // End at the top
+          var begin = const Offset(0.0, 1.0);
+          var end = Offset.zero;
           var curve = Curves.easeInOut;
           var tween = Tween(
             begin: begin,
@@ -364,7 +289,7 @@ class SlideUpPageRoute extends PageRouteBuilder {
 
 class DetailScreen extends StatelessWidget {
   final String title;
-  const DetailScreen({super.key, required this.title});
+  const DetailScreen({Key? key, required this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -373,7 +298,7 @@ class DetailScreen extends StatelessWidget {
       body: Center(
         child: Text(
           "Welcome to $title",
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
       ),
     );
