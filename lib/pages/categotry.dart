@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:gearcare/Design/layout1.dart';
+import 'package:gearcare/pages/menu.dart';
 
 class Category extends StatefulWidget {
   const Category({super.key});
   @override
   State<Category> createState() => _CategoryState();
 }
+
 class _CategoryState extends State<Category> {
   @override
   Widget build(BuildContext context) {
@@ -42,11 +43,9 @@ class _CategoryState extends State<Category> {
 
               //! Scrollable Category List
               ListView.builder(
-                shrinkWrap:
-                    true, 
-                physics:
-                    const NeverScrollableScrollPhysics(), 
-                itemCount: 10,  
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 10,
                 itemBuilder: (context, index) {
                   return CategoryCard(c1);
                 },

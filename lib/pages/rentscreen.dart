@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:gearcare/theme.dart';
 
 class RentScreen extends StatelessWidget {
   const RentScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final appColors = Theme.of(context).extension<AppColors>()!;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: appColors.darkColor,
+      backgroundColor: Colors.black,
       body: ListView(
         children: [
           SafeArea(
@@ -19,7 +17,7 @@ class RentScreen extends StatelessWidget {
               child: Container(
                 width: 20,
                 height: 160,
-                color: appColors.darkColor,
+                color: Colors.black,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.only(left: 16),
               ),
@@ -30,7 +28,7 @@ class RentScreen extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(30),
               ),
-              color: Theme.of(context).colorScheme.background,
+              color: Theme.of(context).primaryColor,
             ),
             child: Column(
               children: [
@@ -49,12 +47,13 @@ class RentScreen extends StatelessWidget {
     );
   }
 
+  //Upper container
   Widget _buildMainContainer(BuildContext context, Size size) {
     return Container(
-      width: 350,
+      width: 340,
       height: 275,
       decoration: BoxDecoration(
-        color: Theme.of(context).extension<AppColors>()!.lightBlue,
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(11),
         boxShadow: const [
           BoxShadow(
@@ -78,9 +77,10 @@ class RentScreen extends StatelessWidget {
     );
   }
 
+  //bottom container
   Widget _buildSecondaryContainer(BuildContext context) {
     return Container(
-      width: 350,
+      width: 340,
       height: 175,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(11),
@@ -104,7 +104,7 @@ class RentScreen extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(11),
-                color: Theme.of(context).extension<AppColors>()!.lightBlue,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ],
@@ -114,15 +114,36 @@ class RentScreen extends StatelessWidget {
   }
 }
 
+// Rent button
+
 class _RentButton extends StatelessWidget {
   const _RentButton();
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(fixedSize: const Size(170, 40)),
-      child: const Text("Rent It"),
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Button Clicked!"),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating, // Makes it float above UI
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10), // Rounded corners
+            ),
+          ),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        fixedSize: const Size(170, 40),
+        backgroundColor: Colors.black,
+      ),
+      child: Center(
+        child: const Text(
+          "Rent It",
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ),
     );
   }
 }

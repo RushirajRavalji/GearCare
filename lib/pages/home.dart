@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gearcare/design/rentscreen.dart';
-import 'package:gearcare/design/profile.dart';
-import 'package:gearcare/design/layout1.dart';
-import 'package:gearcare/design/compny.dart';
+import 'package:gearcare/pages/rentscreen.dart';
+import 'package:gearcare/pages/profile.dart';
+import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/pages/compny.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
