@@ -60,8 +60,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             //! Logout Button
             Container(
-              width: 170,
-              height: 40,
+              width: 350,
+              height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -70,7 +70,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   padding: EdgeInsets.only(),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text("Button Clicked!"),
+                      duration: const Duration(seconds: 2),
+                      behavior:
+                          SnackBarBehavior.floating, // Makes it float above UI
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          10,
+                        ), // Rounded corners
+                      ),
+                    ),
+                  );
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -215,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   //! Settings Section (with Switches)
   Widget _buildSettingsSection() {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.all(11),
       width: w,
       decoration: BoxDecoration(
         color: c1,

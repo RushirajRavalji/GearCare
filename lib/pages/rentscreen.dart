@@ -16,7 +16,7 @@ class RentScreen extends StatelessWidget {
               onTap: () => Navigator.pop(context),
               child: Container(
                 width: 20,
-                height: 160,
+                height: 180,
                 color: Colors.black,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.only(left: 16),
@@ -121,27 +121,37 @@ class _RentButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Button Clicked!"),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating, // Makes it float above UI
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10), // Rounded corners
-            ),
+    return SizedBox(
+      width: 350,
+      height: 50,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(11),
           ),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        fixedSize: const Size(170, 40),
-        backgroundColor: Colors.black,
-      ),
-      child: Center(
-        child: const Text(
-          "Rent It",
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          padding: EdgeInsets.zero,
+        ),
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text("Log out"),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Text(
+              "Rent-it",
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ],
         ),
       ),
     );
