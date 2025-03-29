@@ -5,6 +5,7 @@ import 'package:gearcare/pages/categotry.dart';
 import 'package:gearcare/pages/help_support.dart';
 import 'package:gearcare/pages/home.dart';
 import 'package:gearcare/pages/request_product.dart';
+import 'package:gearcare/models/product_models.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
@@ -79,52 +80,71 @@ class _CustomDrawerState extends State<CustomDrawer>
                   right: 50,
                   bottom: 0,
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Color.fromARGB(255, 212, 235, 250),
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(11),
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 15,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 50),
-                        _buildDrawerItem(context, Icons.home, "Home", Home()),
-                        SizedBox(height: 25),
+                        const SizedBox(height: 50),
+                        _buildDrawerItem(
+                          context,
+                          Icons.home,
+                          "Home",
+                          const Home(),
+                        ),
+                        const SizedBox(height: 25),
                         _buildDrawerItem(
                           context,
                           Icons.grid_view,
                           "Categories",
-                          Category(),
+                          const Category(),
                         ),
-                        SizedBox(height: 25),
+                        const SizedBox(height: 25),
                         _buildDrawerItem(
                           context,
                           Icons.add_circle_outline,
                           "Add your product",
-                          Addproduct(),
+                          Addproduct(
+                            onProductAdded: (
+                              Product product,
+                              ContainerType containerType,
+                            ) {
+                              // Handle product addition logic here
+                              // For example, you can pass it to the Home screen
+                              print(
+                                "Product added: ${product.name}, Container: $containerType",
+                              );
+                            },
+                          ),
                         ),
-                        SizedBox(height: 25),
+                        const SizedBox(height: 25),
                         _buildDrawerItem(
                           context,
                           Icons.request_page,
                           "Request a Product",
-                          RequestProduct(),
+                          const RequestProduct(),
                         ),
-                        SizedBox(height: 25),
+                        const SizedBox(height: 25),
                         _buildDrawerItem(
                           context,
                           Icons.help_outline,
                           "Help and Support",
-                          HelpSupport(),
+                          const HelpSupport(),
                         ),
-                        SizedBox(height: 25),
+                        const SizedBox(height: 25),
                         _buildDrawerItem(
                           context,
                           Icons.info_outline,
                           "About",
-                          About(),
+                          const About(),
                         ),
                       ],
                     ),
@@ -138,8 +158,12 @@ class _CustomDrawerState extends State<CustomDrawer>
                   child: InkWell(
                     onTap: _closeDrawer,
                     child: Container(
-                      padding: EdgeInsets.all(10),
-                      child: Icon(Icons.menu, color: Colors.black, size: 28),
+                      padding: const EdgeInsets.all(10),
+                      child: const Icon(
+                        Icons.menu,
+                        color: Colors.black,
+                        size: 28,
+                      ),
                     ),
                   ),
                 ),
@@ -164,7 +188,7 @@ class _CustomDrawerState extends State<CustomDrawer>
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation1, animation2) => screen,
-            transitionDuration: Duration(milliseconds: 300),
+            transitionDuration: const Duration(milliseconds: 300),
             transitionsBuilder: (context, animation1, animation2, child) {
               return SlideTransition(
                 position: Tween<Offset>(
@@ -179,14 +203,17 @@ class _CustomDrawerState extends State<CustomDrawer>
       },
       child: Row(
         children: [
-          SizedBox(width: 15),
+          const SizedBox(width: 15),
           CircleAvatar(
             radius: 15,
-            backgroundColor: Color.fromRGBO(198, 222, 239, 1),
+            backgroundColor: const Color.fromRGBO(198, 222, 239, 1),
             child: Icon(icon, color: Colors.black, size: 18),
           ),
-          SizedBox(width: 25),
-          Text(title, style: TextStyle(fontSize: 16, color: Colors.black)),
+          const SizedBox(width: 25),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+          ),
         ],
       ),
     );

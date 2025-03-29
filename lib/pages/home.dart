@@ -3,10 +3,12 @@ import 'package:gearcare/pages/rentscreen.dart';
 import 'package:gearcare/pages/profile.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/pages/compny.dart';
+import 'package:gearcare/pages/addproduct.dart';
+import 'package:gearcare/models/product_models.dart';
+import 'dart:io';
 
 class Home extends StatefulWidget {
   const Home({super.key});
-
   @override
   _HomeState createState() => _HomeState();
 }
@@ -14,7 +16,9 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   late PageController _pageController;
   int _currentPage = 0;
-  static const int _totalPages = 5;
+  // Separate lists for upper and bottom products
+  List<Product> _upperProducts = [];
+  List<Product> _bottomProducts = [];
   final List<String> _circleItems = [
     'Electronics',
     'Furniture',
@@ -36,16 +40,28 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 3));
       if (!mounted) return false;
-
-      setState(() {
-        _currentPage = (_currentPage + 1) % _totalPages;
-        _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-      });
+      if (_upperProducts.isNotEmpty) {
+        setState(() {
+          _currentPage = (_currentPage + 1) % _upperProducts.length;
+          _pageController.animateToPage(
+            _currentPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        });
+      }
       return true;
+    });
+  }
+
+  // Function to add a new product to either upper or bottom container
+  void _addProduct(Product product, ContainerType containerType) {
+    setState(() {
+      if (containerType == ContainerType.upper) {
+        _upperProducts.add(product);
+      } else {
+        _bottomProducts.add(product);
+      }
     });
   }
 
@@ -59,7 +75,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final Color lightBlueColor = Color.fromRGBO(212, 235, 250, 1);
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -69,10 +84,26 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               _buildSearchBar(screenWidth),
               _buildScrollableContainer(screenWidth),
               _buildCircleCategories(screenWidth, lightBlueColor),
-              _buildLastContainer(screenWidth, lightBlueColor),
+              // Bottom scrollable products section - now vertical
+              _bottomProducts.isEmpty
+                  ? _buildEmptyBottomContainer(screenWidth, lightBlueColor)
+                  : _buildBottomProductsSection(screenWidth, lightBlueColor),
             ],
           ),
         ),
+      ),
+      // Add a floating action button to navigate to the add product screen
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Addproduct(onProductAdded: _addProduct),
+            ),
+          );
+        },
+        backgroundColor: Colors.blue,
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -149,33 +180,84 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         color: Color.fromRGBO(212, 235, 250, 1),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: PageView.builder(
-        controller: _pageController,
-        itemCount: _totalPages,
-        itemBuilder: (context, index) => _buildPageItem(context, index),
-      ),
+      child:
+          _upperProducts.isEmpty
+              ? Center(
+                child: Text(
+                  "No products in upper container.\nAdd products using the + button.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+              )
+              : PageView.builder(
+                controller: _pageController,
+                itemCount: _upperProducts.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemBuilder:
+                    (context, index) => _buildProductItem(context, index),
+              ),
     );
   }
 
-  Widget _buildPageItem(BuildContext context, int index) {
+  Widget _buildProductItem(BuildContext context, int index) {
+    final product = _upperProducts[index];
     return Padding(
       padding: const EdgeInsets.all(18),
       child: InkWell(
         onTap:
             () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CustomListScreen()),
+              MaterialPageRoute(
+                builder: (context) => RentScreen(product: product),
+              ),
             ),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Center(
-            child: Text(
-              "Page ${index + 1}",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+          child: Column(
+            children: [
+              Expanded(
+                flex: 3,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                  child: Image.file(
+                    File(product.imagePath),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        "\$${product.price.toStringAsFixed(2)}",
+                        style: TextStyle(color: Colors.green),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -213,61 +295,167 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildLastContainer(double screenWidth, Color lightBlueColor) {
+  // Empty bottom container when no products are added yet
+  Widget _buildEmptyBottomContainer(double screenWidth, Color lightBlueColor) {
     return Container(
       width: screenWidth / 1.1,
+      margin: EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(11),
         color: lightBlueColor,
       ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: InkWell(
-              onTap:
-                  () => Navigator.push(
-                    context,
-                    SlideUpPageRoute(page: RentScreen()),
-                  ),
-              child: Column(
-                children: [
-                  Container(
-                    height: 185,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(11),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    height: 85,
-                    decoration: BoxDecoration(
-                      color: Color.fromRGBO(232, 244, 252, 1),
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(11),
-                      ),
-                    ),
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(Icons.star, color: Colors.black),
-                      ),
-                    ),
-                  ),
-                ],
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Container(
+              height: 185,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
+              ),
+              child: Center(
+                child: Text(
+                  "Add products to display here",
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
             ),
+            Container(
+              height: 85,
+              decoration: BoxDecoration(
+                color: Color.fromRGBO(232, 244, 252, 1),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(11),
+                ),
+              ),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Icon(Icons.star, color: Colors.black),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Bottom containers section with vertical scrolling
+  Widget _buildBottomProductsSection(double screenWidth, Color lightBlueColor) {
+    return Container(
+      width: screenWidth / 1.1,
+      // Use ListView.builder with vertical scrolling (default)
+      child: ListView.builder(
+        physics:
+            NeverScrollableScrollPhysics(), // Disable scrolling within ListView
+        shrinkWrap: true, // Important for nested lists
+        padding: EdgeInsets.symmetric(vertical: 10),
+        itemCount: _bottomProducts.length,
+        itemBuilder: (context, index) {
+          return _buildBottomProductContainer(
+            screenWidth,
+            lightBlueColor,
+            _bottomProducts[index],
+            index,
+          );
+        },
+      ),
+    );
+  }
+
+  // Individual bottom product container - modified for vertical layout
+  Widget _buildBottomProductContainer(
+    double screenWidth,
+    Color lightBlueColor,
+    Product product,
+    int index,
+  ) {
+    return Container(
+      width: screenWidth / 1.1,
+      margin: EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(11),
+        color: lightBlueColor,
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            SlideUpPageRoute(page: RentScreen(product: product)),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Container(
+                height: 185,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
+                  child: Image.file(
+                    File(product.imagePath),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                ),
+              ),
+              Container(
+                height: 85,
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(232, 244, 252, 1),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(11),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            product.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "\$${product.price.toStringAsFixed(2)}",
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(Icons.star, color: Colors.black),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// Custom page route for slide-up transition remains the same
+// Custom page route for slide-up transition
 class SlideUpPageRoute extends PageRouteBuilder {
   final Widget page;
   SlideUpPageRoute({required this.page})
@@ -293,7 +481,6 @@ class SlideUpPageRoute extends PageRouteBuilder {
 class DetailScreen extends StatelessWidget {
   final String title;
   const DetailScreen({super.key, required this.title});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
