@@ -137,7 +137,7 @@ class _RentScreenState extends State<RentScreen> {
   Widget _buildSecondaryContainer(BuildContext context) {
     return Container(
       width: 340,
-      height: 225,
+      height: 245,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(11),
         color: Colors.white,
