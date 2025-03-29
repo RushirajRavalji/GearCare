@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:gearcare/pages/rentscreen.dart';
 import 'package:gearcare/pages/profile.dart';
 import 'package:gearcare/pages/menu.dart';
-import 'package:gearcare/pages/compny.dart';
 import 'package:gearcare/pages/addproduct.dart';
 import 'package:gearcare/models/product_models.dart';
 import 'dart:io';
 
 class Home extends StatefulWidget {
   const Home({super.key});
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -16,9 +16,12 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   late PageController _pageController;
   int _currentPage = 0;
+  bool _isLoading = true;
+
   // Separate lists for upper and bottom products
   List<Product> _upperProducts = [];
   List<Product> _bottomProducts = [];
+
   final List<String> _circleItems = [
     'Electronics',
     'Furniture',
@@ -33,7 +36,39 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentPage);
+    _loadProductsFromStorage();
     _startAutoScroll();
+  }
+
+  // Load products from local storage
+  Future<void> _loadProductsFromStorage() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final products = await Product.loadProducts();
+
+      setState(() {
+        _upperProducts = products['upperProducts'] ?? [];
+        _bottomProducts = products['bottomProducts'] ?? [];
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading products: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Save products to local storage
+  Future<void> _saveProductsToStorage() async {
+    try {
+      await Product.saveProducts(_upperProducts, _bottomProducts);
+    } catch (e) {
+      print('Error saving products: $e');
+    }
   }
 
   void _startAutoScroll() {
@@ -63,6 +98,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         _bottomProducts.add(product);
       }
     });
+
+    // Save products to storage after adding a new one
+    _saveProductsToStorage();
   }
 
   @override
@@ -74,7 +112,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final Color lightBlueColor = Color.fromRGBO(212, 235, 250, 1);
+    final Color lightBlueColor = const Color.fromRGBO(212, 235, 250, 1);
+
+    if (_isLoading) {
+      return Scaffold(body: const Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -84,7 +127,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               _buildSearchBar(screenWidth),
               _buildScrollableContainer(screenWidth),
               _buildCircleCategories(screenWidth, lightBlueColor),
-              // Bottom scrollable products section - now vertical
               _bottomProducts.isEmpty
                   ? _buildEmptyBottomContainer(screenWidth, lightBlueColor)
                   : _buildBottomProductsSection(screenWidth, lightBlueColor),
@@ -92,7 +134,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           ),
         ),
       ),
-      // Add a floating action button to navigate to the add product screen
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -103,7 +144,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           );
         },
         backgroundColor: Colors.blue,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -111,25 +152,27 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget _buildTopBar(BuildContext context) {
     return Container(
       height: 55,
-      color: Color.fromRGBO(212, 235, 250, 1),
+      color: const Color.fromRGBO(212, 235, 250, 1),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.menu_sharp),
+                icon: const Icon(Icons.menu_sharp),
                 onPressed:
                     () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CustomDrawer()),
+                      MaterialPageRoute(
+                        builder: (context) => const CustomDrawer(),
+                      ),
                     ),
               ),
-              Icon(Icons.location_on),
+              const Icon(Icons.location_on),
             ],
           ),
           IconButton(
-            icon: CircleAvatar(backgroundColor: Colors.white),
+            icon: const CircleAvatar(backgroundColor: Colors.white),
             onPressed:
                 () => Navigator.push(
                   context,
@@ -153,7 +196,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(40),
                 border: Border.all(color: Colors.black, width: 3),
               ),
-              child: TextField(
+              child: const TextField(
                 decoration: InputDecoration(
                   hintText: "Search...",
                   border: InputBorder.none,
@@ -165,8 +208,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
-          SizedBox(width: 10),
-          Icon(Icons.search, size: 40),
+          const SizedBox(width: 10),
+          const Icon(Icons.search, size: 40),
         ],
       ),
     );
@@ -175,14 +218,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget _buildScrollableContainer(double screenWidth) {
     return Container(
       width: screenWidth * 0.9,
-      height: 270,
+      height: 300,
       decoration: BoxDecoration(
-        color: Color.fromRGBO(212, 235, 250, 1),
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(15),
       ),
       child:
           _upperProducts.isEmpty
-              ? Center(
+              ? const Center(
                 child: Text(
                   "No products in upper container.\nAdd products using the + button.",
                   textAlign: TextAlign.center,
@@ -217,7 +260,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.secondary,
             borderRadius: BorderRadius.circular(15),
           ),
           child: Column(
@@ -225,12 +268,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               Expanded(
                 flex: 3,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(15),
+                  ),
                   child: Image.file(
                     File(product.imagePath),
                     fit: BoxFit.cover,
                     width: double.infinity,
-                    height: double.infinity,
+                    height: 185,
                   ),
                 ),
               ),
@@ -243,15 +288,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     children: [
                       Text(
                         product.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        "\$${product.price.toStringAsFixed(2)}",
-                        style: TextStyle(color: Colors.green),
+                        "\₹${product.price.toStringAsFixed(2)}",
+                        style: const TextStyle(color: Colors.green),
                       ),
                     ],
                   ),
@@ -287,7 +332,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 builder: (context) => DetailScreen(title: _circleItems[index]),
               ),
             ),
-        child: CircleAvatar(
+        child: const CircleAvatar(
           radius: 30,
           backgroundColor: Color.fromRGBO(212, 235, 250, 1),
         ),
@@ -295,64 +340,33 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  // Empty bottom container when no products are added yet
   Widget _buildEmptyBottomContainer(double screenWidth, Color lightBlueColor) {
     return Container(
       width: screenWidth / 1.1,
-      margin: EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(11),
         color: lightBlueColor,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Container(
-              height: 185,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
-              ),
-              child: Center(
-                child: Text(
-                  "Add products to display here",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            ),
-            Container(
-              height: 85,
-              decoration: BoxDecoration(
-                color: Color.fromRGBO(232, 244, 252, 1),
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(11),
-                ),
-              ),
-              child: Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Icon(Icons.star, color: Colors.black),
-                ),
-              ),
-            ),
-          ],
+      child: const Padding(
+        padding: EdgeInsets.all(20),
+        child: Center(
+          child: Text(
+            "Add products to display here",
+            style: TextStyle(color: Colors.grey),
+          ),
         ),
       ),
     );
   }
 
-  // Bottom containers section with vertical scrolling
   Widget _buildBottomProductsSection(double screenWidth, Color lightBlueColor) {
     return Container(
       width: screenWidth / 1.1,
-      // Use ListView.builder with vertical scrolling (default)
       child: ListView.builder(
-        physics:
-            NeverScrollableScrollPhysics(), // Disable scrolling within ListView
-        shrinkWrap: true, // Important for nested lists
-        padding: EdgeInsets.symmetric(vertical: 10),
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        padding: const EdgeInsets.symmetric(vertical: 10),
         itemCount: _bottomProducts.length,
         itemBuilder: (context, index) {
           return _buildBottomProductContainer(
@@ -366,7 +380,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  // Individual bottom product container - modified for vertical layout
   Widget _buildBottomProductContainer(
     double screenWidth,
     Color lightBlueColor,
@@ -375,7 +388,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   ) {
     return Container(
       width: screenWidth / 1.1,
-      margin: EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(11),
         color: lightBlueColor,
@@ -395,10 +408,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 height: 185,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(11),
+                  ),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(11),
+                  ),
                   child: Image.file(
                     File(product.imagePath),
                     fit: BoxFit.cover,
@@ -410,8 +427,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               Container(
                 height: 85,
                 decoration: BoxDecoration(
-                  color: Color.fromRGBO(232, 244, 252, 1),
-                  borderRadius: BorderRadius.vertical(
+                  color: const Color.fromRGBO(232, 244, 252, 1),
+                  borderRadius: const BorderRadius.vertical(
                     bottom: Radius.circular(11),
                   ),
                 ),
@@ -426,23 +443,23 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         children: [
                           Text(
                             product.name,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            "\$${product.price.toStringAsFixed(2)}",
-                            style: TextStyle(
+                            "\₹${product.price.toStringAsFixed(2)}",
+                            style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                      Icon(Icons.star, color: Colors.black),
+                      const Icon(Icons.star, color: Colors.black),
                     ],
                   ),
                 ),
@@ -481,20 +498,16 @@ class SlideUpPageRoute extends PageRouteBuilder {
 class DetailScreen extends StatelessWidget {
   final String title;
   const DetailScreen({super.key, required this.title});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
-          Center(
-            child: Text(
-              "Welcome to $title",
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
+      body: const Center(
+        child: Text(
+          "Welcome to the category!",
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

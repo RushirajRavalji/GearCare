@@ -37,7 +37,6 @@ class _RentScreenState extends State<RentScreen> {
                 color: Colors.black,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.only(left: 16),
-                child: Icon(Icons.arrow_back_ios, color: Colors.white),
               ),
             ),
           ),
@@ -303,7 +302,7 @@ class _RentScreenState extends State<RentScreen> {
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '\$${_totalCost.toStringAsFixed(2)}',
+                  '\₹${_totalCost.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
