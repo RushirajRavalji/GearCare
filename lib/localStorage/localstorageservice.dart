@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:gearcare/localStorage/FirebaseStorageService.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -9,35 +10,24 @@ class LocalStorageService {
   LocalStorageService._internal();
 
   final Uuid _uuid = Uuid();
+  final FirebaseStorageService _firebaseService = FirebaseStorageService();
 
-  /// Saves an image to local storage and returns the saved path
+  /// Saves an image as base64 string and returns the string
   Future<String> saveImage(File imageFile) async {
     try {
-      // Get the application documents directory
-      final Directory appDocDir = await getApplicationDocumentsDirectory();
-
-      // Create images directory if it doesn't exist
-      final Directory imagesDir = Directory('${appDocDir.path}/images');
-      if (!await imagesDir.exists()) {
-        await imagesDir.create(recursive: true);
-      }
-
-      // Generate a unique filename using UUID
-      final String fileName = '${_uuid.v4()}${extension(imageFile.path)}';
-      final String localPath = '${imagesDir.path}/$fileName';
-
-      // Copy the image file to the new location
-      final File localImage = await imageFile.copy(localPath);
-
-      return localImage.path;
+      // Convert image to base64
+      final String base64String = await _firebaseService.fileToBase64(
+        imageFile,
+      );
+      return base64String;
     } catch (e) {
-      print('Error saving image: $e');
-      // Return the original path if saving fails
-      return imageFile.path;
+      print('Error converting image to base64: $e');
+      // Return empty string if conversion fails
+      return '';
     }
   }
 
-  /// Deletes an image from local storage
+  /// Deletes an image from temp storage if it exists
   Future<bool> deleteImage(String imagePath) async {
     try {
       final File file = File(imagePath);
@@ -52,16 +42,15 @@ class LocalStorageService {
     }
   }
 
-  /// Loads an image from local storage
-  Future<File?> loadImage(String imagePath) async {
+  /// Converts base64 string to a temporary file for display
+  Future<File?> loadImage(String base64String) async {
     try {
-      final File file = File(imagePath);
-      if (await file.exists()) {
-        return file;
-      }
-      return null;
+      if (base64String.isEmpty) return null;
+
+      final String fileName = '${_uuid.v4()}.jpg';
+      return await _firebaseService.base64ToFile(base64String, fileName);
     } catch (e) {
-      print('Error loading image: $e');
+      print('Error loading image from base64: $e');
       return null;
     }
   }

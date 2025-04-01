@@ -1,115 +1,70 @@
-import 'dart:io';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class Product {
-  final String id; // Added ID for uniquely identifying products
   final String name;
   final double price;
   final String description;
-  final String imagePath;
+  final String imagePath; // This will store the base64 string
+  String? id; // Optional ID for Firestore
 
   Product({
-    String? id,
     required this.name,
     required this.price,
     required this.description,
     required this.imagePath,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+    this.id,
+  });
 
-  // Convert product to JSON
-  Map<String, dynamic> toJson() {
+  // Convert product to a Map for Firestore
+  Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'price': price,
       'description': description,
-      'imagePath': imagePath,
+      'imagePath': imagePath, // Store base64 string
+      'id': id ?? Uuid().v4(), // Generate ID if not exists
     };
   }
 
-  // Create product from JSON
-  factory Product.fromJson(Map<String, dynamic> json) {
+  // Create product from a Map from Firestore
+  factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      id: json['id'],
-      name: json['name'],
-      price: json['price'],
-      description: json['description'],
-      imagePath: json['imagePath'],
+      name: map['name'] ?? '',
+      price: (map['price'] ?? 0.0).toDouble(),
+      description: map['description'] ?? '',
+      imagePath: map['imagePath'] ?? '',
+      id: map['id'],
     );
   }
 
-  // Static methods for managing products in local storage
+  // Convert base64 image to File for display
+  Future<File> getImageFile() async {
+    try {
+      final FirebaseStorageService storageService = FirebaseStorageService();
+      return await storageService.base64ToFile(
+        imagePath,
+        '${id ?? Uuid().v4()}.jpg',
+      );
+    } catch (e) {
+      throw Exception('Failed to get image file: $e');
+    }
+  }
+
+  // Static methods to save and load products using Firebase
   static Future<void> saveProducts(
     List<Product> upperProducts,
     List<Product> bottomProducts,
   ) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Convert products to JSON strings
-      final String upperProductsJson = jsonEncode(
-        upperProducts.map((p) => p.toJson()).toList(),
-      );
-      final String bottomProductsJson = jsonEncode(
-        bottomProducts.map((p) => p.toJson()).toList(),
-      );
-
-      // Save to SharedPreferences
-      await prefs.setString('upperProducts', upperProductsJson);
-      await prefs.setString('bottomProducts', bottomProductsJson);
-    } catch (e) {
-      print('Error saving products: $e');
-    }
+    final FirebaseStorageService storageService = FirebaseStorageService();
+    await storageService.saveProducts(upperProducts, bottomProducts);
   }
 
   static Future<Map<String, List<Product>>> loadProducts() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Load JSON strings from SharedPreferences
-      final String? upperProductsJson = prefs.getString('upperProducts');
-      final String? bottomProductsJson = prefs.getString('bottomProducts');
-
-      // Parse upper products
-      List<Product> upperProducts = [];
-      if (upperProductsJson != null) {
-        final List<dynamic> decodedUpper = jsonDecode(upperProductsJson);
-        upperProducts =
-            decodedUpper.map((json) => Product.fromJson(json)).toList();
-      }
-
-      // Parse bottom products
-      List<Product> bottomProducts = [];
-      if (bottomProductsJson != null) {
-        final List<dynamic> decodedBottom = jsonDecode(bottomProductsJson);
-        bottomProducts =
-            decodedBottom.map((json) => Product.fromJson(json)).toList();
-      }
-
-      // Verify all image files exist
-      upperProducts = await _verifyImagePaths(upperProducts);
-      bottomProducts = await _verifyImagePaths(bottomProducts);
-
-      return {'upperProducts': upperProducts, 'bottomProducts': bottomProducts};
-    } catch (e) {
-      print('Error loading products: $e');
-      return {'upperProducts': [], 'bottomProducts': []};
-    }
-  }
-
-  // Helper method to verify image paths exist
-  static Future<List<Product>> _verifyImagePaths(List<Product> products) async {
-    List<Product> validProducts = [];
-
-    for (var product in products) {
-      if (await File(product.imagePath).exists()) {
-        validProducts.add(product);
-      } else {
-        print('Image not found: ${product.imagePath}');
-      }
-    }
-
-    return validProducts;
+    final FirebaseStorageService storageService = FirebaseStorageService();
+    return await storageService.loadProducts();
   }
 }

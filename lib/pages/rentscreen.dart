@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/models/product_models.dart';
+import 'package:gearcare/widget/Base64ImageWidget.dart';
 import 'dart:io';
 
 class RentScreen extends StatefulWidget {
   final Product product;
   const RentScreen({super.key, required this.product});
-
   @override
   State<RentScreen> createState() => _RentScreenState();
 }
@@ -23,7 +23,6 @@ class _RentScreenState extends State<RentScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: ListView(
@@ -95,8 +94,8 @@ class _RentScreenState extends State<RentScreen> {
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                  child: Image.file(
-                    File(widget.product.imagePath),
+                  child: Base64ImageWidget(
+                    base64String: widget.product.imagePath,
                     fit: BoxFit.cover,
                     width: double.infinity,
                   ),

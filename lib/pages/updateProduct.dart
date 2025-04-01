@@ -1,32 +1,70 @@
+// Create a new file called update_product.dart
+
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+import 'package:gearcare/pages/addproduct.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:gearcare/models/product_models.dart';
-import 'package:uuid/uuid.dart';
 
-enum ContainerType { upper, bottom }
+class UpdateProduct extends StatefulWidget {
+  final Product product;
+  final ContainerType containerType;
+  final Function(Product, ContainerType) onProductUpdated;
 
-class Addproduct extends StatefulWidget {
-  final Function(Product, ContainerType) onProductAdded;
-  const Addproduct({super.key, required this.onProductAdded});
+  const UpdateProduct({
+    Key? key,
+    required this.product,
+    required this.containerType,
+    required this.onProductUpdated,
+  }) : super(key: key);
+
   @override
-  _AddproductState createState() => _AddproductState();
+  _UpdateProductState createState() => _UpdateProductState();
 }
 
-class _AddproductState extends State<Addproduct> {
+class _UpdateProductState extends State<UpdateProduct> {
   File? _image;
+  String? _currentImageBase64;
   final ImagePicker _picker = ImagePicker();
   final FirebaseStorageService _firebaseService = FirebaseStorageService();
   bool _isLoading = false;
+  bool _imageChanged = false;
 
   // Text editing controllers
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _priceController;
+  late TextEditingController _descriptionController;
 
-  // Default container selection
-  ContainerType _selectedContainer = ContainerType.bottom;
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers with existing product data
+    _nameController = TextEditingController(text: widget.product.name);
+    _priceController = TextEditingController(
+      text: widget.product.price.toString(),
+    );
+    _descriptionController = TextEditingController(
+      text: widget.product.description,
+    );
+    _currentImageBase64 = widget.product.imagePath;
+
+    // Load the existing image
+    _loadExistingImage();
+  }
+
+  Future<void> _loadExistingImage() async {
+    try {
+      final tempFile = await widget.product.getImageFile();
+      if (mounted) {
+        setState(() {
+          _image = tempFile;
+        });
+      }
+    } catch (e) {
+      print('Error loading existing image: $e');
+    }
+  }
 
   // Method to pick image from camera or gallery
   Future<void> _pickImage(ImageSource source) async {
@@ -34,6 +72,7 @@ class _AddproductState extends State<Addproduct> {
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
+        _imageChanged = true;
       });
     }
   }
@@ -44,7 +83,7 @@ class _AddproductState extends State<Addproduct> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Text("Add Product", style: TextStyle(color: Colors.black)),
+        title: Text("Update Product", style: TextStyle(color: Colors.black)),
       ),
       body: Stack(
         children: [
@@ -105,7 +144,7 @@ class _AddproductState extends State<Addproduct> {
                                   ),
                                   SizedBox(height: 10),
                                   Text(
-                                    'Add Product Image',
+                                    'Change Product Image',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 16,
@@ -157,43 +196,15 @@ class _AddproductState extends State<Addproduct> {
                     ),
                   ),
                   SizedBox(height: 20),
-                  // Container Selection
+                  // Display current container information
                   Text(
-                    "Select where to add the product:",
+                    "Current Location: ${widget.containerType == ContainerType.upper ? 'Upper Container' : 'Bottom Container'}",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RadioListTile<ContainerType>(
-                          title: Text("Upper Container"),
-                          value: ContainerType.upper,
-                          groupValue: _selectedContainer,
-                          onChanged: (ContainerType? value) {
-                            setState(() {
-                              _selectedContainer = value!;
-                            });
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        child: RadioListTile<ContainerType>(
-                          title: Text("Bottom Container"),
-                          value: ContainerType.bottom,
-                          groupValue: _selectedContainer,
-                          onChanged: (ContainerType? value) {
-                            setState(() {
-                              _selectedContainer = value!;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
                   SizedBox(height: 20),
-                  // Add Product Button
+                  // Update Product Button
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _saveProduct,
+                    onPressed: _isLoading ? null : _updateProduct,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       padding: EdgeInsets.symmetric(vertical: 15),
@@ -202,7 +213,7 @@ class _AddproductState extends State<Addproduct> {
                       ),
                     ),
                     child: Text(
-                      'Add Product',
+                      'Update Product',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
@@ -221,15 +232,14 @@ class _AddproductState extends State<Addproduct> {
     );
   }
 
-  Future<void> _saveProduct() async {
+  Future<void> _updateProduct() async {
     // Validate inputs
     if (_nameController.text.isEmpty ||
         _priceController.text.isEmpty ||
-        _descriptionController.text.isEmpty ||
-        _image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all fields and add an image')),
-      );
+        _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
@@ -242,19 +252,30 @@ class _AddproductState extends State<Addproduct> {
       // Parse price to double
       final double price = double.parse(_priceController.text);
 
-      // Convert image to base64 using FirebaseStorageService
-      final String base64Image = await _firebaseService.fileToBase64(_image!);
+      // Use existing image if not changed
+      String base64Image = _currentImageBase64!;
 
-      // Create product object with the saved image path (base64 string)
-      final product = Product(
+      // Convert new image to base64 if changed
+      if (_imageChanged && _image != null) {
+        base64Image = await _firebaseService.fileToBase64(_image!);
+      }
+
+      // Create updated product object
+      final updatedProduct = Product(
         name: _nameController.text,
         price: price,
         description: _descriptionController.text,
         imagePath: base64Image,
+        id: widget.product.id, // Keep the same ID
       );
 
-      // Pass the product back to Home screen with the selected container type
-      widget.onProductAdded(product, _selectedContainer);
+      // Pass the updated product back
+      widget.onProductUpdated(updatedProduct, widget.containerType);
+
+      // Show success message
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Product updated successfully')));
 
       // Navigate back
       Navigator.pop(context);

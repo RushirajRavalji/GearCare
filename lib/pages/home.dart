@@ -4,11 +4,11 @@ import 'package:gearcare/pages/profile.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/pages/addproduct.dart';
 import 'package:gearcare/models/product_models.dart';
+import 'package:gearcare/widget/Base64ImageWidget.dart';
 import 'dart:io';
 
 class Home extends StatefulWidget {
   const Home({super.key});
-
   @override
   _HomeState createState() => _HomeState();
 }
@@ -17,11 +17,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   late PageController _pageController;
   int _currentPage = 0;
   bool _isLoading = true;
-
   // Separate lists for upper and bottom products
   List<Product> _upperProducts = [];
   List<Product> _bottomProducts = [];
-
   final List<String> _circleItems = [
     'Electronics',
     'Furniture',
@@ -40,15 +38,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     _startAutoScroll();
   }
 
-  // Load products from local storage
+  // Load products from Firebase
   Future<void> _loadProductsFromStorage() async {
     try {
       setState(() {
         _isLoading = true;
       });
-
       final products = await Product.loadProducts();
-
       setState(() {
         _upperProducts = products['upperProducts'] ?? [];
         _bottomProducts = products['bottomProducts'] ?? [];
@@ -62,7 +58,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     }
   }
 
-  // Save products to local storage
+  // Save products to Firebase
   Future<void> _saveProductsToStorage() async {
     try {
       await Product.saveProducts(_upperProducts, _bottomProducts);
@@ -98,7 +94,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         _bottomProducts.add(product);
       }
     });
-
     // Save products to storage after adding a new one
     _saveProductsToStorage();
   }
@@ -113,11 +108,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final Color lightBlueColor = const Color.fromRGBO(212, 235, 250, 1);
-
     if (_isLoading) {
       return Scaffold(body: const Center(child: CircularProgressIndicator()));
     }
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -271,8 +264,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(15),
                   ),
-                  child: Image.file(
-                    File(product.imagePath),
+                  child: Base64ImageWidget(
+                    base64String: product.imagePath,
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: 185,
@@ -416,11 +409,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(11),
                   ),
-                  child: Image.file(
-                    File(product.imagePath),
+                  child: Base64ImageWidget(
+                    base64String: product.imagePath,
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(11),
+                    ),
                   ),
                 ),
               ),
@@ -498,7 +494,6 @@ class SlideUpPageRoute extends PageRouteBuilder {
 class DetailScreen extends StatelessWidget {
   final String title;
   const DetailScreen({super.key, required this.title});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
