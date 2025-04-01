@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-
 class Base64ImageWidget extends StatefulWidget {
   final String base64String;
   final BoxFit fit;
