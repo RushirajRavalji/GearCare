@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969038454381",
+    "project_id": "gearcare-2347f",
+    "storage_bucket": "gearcare-2347f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969038454381:android:02e4bd2ae50933cc9d6964",
+        "android_client_info": {
+          "package_name": "com.example.gearcare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByuq0bcr1I548l3JOkK3RECB4I5YPRfso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
