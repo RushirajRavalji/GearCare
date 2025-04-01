@@ -3,7 +3,6 @@ import 'package:gearcare/localStorage/FirebaseStorageService.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:gearcare/models/product_models.dart';
-import 'package:uuid/uuid.dart';
 
 enum ContainerType { upper, bottom }
 

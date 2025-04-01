@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'package:gearcare/localStorage/FirebaseStorageService.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 class LocalStorageService {

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:gearcare/models/product_models.dart';
+
 
 class Base64ImageWidget extends StatefulWidget {
   final String base64String;

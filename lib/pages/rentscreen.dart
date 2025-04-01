@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/models/product_models.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
-import 'dart:io';
+
 
 class RentScreen extends StatefulWidget {
   final Product product;

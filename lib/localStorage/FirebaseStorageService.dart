@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gearcare/models/product_models.dart';
 
 class FirebaseStorageService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Collection references
   final CollectionReference _upperProductsCollection = FirebaseFirestore
