@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:gearcare/firebase_options.dart';
 import 'package:gearcare/pages/home.dart';
 import 'package:gearcare/theme.dart';
 
-void main() {
+void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -17,6 +19,9 @@ void main() {
       ),
     );
   };
+
+  // Initialize Firebase using the static getter for currentPlatform options
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Run the app
   runApp(const MainApp());
