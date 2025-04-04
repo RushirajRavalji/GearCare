@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/firebase_auth_service.dart';
 import 'package:gearcare/pages/login.dart';
 
-import 'package:gearcare/state/registerstate.dart';
+import 'package:gearcare/pages/registerstate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

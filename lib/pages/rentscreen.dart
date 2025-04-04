@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:gearcare/models/product_models.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
 
-
 class RentScreen extends StatefulWidget {
   final Product product;
   const RentScreen({super.key, required this.product});
@@ -136,7 +135,7 @@ class _RentScreenState extends State<RentScreen> {
   Widget _buildSecondaryContainer(BuildContext context) {
     return Container(
       width: 340,
-      height: 245,
+      height: 255,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(11),
         color: Colors.white,
@@ -256,6 +255,20 @@ class _RentScreenState extends State<RentScreen> {
                   ),
                 ),
               ],
+            ),
+            SizedBox(width: 1),
+            // Days indicator
+            Container(
+              width: double.infinity,
+              child: Text(
+                '${_endDate.difference(_startDate).inDays + 1} days',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey[700],
+                ),
+                textAlign: TextAlign.end,
+              ),
             ),
             SizedBox(height: 15),
             // Quantity selector

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gearcare/pages/home.dart';
+import 'package:gearcare/pages/registerstate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
@@ -12,7 +13,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController nameController = TextEditingController();
+  // final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -51,21 +52,21 @@ class _LoginState extends State<Login> {
                     ),
 
                   // Name Field
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
+                  // TextFormField(
+                  //   controller: nameController,
+                  //   decoration: const InputDecoration(
+                  //     labelText: 'Name',
+                  //     border: OutlineInputBorder(),
+                  //     prefixIcon: Icon(Icons.person),
+                  //   ),
+                  //   validator: (value) {
+                  //     if (value == null || value.isEmpty) {
+                  //       return 'Please enter your name';
+                  //     }
+                  //     return null;
+                  //   },
+                  // ),
+                  // const SizedBox(height: 20),
 
                   // Email Field
                   TextFormField(
@@ -145,9 +146,14 @@ class _LoginState extends State<Login> {
                       const Text("Don't have an account? "),
                       GestureDetector(
                         onTap: () {
-                          // Navigate to Register page
-                          // You can add this functionality later
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Register(),
+                            ),
+                          );
                         },
+
                         child: const Text(
                           "Register",
                           style: TextStyle(
@@ -185,7 +191,7 @@ class _LoginState extends State<Login> {
         // Save user data to shared preferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('uid', credential.user!.uid);
-        await prefs.setString('name', nameController.text);
+        // await prefs.setString('name', nameController.text);
         await prefs.setString('email', emailController.text);
 
         // Navigate to Home
