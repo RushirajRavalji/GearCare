@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/pages/about.dart';
-import 'package:gearcare/pages/addproduct.dart' as addproduct;
-
+import 'package:gearcare/pages/addproduct.dart';
 import 'package:gearcare/pages/categotry.dart';
 import 'package:gearcare/pages/help_support.dart';
 import 'package:gearcare/pages/home.dart';
@@ -71,11 +70,15 @@ class _CustomDrawerState extends State<CustomDrawer>
         body: SlideTransition(
           position: _slideAnimation,
           child: Drawer(
-            width: MediaQuery.of(context).size.width * 0.8,
+            width: MediaQuery.of(context).size.width,
             child: Stack(
               children: [
                 // Blue background container
-                Positioned.fill(
+                Positioned(
+                  top: 95,
+                  left: 0,
+                  right: 50,
+                  bottom: 0,
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Color.fromARGB(255, 212, 235, 250),
@@ -109,12 +112,13 @@ class _CustomDrawerState extends State<CustomDrawer>
                           context,
                           Icons.add_circle_outline,
                           "Add your product",
-                          addproduct.Addproduct(
+                          Addproduct(
                             onProductAdded: (
                               Product product,
-                              addproduct.ContainerType containerType,
+                              ContainerType containerType,
                             ) {
                               // Handle product addition logic here
+                              // For example, you can pass it to the Home screen
                               print(
                                 "Product added: ${product.name}, Container: $containerType",
                               );
