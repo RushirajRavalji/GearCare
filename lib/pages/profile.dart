@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/firebase_auth_service.dart';
 import 'package:gearcare/pages/login.dart';
-
 import 'package:gearcare/pages/registerstate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,17 +11,26 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
   @override
   State createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Color c1 = const Color.fromRGBO(211, 232, 246, 1);
+  // Colors
+  Color primaryColor = const Color(0xFF3A86FF);
+  Color secondaryColor = const Color(0xFFE2EEFF);
+  Color accentColor = const Color(0xFF8D99AE);
+  Color backgroundColor = const Color(0xFFF8F9FA);
+  Color textColor = const Color(0xFF2B2D42);
+
   double w = 0;
   bool isLoading = false;
   String? errorMessage;
+
   // List to store switch states
   List<bool> switchValues = List.generate(8, (index) => false);
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +57,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       barrierDismissible: false,
       builder:
           (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: const Text('Authentication Required'),
             content: const Text(
               'Please login or create an account to view your profile.',
@@ -62,9 +73,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(builder: (context) => const Login()),
                   );
                 },
-                child: const Text('Login'),
+                child: Text(
+                  'Login',
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-              TextButton(
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
                 onPressed: () {
                   Navigator.of(context).pop();
                   Navigator.push(
@@ -72,7 +96,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(builder: (context) => const Register()),
                   );
                 },
-                child: const Text('Register'),
+                child: const Text(
+                  'Register',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -121,88 +151,120 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     w = MediaQuery.of(context).size.width;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 25),
+          icon: Icon(Icons.arrow_back_ios_new, color: textColor, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           "Your Profile",
-          style: TextStyle(color: Colors.black, fontSize: 22),
+          style: TextStyle(
+            color: textColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         centerTitle: true,
       ),
       body:
           isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(child: CircularProgressIndicator(color: primaryColor))
               : SingleChildScrollView(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Error message
                     if (errorMessage != null)
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(12),
                         margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
                         ),
-                        child: Text(
-                          errorMessage!,
-                          style: const TextStyle(color: Colors.red),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+
                     // No account message with register button
                     if (FirebaseAuth.instance.currentUser == null)
                       _buildNoAccountSection(),
-                    //! Profile Section - Only show if logged in
+
+                    // Profile Section - Only show if logged in
                     if (FirebaseAuth.instance.currentUser != null)
                       _buildProfileSection(),
-                    const SizedBox(height: 15),
-                    _buildDivider(),
-                    const SizedBox(height: 15),
-                    //! Subscription Box with Progress - Only show if logged in
+
+                    const SizedBox(height: 20),
+
+                    if (FirebaseAuth.instance.currentUser != null)
+                      _buildDivider(),
+
+                    const SizedBox(height: 20),
+
+                    // Subscription Box with Progress - Only show if logged in
                     if (FirebaseAuth.instance.currentUser != null)
                       _buildSubscriptionBox1(),
-                    const SizedBox(height: 15),
-                    //! Settings Section (with Toggles) - Only show if logged in
+
+                    const SizedBox(height: 20),
+
+                    // Settings Section (with Toggles) - Only show if logged in
                     if (FirebaseAuth.instance.currentUser != null)
                       _buildSettingsSection(),
-                    const SizedBox(height: 20),
-                    //! Logout Button - Only show if logged in
+
+                    const SizedBox(height: 25),
+
+                    // Logout Button - Only show if logged in
                     if (FirebaseAuth.instance.currentUser != null)
                       SizedBox(
-                        width: 350,
-                        height: 50,
+                        width: w - 40,
+                        height: 54,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
+                            backgroundColor: Colors.red.shade50,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           onPressed: _logout,
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 "Logout",
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.red.shade700,
                                   fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              SizedBox(width: 10),
-                              Icon(Icons.logout, color: Colors.white, size: 18),
+                              const SizedBox(width: 10),
+                              Icon(
+                                Icons.logout,
+                                color: Colors.red.shade700,
+                                size: 18,
+                              ),
                             ],
                           ),
                         ),
                       ),
+
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -212,64 +274,98 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // New section for users without an account
   Widget _buildNoAccountSection() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.only(bottom: 20),
       width: w,
       decoration: BoxDecoration(
-        color: c1,
-        borderRadius: BorderRadius.circular(11),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.account_circle, size: 70, color: Colors.black54),
-          const SizedBox(height: 15),
-          const Text(
-            "You don't have an account yet",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Create an account to track your orders, save gear information, and manage your preferences.",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.black54),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: secondaryColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person_outline_rounded,
+              size: 60,
+              color: primaryColor,
+            ),
           ),
           const SizedBox(height: 20),
+          Text(
+            "Welcome to GearCare",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Create an account to track your orders, save gear information, and manage your preferences.",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 15, color: accentColor, height: 1.5),
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            width: w - 80,
+            height: 54,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Register()),
+                );
+              },
+              child: const Text(
+                "Create Account",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 12,
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Register()),
-                  );
-                },
-                child: const Text(
-                  "Register Now",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+              Text(
+                "Already have an account? ",
+                style: TextStyle(color: accentColor),
               ),
-              const SizedBox(width: 15),
-              TextButton(
-                onPressed: () {
+              GestureDetector(
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const Login()),
                   );
                 },
-                child: const Text(
+                child: Text(
                   "Login",
-                  style: TextStyle(color: Colors.blue, fontSize: 16),
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -312,60 +408,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  //! Profile Section
+  // Profile Section
   Widget _buildProfileSection() {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(20),
       width: w,
       decoration: BoxDecoration(
-        color: c1,
-        borderRadius: BorderRadius.circular(11),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           GestureDetector(
             onTap: _pickImage,
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.white,
-              backgroundImage: _getProfileImage(),
-              child:
-                  _image == null && _profileImageUrl == null
-                      ? const Icon(
-                        Icons.add_a_photo,
-                        size: 40,
-                        color: Colors.grey,
-                      )
-                      : null,
-            ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
+              alignment: Alignment.bottomRight,
               children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: primaryColor, width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 55,
+                    backgroundColor: secondaryColor,
+                    backgroundImage: _getProfileImage(),
+                    child:
+                        _image == null && _profileImageUrl == null
+                            ? Icon(Icons.person, size: 60, color: accentColor)
+                            : null,
+                  ),
                 ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  enabled:
-                      false, // Email shouldn't be editable for Firebase Auth
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: mobileController,
-                  decoration: const InputDecoration(labelText: 'Mobile Number'),
-                  keyboardType: TextInputType.phone,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 30),
+          _buildProfileTextField(
+            controller: nameController,
+            label: 'Full Name',
+            icon: Icons.person_outline,
+          ),
+          const SizedBox(height: 16),
+          _buildProfileTextField(
+            controller: emailController,
+            label: 'Email Address',
+            icon: Icons.email_outlined,
+            enabled: false,
+          ),
+          const SizedBox(height: 16),
+          _buildProfileTextField(
+            controller: mobileController,
+            label: 'Mobile Number',
+            icon: Icons.phone_outlined,
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 25),
+          SizedBox(
+            width: w - 80,
+            height: 54,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: _saveProfile,
+              child: const Text(
+                "Update Profile",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProfileTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool enabled = true,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: enabled ? secondaryColor.withOpacity(0.5) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: enabled ? secondaryColor : Colors.grey.shade200,
+        ),
+      ),
+      child: TextField(
+        controller: controller,
+        enabled: enabled,
+        keyboardType: keyboardType,
+        style: TextStyle(
+          color: enabled ? textColor : accentColor,
+          fontSize: 15,
+        ),
+        decoration: InputDecoration(
+          prefixIcon: Icon(
+            icon,
+            color: enabled ? primaryColor : accentColor,
+            size: 22,
+          ),
+          labelText: label,
+          labelStyle: TextStyle(color: accentColor),
+          border: InputBorder.none,
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+        ),
       ),
     );
   }
@@ -379,7 +560,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return null;
   }
 
-  //! Image Picker Method
+  // Image Picker Method
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -444,8 +625,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         profileImageUrl: _profileImageUrl,
       );
       if (!mounted) return;
+
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+        SnackBar(
+          content: const Text('Profile updated successfully'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     } catch (e) {
       setState(() {
@@ -458,20 +648,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  //! Controllers for TextFields
+  // Controllers for TextFields
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController mobileController = TextEditingController();
   XFile? _image;
   String? _profileImageUrl;
-  //! Subscription Section with Order History
+
+  // Subscription Section with Order History
   Widget _buildSubscriptionBox1() {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(20),
       width: w,
       decoration: BoxDecoration(
-        color: c1,
-        borderRadius: BorderRadius.circular(11),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,11 +677,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Subscription Status",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Icon(
+                    Icons.verified_user_outlined,
+                    color: primaryColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    "Subscription",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                ],
               ),
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () {
                   // Navigate to order history page or show a dialog
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -494,74 +706,181 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: secondaryColor,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text("Order History"),
+                icon: Icon(Icons.history, color: primaryColor, size: 18),
+                label: Text(
+                  "History",
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
-          Container(
-            width: 120,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Text("Time Remaining", style: TextStyle(fontSize: 12)),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: secondaryColor,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time, color: primaryColor, size: 16),
+                    const SizedBox(width: 5),
+                    Text(
+                      "Active Plan",
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      color: Colors.amber.shade700,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      "70% Remaining",
+                      style: TextStyle(
+                        color: Colors.amber.shade700,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "Time Remaining",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black54,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 8),
           Container(
+            width: double.infinity,
+            height: 12,
             decoration: BoxDecoration(
+              color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.black),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: const LinearProgressIndicator(
-                value: 0.7,
-                backgroundColor: Colors.white,
-                valueColor: AlwaysStoppedAnimation(Colors.black),
-                minHeight: 8,
+            child: Stack(
+              children: [
+                Container(
+                  width: w * 0.7, // 70% remaining
+                  height: 12,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryColor.withOpacity(0.7), primaryColor],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Premium Plan",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                ),
               ),
-            ),
+              Text(
+                "215 days left",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: primaryColor,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  //! Settings Section (with Switches)
+  // Settings Section (with Switches)
   Widget _buildSettingsSection() {
     return Container(
-      padding: const EdgeInsets.all(11),
+      padding: const EdgeInsets.all(20),
       width: w,
       decoration: BoxDecoration(
-        color: c1,
-        borderRadius: BorderRadius.circular(11),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 30,
-            width: 160,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.only(top: 5, left: 15),
-              child: Text("Settings", style: TextStyle(fontSize: 12)),
-            ),
+          Row(
+            children: [
+              Icon(Icons.settings_outlined, color: primaryColor, size: 24),
+              const SizedBox(width: 10),
+              Text(
+                "Settings",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          //! ListView for switches
+          const SizedBox(height: 20),
+          // ListView for switches
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -577,69 +896,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 "App Vibrations",
                 "Background Refresh",
               ];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+              final settingIcons = [
+                Icons.notifications_outlined,
+                Icons.dark_mode_outlined,
+                Icons.backup_outlined,
+                Icons.location_on_outlined,
+                Icons.sync_outlined,
+                Icons.volume_up_outlined,
+                Icons.vibration_outlined,
+                Icons.refresh_outlined,
+              ];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: secondaryColor.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color:
+                        switchValues[index]
+                            ? primaryColor.withOpacity(0.3)
+                            : Colors.transparent,
+                  ),
+                ),
                 child: Row(
                   children: [
-                    // Toggle switch
-                    Transform.scale(
-                      scale: 0.8,
-                      child: Switch(
-                        value: switchValues[index],
-                        onChanged: (value) {
-                          setState(() {
-                            switchValues[index] = value;
-                          });
-                          // You can save these settings to Firebase here
-                        },
-                        activeColor: Colors.grey,
-                        activeTrackColor: Colors.white,
-                        inactiveThumbColor: Colors.grey,
-                        inactiveTrackColor: Colors.white,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color:
+                            switchValues[index]
+                                ? primaryColor.withOpacity(0.1)
+                                : Colors.grey.shade200,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        settingIcons[index],
+                        color: switchValues[index] ? primaryColor : Colors.grey,
+                        size: 18,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 16),
                     // Setting label
-                    Text(
-                      settingLabels[index],
-                      style: const TextStyle(fontSize: 14),
+                    Expanded(
+                      child: Text(
+                        settingLabels[index],
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: textColor,
+                        ),
+                      ),
+                    ),
+                    // Toggle switch
+                    Switch.adaptive(
+                      value: switchValues[index],
+                      onChanged: (value) {
+                        setState(() {
+                          switchValues[index] = value;
+                        });
+                        // You can save these settings to Firebase here
+                      },
+                      activeColor: primaryColor,
+                      activeTrackColor: primaryColor.withOpacity(0.3),
                     ),
                   ],
                 ),
               );
             },
           ),
-          const SizedBox(height: 15),
-          // Save button
-          Center(
-            child: SizedBox(
-              width: 150,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: _saveProfile,
-                child: const Text(
-                  "Save Changes",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  //! Helper: Divider
+  // Helper: Divider
   Widget _buildDivider() {
     return Container(
-      width: w / 1.3,
-      height: 1,
-      color: Colors.black.withOpacity(0.2),
+      width: w / 1.5,
+      height: 4,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(2),
+      ),
     );
   }
 }

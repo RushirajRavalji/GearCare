@@ -6,7 +6,6 @@ import 'package:gearcare/pages/addproduct.dart';
 import 'package:gearcare/models/product_models.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
 
-
 class Home extends StatefulWidget {
   const Home({super.key});
   @override
@@ -28,6 +27,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     'Sports',
     'Cameras',
     'Musical Instruments',
+  ];
+
+  // Icons for categories
+  final List<IconData> _categoryIcons = [
+    Icons.devices,
+    Icons.chair,
+    Icons.directions_car,
+    Icons.handyman,
+    Icons.sports_soccer,
+    Icons.camera_alt,
+    Icons.music_note,
   ];
 
   @override
@@ -107,22 +117,42 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final Color lightBlueColor = const Color.fromRGBO(212, 235, 250, 1);
+    final Color primaryBlue = const Color(0xFF3498DB);
+    final Color lightBlueColor = const Color(0xFFD4EBFA);
+    final Color backgroundGrey = const Color(0xFFF9FAFC);
+
     if (_isLoading) {
-      return Scaffold(body: const Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator(color: primaryBlue)),
+      );
     }
+
     return Scaffold(
+      backgroundColor: backgroundGrey,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildTopBar(context),
-              _buildSearchBar(screenWidth),
-              _buildScrollableContainer(screenWidth),
-              _buildCircleCategories(screenWidth, lightBlueColor),
+              _buildTopBar(context, primaryBlue),
+              _buildSearchBar(screenWidth, primaryBlue),
+              const SizedBox(height: 20),
+              _buildFeaturedHeading(screenWidth),
+              const SizedBox(height: 10),
+              _buildScrollableContainer(screenWidth, primaryBlue),
+              const SizedBox(height: 25),
+              _buildCategoryHeading(screenWidth),
+              const SizedBox(height: 10),
+              _buildCircleCategories(screenWidth, primaryBlue),
+              const SizedBox(height: 25),
+              _buildRecommendedHeading(screenWidth),
+              const SizedBox(height: 10),
               _bottomProducts.isEmpty
                   ? _buildEmptyBottomContainer(screenWidth, lightBlueColor)
-                  : _buildBottomProductsSection(screenWidth, lightBlueColor),
+                  : _buildBottomProductsSection(
+                    screenWidth,
+                    lightBlueColor,
+                    primaryBlue,
+                  ),
             ],
           ),
         ),
@@ -136,23 +166,34 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
           );
         },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
+        backgroundColor: primaryBlue,
+        elevation: 4,
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, Color primaryColor) {
     return Container(
-      height: 55,
-      color: const Color.fromRGBO(212, 235, 250, 1),
+      height: 65,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.menu_sharp),
+                icon: const Icon(Icons.menu_rounded, size: 26),
                 onPressed:
                     () => Navigator.push(
                       context,
@@ -161,68 +202,163 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       ),
                     ),
               ),
-              const Icon(Icons.location_on),
+              const SizedBox(width: 8),
+              Row(
+                children: [
+                  Icon(Icons.location_on, color: primaryColor, size: 18),
+                  const SizedBox(width: 4),
+                  const Text(
+                    "Current Location",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ],
           ),
-          IconButton(
-            icon: const CircleAvatar(backgroundColor: Colors.white),
-            onPressed:
+          GestureDetector(
+            onTap:
                 () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ProfileScreen()),
                 ),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: primaryColor, width: 2),
+              ),
+              child: const Icon(Icons.person, color: Colors.black54, size: 22),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSearchBar(double screenWidth) {
+  Widget _buildSearchBar(double screenWidth, Color primaryColor) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 45,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(color: Colors.black, width: 3),
-              ),
-              child: const TextField(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
                 decoration: InputDecoration(
-                  hintText: "Search...",
+                  hintText: "Search for gear to rent...",
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 15,
+                  ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 10,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
                   ),
                 ),
               ),
             ),
+            Container(
+              height: 50,
+              width: 50,
+              decoration: BoxDecoration(
+                color: primaryColor,
+                borderRadius: const BorderRadius.horizontal(
+                  right: Radius.circular(15),
+                ),
+              ),
+              child: const Icon(Icons.search, color: Colors.white, size: 24),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturedHeading(double screenWidth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            "Featured Gear",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 10),
-          const Icon(Icons.search, size: 40),
         ],
       ),
     );
   }
 
-  Widget _buildScrollableContainer(double screenWidth) {
-    return Container(
-      width: screenWidth * 0.9,
-      height: 300,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
-        borderRadius: BorderRadius.circular(15),
+  Widget _buildCategoryHeading(double screenWidth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            "Categories",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildRecommendedHeading(double screenWidth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            "Recommended For You",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScrollableContainer(double screenWidth, Color primaryColor) {
+    return Container(
+      width: screenWidth,
+      height: 280,
       child:
           _upperProducts.isEmpty
-              ? const Center(
-                child: Text(
-                  "No products in upper container.\nAdd products using the + button.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 50,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "No featured products yet.",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      "Add products using the + button.",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
                 ),
               )
               : PageView.builder(
@@ -234,15 +370,20 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   });
                 },
                 itemBuilder:
-                    (context, index) => _buildProductItem(context, index),
+                    (context, index) =>
+                        _buildProductItem(context, index, primaryColor),
               ),
     );
   }
 
-  Widget _buildProductItem(BuildContext context, int index) {
+  Widget _buildProductItem(
+    BuildContext context,
+    int index,
+    Color primaryColor,
+  ) {
     final product = _upperProducts[index];
     return Padding(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: InkWell(
         onTap:
             () => Navigator.push(
@@ -253,43 +394,101 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary,
-            borderRadius: BorderRadius.circular(15),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 15,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 3,
+                flex: 7,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(15),
+                    top: Radius.circular(20),
                   ),
-                  child: Base64ImageWidget(
-                    base64String: product.imagePath,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 185,
+                  child: Stack(
+                    children: [
+                      Base64ImageWidget(
+                        base64String: product.imagePath,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                      Positioned(
+                        top: 15,
+                        right: 15,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            "Featured",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               Expanded(
-                flex: 1,
+                flex: 3,
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         product.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 18,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        "\₹${product.price.toStringAsFixed(2)}",
-                        style: const TextStyle(color: Colors.green),
+                      const SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "₹${product.price.toStringAsFixed(2)}/day",
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Icon(Icons.star, color: Colors.amber, size: 18),
+                              const SizedBox(width: 4),
+                              const Text(
+                                "4.8",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -302,32 +501,58 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildCircleCategories(double screenWidth, Color lightBlueColor) {
-    return SizedBox(
-      width: screenWidth / 1.1,
-      height: 70,
+  Widget _buildCircleCategories(double screenWidth, Color primaryColor) {
+    return Container(
+      height: 100,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: _circleItems.length,
-        itemBuilder: (context, index) => _buildCircleItem(context, index),
+        itemBuilder:
+            (context, index) => _buildCircleItem(context, index, primaryColor),
       ),
     );
   }
 
-  Widget _buildCircleItem(BuildContext context, int index) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: InkWell(
-        onTap:
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetailScreen(title: _circleItems[index]),
-              ),
+  Widget _buildCircleItem(BuildContext context, int index, Color primaryColor) {
+    return GestureDetector(
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailScreen(title: _circleItems[index]),
             ),
-        child: const CircleAvatar(
-          radius: 30,
-          backgroundColor: Color.fromRGBO(212, 235, 250, 1),
+          ),
+      child: Container(
+        width: 80,
+        margin: const EdgeInsets.symmetric(horizontal: 6),
+        child: Column(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(_categoryIcons[index], color: primaryColor, size: 28),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _circleItems[index],
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -335,31 +560,55 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Widget _buildEmptyBottomContainer(double screenWidth, Color lightBlueColor) {
     return Container(
-      width: screenWidth / 1.1,
-      margin: const EdgeInsets.only(bottom: 20),
+      width: screenWidth - 32,
+      height: 150,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(11),
-        color: lightBlueColor,
-      ),
-      child: const Padding(
-        padding: EdgeInsets.all(20),
-        child: Center(
-          child: Text(
-            "Add products to display here",
-            style: TextStyle(color: Colors.grey),
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
-        ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.add_box_outlined, size: 50, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          const Text(
+            "No recommendations yet",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Add products to display here",
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBottomProductsSection(double screenWidth, Color lightBlueColor) {
+  Widget _buildBottomProductsSection(
+    double screenWidth,
+    Color lightBlueColor,
+    Color primaryColor,
+  ) {
     return Container(
-      width: screenWidth / 1.1,
+      width: screenWidth,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ListView.builder(
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.only(bottom: 80),
         itemCount: _bottomProducts.length,
         itemBuilder: (context, index) {
           return _buildBottomProductContainer(
@@ -367,6 +616,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             lightBlueColor,
             _bottomProducts[index],
             index,
+            primaryColor,
           );
         },
       ),
@@ -378,13 +628,20 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     Color lightBlueColor,
     Product product,
     int index,
+    Color primaryColor,
   ) {
     return Container(
-      width: screenWidth / 1.1,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(11),
-        color: lightBlueColor,
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: InkWell(
         onTap: () {
@@ -393,75 +650,105 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             SlideUpPageRoute(page: RentScreen(product: product)),
           );
         },
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            children: [
-              Container(
-                height: 185,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(11),
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(11),
-                  ),
-                  child: Base64ImageWidget(
-                    base64String: product.imagePath,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                Container(
+                  height: 180,
+                  width: double.infinity,
+                  child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(11),
+                      top: Radius.circular(20),
+                    ),
+                    child: Base64ImageWidget(
+                      base64String: product.imagePath,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
                     ),
                   ),
                 ),
-              ),
-              Container(
-                height: 85,
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(232, 244, 252, 1),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(11),
+                Positioned(
+                  top: 15,
+                  right: 15,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.85),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Text(
+                        product.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
                         children: [
-                          Text(
-                            product.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          Icon(
+                            Icons.location_on,
+                            color: Colors.grey.shade600,
+                            size: 14,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(width: 4),
                           Text(
-                            "\₹${product.price.toStringAsFixed(2)}",
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
+                            "Nearby Location",
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
                             ),
                           ),
                         ],
                       ),
-                      const Icon(Icons.star, color: Colors.black),
                     ],
                   ),
-                ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      "₹${product.price.toStringAsFixed(0)}/day",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -497,13 +784,55 @@ class DetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const Center(
-        child: Text(
-          "Welcome to the category!",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: const Color(0xFF3498DB),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _getCategoryIcon(title),
+              size: 80,
+              color: const Color(0xFF3498DB),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "Browse $title",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Find the best $title to rent",
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Electronics':
+        return Icons.devices;
+      case 'Furniture':
+        return Icons.chair;
+      case 'Vehicles':
+        return Icons.directions_car;
+      case 'Tools':
+        return Icons.handyman;
+      case 'Sports':
+        return Icons.sports_soccer;
+      case 'Cameras':
+        return Icons.camera_alt;
+      case 'Musical Instruments':
+        return Icons.music_note;
+      default:
+        return Icons.category;
+    }
   }
 }
