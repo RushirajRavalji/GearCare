@@ -9,16 +9,28 @@ enum ContainerType { upper, bottom }
 
 class Addproduct extends StatefulWidget {
   final Function(Product, ContainerType) onProductAdded;
-  const Addproduct({super.key, required this.onProductAdded});
+  final Product? productToEdit;
+  final ContainerType? containerType;
+
+  const Addproduct({
+    super.key,
+    required this.onProductAdded,
+    this.productToEdit,
+    this.containerType,
+  });
+
   @override
   _AddproductState createState() => _AddproductState();
 }
 
 class _AddproductState extends State<Addproduct> {
   File? _image;
+  String? _existingImageBase64;
   final ImagePicker _picker = ImagePicker();
   final FirebaseStorageService _firebaseService = FirebaseStorageService();
   bool _isLoading = false;
+  bool _isEditMode = false;
+  String? _editingProductId;
 
   // Text editing controllers
   final TextEditingController _nameController = TextEditingController();
@@ -27,6 +39,29 @@ class _AddproductState extends State<Addproduct> {
 
   // Default container selection
   ContainerType _selectedContainer = ContainerType.bottom;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeProductData();
+  }
+
+  // Initialize product data if in edit mode
+  void _initializeProductData() {
+    if (widget.productToEdit != null) {
+      _isEditMode = true;
+      _editingProductId = widget.productToEdit!.id;
+      _nameController.text = widget.productToEdit!.name;
+      _priceController.text = widget.productToEdit!.price.toString();
+      _descriptionController.text = widget.productToEdit!.description;
+      _existingImageBase64 = widget.productToEdit!.imagePath;
+
+      // Set the container type if provided
+      if (widget.containerType != null) {
+        _selectedContainer = widget.containerType!;
+      }
+    }
+  }
 
   // Method to pick image from camera or gallery
   Future<void> _pickImage(ImageSource source) async {
@@ -55,7 +90,7 @@ class _AddproductState extends State<Addproduct> {
               ),
         ),
         title: Text(
-          "Add New Product",
+          _isEditMode ? "Edit Product" : "Add New Product",
           style: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
@@ -543,66 +578,109 @@ class _AddproductState extends State<Addproduct> {
     );
   }
 
+  // Save product method
   Future<void> _saveProduct() async {
-    // Validate inputs
-    if (_nameController.text.isEmpty ||
-        _priceController.text.isEmpty ||
-        _descriptionController.text.isEmpty ||
-        _image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please fill all fields and add an image'),
-          backgroundColor: Colors.red[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-      return;
-    }
-
     try {
-      // Set loading state
+      // Validate all fields
+      if (_nameController.text.isEmpty) {
+        _showErrorSnackBar('Please enter a product name');
+        return;
+      }
+
+      if (_priceController.text.isEmpty) {
+        _showErrorSnackBar('Please enter a product price');
+        return;
+      }
+
+      double price;
+      try {
+        price = double.parse(_priceController.text);
+      } catch (e) {
+        _showErrorSnackBar('Please enter a valid price');
+        return;
+      }
+
+      if (_descriptionController.text.isEmpty) {
+        _showErrorSnackBar('Please enter a product description');
+        return;
+      }
+
+      if (_image == null && _existingImageBase64 == null) {
+        _showErrorSnackBar('Please select a product image');
+        return;
+      }
+
       setState(() {
         _isLoading = true;
       });
 
-      // Parse price to double
-      final double price = double.parse(_priceController.text);
+      // Process image - use existing image or convert new one
+      String imagePath;
+      if (_image != null) {
+        // Convert image to base64
+        imagePath = await _firebaseService.fileToBase64(_image!);
+      } else {
+        // Use existing image
+        imagePath = _existingImageBase64!;
+      }
 
-      // Convert image to base64 using FirebaseStorageService
-      final String base64Image = await _firebaseService.fileToBase64(_image!);
+      // Create or update product
+      Product product;
+      if (_isEditMode) {
+        // Update existing product
+        product = Product(
+          id: _editingProductId!,
+          name: _nameController.text,
+          price: price,
+          description: _descriptionController.text,
+          imagePath: imagePath,
+        );
+      } else {
+        // Create new product
+        product = Product(
+          id:
+              DateTime.now().millisecondsSinceEpoch
+                  .toString(), // Generate unique ID
+          name: _nameController.text,
+          price: price,
+          description: _descriptionController.text,
+          imagePath: imagePath,
+        );
+      }
 
-      // Create product object with the saved image path (base64 string)
-      final product = Product(
-        name: _nameController.text,
-        price: price,
-        description: _descriptionController.text,
-        imagePath: base64Image,
-      );
-
-      // Pass the product back to Home screen with the selected container type
+      // Call the callback function
       widget.onProductAdded(product, _selectedContainer);
 
-      // Navigate back
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isEditMode
+                ? 'Product updated successfully'
+                : 'Product added successfully',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate back to the previous screen
       Navigator.pop(context);
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
+      _showErrorSnackBar('Error saving product: $e');
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override

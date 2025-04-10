@@ -666,9 +666,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         onTap:
             () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => RentScreen(product: product),
-              ),
+              SlideUpPageRoute(page: RentScreen(product: product)),
             ),
         child: Container(
           decoration: BoxDecoration(
@@ -719,6 +717,69 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               fontSize: 12,
                             ),
                           ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: PopupMenuButton<String>(
+                          color: Colors.white,
+                          elevation: 20,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.more_vert,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _editProduct(product, ContainerType.upper);
+                            } else if (value == 'delete') {
+                              _showDeleteConfirmation(
+                                product,
+                                ContainerType.upper,
+                              );
+                            }
+                          },
+                          itemBuilder:
+                              (context) => [
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit, size: 20),
+                                      SizedBox(width: 10),
+                                      Text('Edit'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                         ),
                       ),
                     ],
@@ -946,6 +1007,62 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       color: Colors.white.withOpacity(0.85),
                       borderRadius: BorderRadius.circular(20),
                     ),
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: PopupMenuButton<String>(
+                    color: Colors.white,
+                    elevation: 20,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.more_vert,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _editProduct(product, ContainerType.bottom);
+                      } else if (value == 'delete') {
+                        _showDeleteConfirmation(product, ContainerType.bottom);
+                      }
+                    },
+                    itemBuilder:
+                        (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 20),
+                                SizedBox(width: 10),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red, size: 20),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                   ),
                 ),
               ],
@@ -1196,6 +1313,76 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         const SizedBox(width: 8),
         Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
       ],
+    );
+  }
+
+  // Edit a product
+  void _editProduct(Product product, ContainerType containerType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => Addproduct(
+              onProductAdded: _addProduct,
+              productToEdit: product,
+              containerType: containerType,
+            ),
+      ),
+    ).then((_) {
+      // Refresh products after edit
+      _loadProductsFromStorage();
+    });
+  }
+
+  // Show delete confirmation dialog
+  void _showDeleteConfirmation(Product product, ContainerType containerType) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Product'),
+            content: const Text(
+              'Are you sure you want to delete this product?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deleteProduct(product, containerType);
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // Delete a product
+  void _deleteProduct(Product product, ContainerType containerType) {
+    setState(() {
+      if (containerType == ContainerType.upper) {
+        _upperProducts.removeWhere((p) => p.id == product.id);
+      } else {
+        _bottomProducts.removeWhere((p) => p.id == product.id);
+      }
+    });
+
+    // Save changes to storage
+    _saveProductsToStorage();
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Product deleted successfully'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 }
