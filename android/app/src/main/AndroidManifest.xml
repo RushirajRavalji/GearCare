@@ -3,6 +3,12 @@
     <!-- ✅ Internet permission added -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Location permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- For Android 10+ (API level 29+) background location requires special handling -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" android:maxSdkVersion="28" />
+
     <application
         android:label="gearcare"
         android:name="${applicationName}"

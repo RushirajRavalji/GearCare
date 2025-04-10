@@ -10,6 +10,8 @@ import 'package:gearcare/widget/Base64ImageWidget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gearcare/localStorage/location_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -49,6 +51,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   String? _cachedProfileUrl;
   Future<String?>? _profileUrlFuture;
 
+  // For location
+  final LocationService _locationService = LocationService();
+  String _currentLocation = 'Current Location';
+  bool _isLoadingLocation = false;
+
   // For auto-scroll timer
   Timer? _autoScrollTimer;
 
@@ -66,6 +73,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       if (_upperProducts.isNotEmpty) {
         _startAutoScroll();
       }
+
+      // Fetch location after UI is built with a slight delay
+      // to prevent multiple permission dialogs at startup
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        _fetchCurrentLocation();
+      });
     });
   }
 
@@ -287,15 +300,58 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     ),
               ),
               const SizedBox(width: 8),
-              Row(
-                children: [
-                  Icon(Icons.location_on, color: primaryColor, size: 18),
-                  const SizedBox(width: 4),
-                  const Text(
-                    "Current Location",
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              GestureDetector(
+                onTap: _fetchCurrentLocation, // Refresh location on tap
+                onLongPress:
+                    () => _showLocationDetails(
+                      context,
+                      primaryColor,
+                    ), // Show details on long press
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
-                ],
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_on, color: primaryColor, size: 18),
+                      const SizedBox(width: 4),
+                      _isLoadingLocation
+                          ? SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                primaryColor,
+                              ),
+                            ),
+                          )
+                          : ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.35,
+                            ),
+                            child: Text(
+                              _currentLocation,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      // Add refresh indicator
+                      const SizedBox(width: 4),
+                      Icon(Icons.refresh, color: primaryColor, size: 14),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -960,6 +1016,186 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           ],
         ),
       ),
+    );
+  }
+
+  // Fetch current location
+  Future<void> _fetchCurrentLocation() async {
+    if (_isLoadingLocation) return;
+
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    try {
+      // First check if location services (GPS) are enabled
+      bool servicesEnabled = await Geolocator.isLocationServiceEnabled();
+
+      if (!servicesEnabled) {
+        if (!mounted) return;
+
+        // Show dialog to enable location services
+        bool openedSettings = await _locationService.showLocationServicesDialog(
+          context,
+        );
+
+        setState(() {
+          _currentLocation = 'Location services disabled';
+          _isLoadingLocation = false;
+        });
+
+        return;
+      }
+
+      // Check location permission
+      bool hasPermission = await _locationService.checkLocationPermission();
+
+      // If no permission, request it
+      if (!hasPermission) {
+        hasPermission = await _locationService.requestLocationPermission();
+
+        // If still no permission, show dialog to open settings
+        if (!hasPermission) {
+          if (!mounted) return;
+
+          // Show permission dialog
+          bool openedSettings = await _locationService
+              .showLocationPermissionDialog(context);
+
+          // Update state regardless of result
+          setState(() {
+            _currentLocation = 'Location permission required';
+            _isLoadingLocation = false;
+          });
+
+          return;
+        }
+      }
+
+      // Get location with address
+      final locationData =
+          await _locationService.getCurrentLocationWithAddress();
+
+      if (mounted) {
+        setState(() {
+          _currentLocation = locationData['address'] ?? 'Current Location';
+
+          // If using cached data, indicate that
+          if (locationData.containsKey('isCache') &&
+              locationData['isCache'] == true) {
+            _currentLocation = '${_currentLocation} (cached)';
+          }
+
+          _isLoadingLocation = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching location: $e');
+      if (mounted) {
+        setState(() {
+          _currentLocation = 'Location unavailable';
+          _isLoadingLocation = false;
+        });
+      }
+    }
+  }
+
+  // Show detailed location info dialog
+  void _showLocationDetails(BuildContext context, Color primaryColor) async {
+    try {
+      final locationData =
+          await _locationService.getCurrentLocationWithAddress();
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.location_on, color: primaryColor),
+                  const SizedBox(width: 8),
+                  const Text('Location Details'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLocationDetailRow(
+                    'Address:',
+                    locationData['address'] ?? 'Unknown',
+                    primaryColor,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildLocationDetailRow(
+                    'Latitude:',
+                    locationData.containsKey('latitude')
+                        ? locationData['latitude'].toString()
+                        : 'N/A',
+                    primaryColor,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildLocationDetailRow(
+                    'Longitude:',
+                    locationData.containsKey('longitude')
+                        ? locationData['longitude'].toString()
+                        : 'N/A',
+                    primaryColor,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildLocationDetailRow(
+                    'Last Updated:',
+                    locationData.containsKey('timestamp')
+                        ? _formatTimestamp(locationData['timestamp'])
+                        : 'N/A',
+                    primaryColor,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Close', style: TextStyle(color: primaryColor)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _fetchCurrentLocation();
+                  },
+                  child: const Text('Refresh Location'),
+                ),
+              ],
+            ),
+      );
+    } catch (e) {
+      print('Error showing location details: $e');
+    }
+  }
+
+  // Helper to format timestamp
+  String _formatTimestamp(int timestamp) {
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    return '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  // Helper to build location detail row
+  Widget _buildLocationDetailRow(String label, String value, Color color) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontWeight: FontWeight.bold, color: color),
+        ),
+        const SizedBox(width: 8),
+        Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
+      ],
     );
   }
 }
