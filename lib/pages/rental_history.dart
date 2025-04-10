@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 class RentalHistoryScreen extends StatefulWidget {
   const RentalHistoryScreen({Key? key}) : super(key: key);
-
   @override
   _RentalHistoryScreenState createState() => _RentalHistoryScreenState();
 }
@@ -41,7 +40,7 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
             color: Colors.black,
-            size: 18,
+            size: 20,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -50,20 +49,41 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
           style: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: 22,
+            letterSpacing: 0.2,
           ),
         ),
-
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Theme.of(context).primaryColor,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Theme.of(context).primaryColor,
-          tabs: const [
-            Tab(text: "All"),
-            Tab(text: "Active"),
-            Tab(text: "Completed"),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFEEEEEE), width: 1),
+              ),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey[500],
+              indicatorColor: Colors.black,
+              indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+              ),
+              tabs: const [
+                Tab(text: "All"),
+                Tab(text: "Active"),
+                Tab(text: "Completed"),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -84,18 +104,37 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
         if (snapshot.hasError) {
           return Center(
-            child: Text(
-              'Error loading rental history: ${snapshot.error}',
-              style: const TextStyle(color: Colors.red),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 70, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading rental history',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.red[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${snapshot.error}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           );
         }
-
         final rentals = snapshot.data ?? [];
-
+        // Sort rentals by date
+        rentals.sort((a, b) => b.rentalDate.compareTo(a.rentalDate));
         // Filter the rentals based on the selected tab
         final filteredRentals =
             filter == 'all'
@@ -105,13 +144,20 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
                 : rentals
                     .where((rental) => rental.status == 'completed')
                     .toList();
-
         if (filteredRentals.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.history, size: 80, color: Colors.grey[300]),
+                Icon(
+                  filter == 'active'
+                      ? Icons.pending_actions
+                      : filter == 'completed'
+                      ? Icons.check_circle_outline
+                      : Icons.history,
+                  size: 80,
+                  color: Colors.grey[300],
+                ),
                 const SizedBox(height: 16),
                 Text(
                   filter == 'active'
@@ -120,23 +166,31 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
                       ? 'No completed rentals'
                       : 'No rental history yet',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Rented items will appear here',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[400]),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    filter == 'active'
+                        ? 'Your active rentals will appear here'
+                        : filter == 'completed'
+                        ? 'Your completed rentals will appear here'
+                        : 'Your rental history will appear here once you rent items',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ),
           );
         }
-
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           itemCount: filteredRentals.length,
           itemBuilder: (context, index) {
             return _buildRentalCard(filteredRentals[index]);
@@ -149,171 +203,262 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
   Widget _buildRentalCard(RentalRecord rental) {
     final Color statusColor =
         rental.status == 'active'
-            ? Colors.green
+            ? const Color(0xFF4CAF50)
             : rental.status == 'completed'
-            ? Colors.blue
-            : Colors.orange;
-
+            ? const Color(0xFF2196F3)
+            : const Color(0xFFFF9800);
     final dateFormat = DateFormat('MMM dd, yyyy');
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            offset: const Offset(0, 4),
+            blurRadius: 10,
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Product Image and Basic Info
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Product Image
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                ),
-                child: SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: Base64ImageWidget(
-                    base64String: rental.productImagePath,
-                    fit: BoxFit.cover,
+          Container(
+            height: 140,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Image
+                Hero(
+                  tag: 'rental_${rental.id}',
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                    ),
+                    child: SizedBox(
+                      width: 140,
+                      height: 140,
+                      child: Base64ImageWidget(
+                        base64String: rental.productImagePath,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-
-              // Product Details
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        rental.productName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              rental.status.toUpperCase(),
-                              style: TextStyle(
-                                color: statusColor,
+                // Product Details
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              rental.productName,
+                              style: const TextStyle(
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                                letterSpacing: 0.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: statusColor.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    rental.status.toUpperCase(),
+                                    style: TextStyle(
+                                      color: statusColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_month_rounded,
+                              size: 16,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              dateFormat.format(rental.rentalDate),
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Rental Details
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Details Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildDetailItem(
+                      Icons.timelapse_rounded,
+                      'Duration',
+                      '${rental.duration} ${rental.duration == 1 ? 'day' : 'days'}',
+                    ),
+                    _buildDetailItem(
+                      Icons.attach_money_rounded,
+                      'Daily Rate',
+                      '₹${rental.price.toStringAsFixed(2)}',
+                    ),
+                    _buildDetailItem(
+                      Icons.payments_rounded,
+                      'Total Cost',
+                      '₹${rental.totalCost.toStringAsFixed(2)}',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Divider
+                Container(height: 1, color: Colors.grey[200]),
+                const SizedBox(height: 16),
+                // Action Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Status with Icon
+                    Row(
+                      children: [
+                        Icon(
+                          rental.status == 'active'
+                              ? Icons.watch_later_rounded
+                              : Icons.check_circle_rounded,
+                          color: statusColor,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          rental.status == 'active'
+                              ? 'Active Rental'
+                              : 'Completed',
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
                           ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.calendar_today,
-                            size: 14,
-                            color: Colors.grey[600],
+                        ),
+                      ],
+                    ),
+                    // Return Button (if active) or Return Date (if completed)
+                    if (rental.status == 'active')
+                      ElevatedButton.icon(
+                        onPressed: () => _showReturnDialog(rental),
+                        icon: const Icon(Icons.luggage_rounded, size: 18),
+                        label: const Text('Return Item'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    if (rental.status == 'completed' &&
+                        rental.returnDate != null)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.assignment_return_rounded,
+                            size: 18,
+                            color: Colors.grey,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            dateFormat.format(rental.rentalDate),
+                            'Returned: ${dateFormat.format(rental.returnDate!)}',
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[700],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Duration: ${rental.duration} ${rental.duration == 1 ? 'day' : 'days'}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Price: ₹${rental.price.toStringAsFixed(2)}/day',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(IconData icon, String label, String value) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
               ),
             ],
           ),
-
-          // Divider
-          const Divider(height: 1),
-
-          // Rental Details
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Total Cost
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total Cost',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    Text(
-                      '₹${rental.totalCost.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Action Button (if active)
-                if (rental.status == 'active')
-                  ElevatedButton(
-                    onPressed: () => _showReturnDialog(rental),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Text('Return Item'),
-                  ),
-
-                // Return Date (if completed)
-                if (rental.status == 'completed' && rental.returnDate != null)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Returned On',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      Text(
-                        dateFormat.format(rental.returnDate!),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
         ],
@@ -327,20 +472,60 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Return Item'),
-            content: const Text('Would you like to return this item now?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                const Icon(
+                  Icons.assignment_return_rounded,
+                  color: Colors.green,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Return Item',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Are you sure you want to return "${rental.productName}"?',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'The rental will be marked as completed.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                ),
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
                   _returnItem(rental.id);
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
                 child: const Text('Return Now'),
-                style: TextButton.styleFrom(foregroundColor: Colors.green),
               ),
             ],
           ),
@@ -352,16 +537,38 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
     try {
       await _rentalService.completeRental(rentalId);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Item returned successfully'),
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Item returned successfully'),
+            ],
+          ),
           backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: const EdgeInsets.all(10),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error returning item: $e'),
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Error returning item: $e')),
+            ],
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: const EdgeInsets.all(10),
         ),
       );
     }

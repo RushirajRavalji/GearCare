@@ -18,7 +18,6 @@ class RentalHistoryService {
   Stream<List<RentalRecord>> getUserRentalHistory() {
     return _rentalsCollection
         .where('userId', isEqualTo: currentUserId)
-        .orderBy('rentalDate', descending: true)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
@@ -29,16 +28,10 @@ class RentalHistoryService {
 
   // Get active rentals for the current user
   Stream<List<RentalRecord>> getActiveRentals() {
-    return _rentalsCollection
-        .where('userId', isEqualTo: currentUserId)
-        .where('status', isEqualTo: 'active')
-        .orderBy('rentalDate', descending: true)
-        .snapshots()
-        .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => RentalRecord.fromFirestore(doc))
-              .toList();
-        });
+    return getUserRentalHistory().map((rentals) {
+      return rentals.where((rental) => rental.status == 'active').toList()
+        ..sort((a, b) => b.rentalDate.compareTo(a.rentalDate));
+    });
   }
 
   // Complete a rental (return the item)
