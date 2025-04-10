@@ -13,7 +13,6 @@ class _RentScreenState extends State<RentScreen> {
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(Duration(days: 7));
   int _quantity = 1;
-
   double get _totalCost {
     final days = _endDate.difference(_startDate).inDays + 1;
     return widget.product.price * days * _quantity;
@@ -21,7 +20,6 @@ class _RentScreenState extends State<RentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -69,7 +67,6 @@ class _RentScreenState extends State<RentScreen> {
               ),
             ),
           ),
-
           // Main content
           Container(
             margin: const EdgeInsets.only(top: 100),
@@ -181,7 +178,7 @@ class _RentScreenState extends State<RentScreen> {
                       child: Text(
                         '₹${widget.product.price.toStringAsFixed(2)}/day',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -191,7 +188,6 @@ class _RentScreenState extends State<RentScreen> {
               ),
             ],
           ),
-
           // Product description
           Padding(
             padding: const EdgeInsets.all(16),
@@ -254,7 +250,7 @@ class _RentScreenState extends State<RentScreen> {
                   ),
                   child: Icon(
                     Icons.calendar_today_rounded,
-                    color: Theme.of(context).primaryColor,
+                    color: Colors.black,
                     size: 20,
                   ),
                 ),
@@ -270,7 +266,6 @@ class _RentScreenState extends State<RentScreen> {
               ],
             ),
             const SizedBox(height: 20),
-
             // Date selector row
             Row(
               children: [
@@ -298,7 +293,7 @@ class _RentScreenState extends State<RentScreen> {
                               return Theme(
                                 data: Theme.of(context).copyWith(
                                   colorScheme: ColorScheme.light(
-                                    primary: Theme.of(context).primaryColor,
+                                    primary: Colors.black,
                                   ),
                                 ),
                                 child: child!,
@@ -371,7 +366,7 @@ class _RentScreenState extends State<RentScreen> {
                               return Theme(
                                 data: Theme.of(context).copyWith(
                                   colorScheme: ColorScheme.light(
-                                    primary: Theme.of(context).primaryColor,
+                                    primary: Colors.black,
                                   ),
                                 ),
                                 child: child!,
@@ -418,34 +413,65 @@ class _RentScreenState extends State<RentScreen> {
               ],
             ),
 
-            // Days indicator
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Container(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${_endDate.difference(_startDate).inDays + 1} days',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+            // Added Rented Days Section
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.date_range,
                       color: Theme.of(context).primaryColor,
+                      size: 20,
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Duration',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'You have selected for ${_endDate.difference(_startDate).inDays + 1} days',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_endDate.difference(_startDate).inDays + 1} days',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             const Divider(height: 32),
-
             // Quantity selector
             Row(
               children: [
@@ -526,9 +552,7 @@ class _RentScreenState extends State<RentScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 20),
-
             // Cost summary
             Container(
               padding: const EdgeInsets.all(16),
@@ -553,7 +577,7 @@ class _RentScreenState extends State<RentScreen> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
+                      color: Colors.amber,
                     ),
                   ),
                 ],
@@ -606,7 +630,7 @@ class _RentScreenState extends State<RentScreen> {
                       child: Text(
                         'OK',
                         style: TextStyle(
-                          color: Theme.of(context).primaryColor,
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
