@@ -56,29 +56,37 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Your animated text
-            Text(
-              _displayText,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 4,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE3F2FD), Colors.white],
+          ),
+        ),
+        child: Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Your animated text
+              Text(
+                _displayText,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
               ),
-            ),
 
-            // Blinking cursor at the end of text
-            if (_currentIndex < _fullText.length)
-              Positioned(
-                left: _getTextWidth(context) + 8,
-                child: _buildBlinkingCursor(),
-              ),
-          ],
+              // Blinking cursor at the end of text
+              if (_currentIndex < _fullText.length)
+                Positioned(
+                  left: _getTextWidth(context) + 8,
+                  child: _buildBlinkingCursor(),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -87,7 +95,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget _buildBlinkingCursor() {
     return AnimatedOpacity(
       opacity: DateTime.now().millisecondsSinceEpoch % 1000 > 500 ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 500),
       child: Container(height: 30, width: 3, color: Colors.black87),
     );
   }
@@ -98,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen>
       text: TextSpan(
         text: _displayText,
         style: const TextStyle(
-          fontSize: 40,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           letterSpacing: 4,
         ),
@@ -107,38 +115,5 @@ class _SplashScreenState extends State<SplashScreen>
     )..layout();
 
     return textPainter.width;
-  }
-}
-
-// Example of how to use the splash screen
-// In your main.dart file:
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Gear Care',
-      debugShowCheckedModeBanner: false,
-      home: SplashScreen(
-        nextScreen: MainScreen(), // Replace with your main app screen
-      ),
-    );
-  }
-}
-
-// Dummy main screen (replace with your actual main screen)
-class MainScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Gear Care')),
-      body: const Center(child: Text('Welcome to Gear Care!')),
-    );
   }
 }

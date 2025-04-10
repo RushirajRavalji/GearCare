@@ -32,7 +32,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const SplashScreen(nextScreen: Home()),
+      home: const SplashScreen(nextScreen: Login()),
     );
   }
 }

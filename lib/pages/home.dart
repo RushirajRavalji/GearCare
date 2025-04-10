@@ -475,19 +475,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               fontSize: 16,
                             ),
                           ),
-                          Row(
-                            children: [
-                              Icon(Icons.star, color: Colors.amber, size: 18),
-                              const SizedBox(width: 4),
-                              const Text(
-                                "4.8",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ],
