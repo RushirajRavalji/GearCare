@@ -143,8 +143,9 @@ class FirebaseAuthService {
     await prefs.setString('email', email);
     if (name != null) await prefs.setString('name', name);
     if (mobile != null) await prefs.setString('mobile', mobile);
-    if (profileImageUrl != null)
+    if (profileImageUrl != null) {
       await prefs.setString('profileImageUrl', profileImageUrl);
+    }
   }
 
   Exception _handleAuthException(FirebaseAuthException e) {

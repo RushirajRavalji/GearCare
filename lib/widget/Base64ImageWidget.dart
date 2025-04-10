@@ -10,13 +10,13 @@ class Base64ImageWidget extends StatelessWidget {
   final BorderRadius? borderRadius;
 
   const Base64ImageWidget({
-    Key? key,
+    super.key,
     required this.base64String,
     this.width,
     this.height,
     this.fit = BoxFit.cover,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

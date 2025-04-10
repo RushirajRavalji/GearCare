@@ -21,9 +21,9 @@ class _CustomDrawerState extends State<CustomDrawer>
   bool _isClosing = false;
 
   // Colors
-  final Color primaryColor = const Color(0xFF3A86FF);
+  final Color primaryColor = Color(0xFF2E576C);
   final Color bgColor = const Color(0xFFF0F7FF);
-  final Color iconBgColor = const Color(0xFFD2E3FC);
+  final Color iconBgColor = Color.fromARGB(17, 200, 206, 210);
   final Color textColor = const Color(0xFF2B2D42);
   final Color highlightColor = const Color(0xFF8BBCFF);
 
@@ -59,7 +59,33 @@ class _CustomDrawerState extends State<CustomDrawer>
     });
     _animationController.reverse().then((_) {
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  void _navigateToScreen(Widget screen) {
+    // Close drawer first
+    _closeDrawer();
+
+    // Navigate after animation completes
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (context, animation1, animation2) => screen,
+            transitionDuration: const Duration(milliseconds: 300),
+            transitionsBuilder: (context, animation1, animation2, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(animation1),
+                child: child,
+              );
+            },
+          ),
+        );
       }
     });
   }
@@ -68,7 +94,6 @@ class _CustomDrawerState extends State<CustomDrawer>
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     final double drawerWidth = size.width * 0.85; // 85% of screen width
-
     return GestureDetector(
       onTap: _closeDrawer,
       child: Scaffold(
@@ -111,7 +136,6 @@ class _CustomDrawerState extends State<CustomDrawer>
                         ),
                       ),
                     ),
-
                     // App Logo and Name
                     Positioned(
                       top: 60,
@@ -161,7 +185,6 @@ class _CustomDrawerState extends State<CustomDrawer>
                         ],
                       ),
                     ),
-
                     // Close button
                     Positioned(
                       top: 60,
@@ -174,10 +197,14 @@ class _CustomDrawerState extends State<CustomDrawer>
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),
+                          child: Icon(
+                            Icons.close,
+                            color: primaryColor,
+                            size: 22,
+                          ),
                         ),
                       ),
                     ),
-
                     // Menu Items
                     Positioned(
                       top: 180,
@@ -245,7 +272,6 @@ class _CustomDrawerState extends State<CustomDrawer>
                         ),
                       ),
                     ),
-
                     // Version info at bottom
                     Positioned(
                       bottom: 20,
@@ -265,7 +291,6 @@ class _CustomDrawerState extends State<CustomDrawer>
                 ),
               ),
             ),
-
             // Empty space to the right, clicking here closes drawer
             Expanded(
               child: GestureDetector(
@@ -297,30 +322,7 @@ class _CustomDrawerState extends State<CustomDrawer>
         borderRadius: BorderRadius.circular(15),
         child: InkWell(
           borderRadius: BorderRadius.circular(15),
-          onTap: () {
-            // Close drawer first
-            _closeDrawer();
-
-            // Then navigate after animation completes
-            Future.delayed(const Duration(milliseconds: 300), () {
-              Navigator.pushReplacement(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation1, animation2) => screen,
-                  transitionDuration: const Duration(milliseconds: 300),
-                  transitionsBuilder: (context, animation1, animation2, child) {
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(1.0, 0.0),
-                        end: Offset.zero,
-                      ).animate(animation1),
-                      child: child,
-                    );
-                  },
-                ),
-              );
-            });
-          },
+          onTap: () => _navigateToScreen(screen),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: Row(

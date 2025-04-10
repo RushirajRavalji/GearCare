@@ -117,7 +117,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final Color primaryBlue = const Color(0xFF3498DB);
+    final Color primaryBlue = Color(0xFF2E576C);
     final Color lightBlueColor = const Color(0xFFD4EBFA);
     final Color backgroundGrey = const Color(0xFFF9FAFC);
 
@@ -334,7 +334,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildScrollableContainer(double screenWidth, Color primaryColor) {
-    return Container(
+    return SizedBox(
       width: screenWidth,
       height: 280,
       child:
@@ -502,7 +502,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildCircleCategories(double screenWidth, Color primaryColor) {
-    return Container(
+    return SizedBox(
       height: 100,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -654,7 +654,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           children: [
             Stack(
               children: [
-                Container(
+                SizedBox(
                   height: 180,
                   width: double.infinity,
                   child: ClipRRect(

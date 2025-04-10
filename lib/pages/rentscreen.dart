@@ -24,36 +24,77 @@ class _RentScreenState extends State<RentScreen> {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: ListView(
+      body: Stack(
         children: [
-          SafeArea(
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 20,
-                height: 180,
-                color: Colors.black,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.only(left: 16),
+          // Header with back button
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 120,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      'Rent Equipment',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    SizedBox(width: 42), // Balance the layout
+                  ],
+                ),
               ),
             ),
           ),
-          DecoratedBox(
+
+          // Main content
+          Container(
+            margin: const EdgeInsets.only(top: 100),
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(30),
               ),
-              color: Theme.of(context).primaryColor,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).primaryColor,
+                  Color.fromARGB(255, 240, 240, 240),
+                ],
+                stops: [0.0, 0.3],
+              ),
             ),
-            child: Column(
+            child: ListView(
+              padding: const EdgeInsets.only(top: 30, bottom: 30),
               children: [
-                const SizedBox(height: 45),
-                _buildMainContainer(context, size),
-                const SizedBox(height: 20),
-                _buildSecondaryContainer(context),
-                const SizedBox(height: 8),
-                _buildRentButton(),
-                const SizedBox(height: 20),
+                _buildProductCard(context),
+                const SizedBox(height: 24),
+                _buildRentalDetailsCard(context),
+                const SizedBox(height: 24),
+                _buildRentButton(context),
               ],
             ),
           ),
@@ -62,63 +103,87 @@ class _RentScreenState extends State<RentScreen> {
     );
   }
 
-  //Upper container with product image and details
-  Widget _buildMainContainer(BuildContext context, Size size) {
+  Widget _buildProductCard(BuildContext context) {
     return Container(
-      width: 340,
-      height: 275,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
-        borderRadius: BorderRadius.circular(11),
-        boxShadow: const [
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
           BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(11),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product image with overlay gradient
+          Stack(
             children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+                child: SizedBox(
+                  height: 200,
+                  width: double.infinity,
                   child: Base64ImageWidget(
                     base64String: widget.product.imagePath,
                     fit: BoxFit.cover,
-                    width: double.infinity,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.7),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                left: 16,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       widget.product.name,
-                      style: TextStyle(
-                        fontSize: 18,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      '${widget.product.price.toStringAsFixed(2)} per day',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '₹${widget.product.price.toStringAsFixed(2)}/day',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -126,25 +191,50 @@ class _RentScreenState extends State<RentScreen> {
               ),
             ],
           ),
-        ),
+
+          // Product description
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Description',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.product.description ??
+                      'High-quality equipment available for rent. Perfect for your needs.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  //bottom container with rental details
-  Widget _buildSecondaryContainer(BuildContext context) {
+  Widget _buildRentalDetailsCard(BuildContext context) {
     return Container(
-      width: 340,
-      height: 255,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(11),
         color: Colors.white,
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
           BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -153,23 +243,34 @@ class _RentScreenState extends State<RentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 150,
-              height: 30,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                'Rental Details',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            // Title
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.calendar_today_rounded,
+                    color: Theme.of(context).primaryColor,
+                    size: 20,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Text(
+                  'Rental Details',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 20),
+
             // Date selector row
             Row(
               children: [
@@ -177,8 +278,15 @@ class _RentScreenState extends State<RentScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Start Date', style: TextStyle(fontSize: 12)),
-                      SizedBox(height: 4),
+                      Text(
+                        'Start Date',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       InkWell(
                         onTap: () async {
                           final pickedDate = await showDatePicker(
@@ -186,6 +294,16 @@ class _RentScreenState extends State<RentScreen> {
                             initialDate: _startDate,
                             firstDate: DateTime.now(),
                             lastDate: DateTime.now().add(Duration(days: 365)),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (pickedDate != null) {
                             setState(() {
@@ -198,30 +316,50 @@ class _RentScreenState extends State<RentScreen> {
                           }
                         },
                         child: Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 8,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
                           ),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
-                            '${_startDate.day}/${_startDate.month}/${_startDate.year}',
-                            style: TextStyle(fontSize: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_startDate.day}/${_startDate.month}/${_startDate.year}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Icon(
+                                Icons.calendar_month,
+                                size: 18,
+                                color: Colors.grey[600],
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('End Date', style: TextStyle(fontSize: 12)),
-                      SizedBox(height: 4),
+                      Text(
+                        'End Date',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       InkWell(
                         onTap: () async {
                           final pickedDate = await showDatePicker(
@@ -229,6 +367,16 @@ class _RentScreenState extends State<RentScreen> {
                             initialDate: _endDate,
                             firstDate: _startDate,
                             lastDate: DateTime.now().add(Duration(days: 365)),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (pickedDate != null) {
                             setState(() {
@@ -237,17 +385,30 @@ class _RentScreenState extends State<RentScreen> {
                           }
                         },
                         child: Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 8,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
                           ),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
-                            '${_endDate.day}/${_endDate.month}/${_endDate.year}',
-                            style: TextStyle(fontSize: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_endDate.day}/${_endDate.month}/${_endDate.year}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Icon(
+                                Icons.calendar_month,
+                                size: 18,
+                                color: Colors.grey[600],
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -256,72 +417,147 @@ class _RentScreenState extends State<RentScreen> {
                 ),
               ],
             ),
-            SizedBox(width: 1),
+
             // Days indicator
-            Container(
-              width: double.infinity,
-              child: Text(
-                '${_endDate.difference(_startDate).inDays + 1} days',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.grey[700],
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${_endDate.difference(_startDate).inDays + 1} days',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
                 ),
-                textAlign: TextAlign.end,
               ),
             ),
-            SizedBox(height: 15),
+
+            const Divider(height: 32),
+
             // Quantity selector
             Row(
               children: [
                 Text(
-                  'Quantity:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: 10),
-                IconButton(
-                  icon: Icon(Icons.remove, size: 18),
-                  onPressed: () {
-                    if (_quantity > 1) {
-                      setState(() {
-                        _quantity--;
-                      });
-                    }
-                  },
-                  constraints: BoxConstraints(minWidth: 30, minHeight: 30),
-                  padding: EdgeInsets.zero,
-                ),
-                Text('$_quantity', style: TextStyle(fontSize: 14)),
-                IconButton(
-                  icon: Icon(Icons.add, size: 18),
-                  onPressed: () {
-                    setState(() {
-                      _quantity++;
-                    });
-                  },
-                  constraints: BoxConstraints(minWidth: 30, minHeight: 30),
-                  padding: EdgeInsets.zero,
-                ),
-              ],
-            ),
-            SizedBox(height: 15),
-            // Cost summary
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total Cost:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '\₹${_totalCost.toStringAsFixed(2)}',
+                  'Quantity',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          if (_quantity > 1) {
+                            setState(() {
+                              _quantity--;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(11),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.remove,
+                            size: 16,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 40,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          '$_quantity',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _quantity++;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: const BorderRadius.horizontal(
+                              right: Radius.circular(11),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 16,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Cost summary
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total Cost',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  Text(
+                    '₹${_totalCost.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -329,18 +565,18 @@ class _RentScreenState extends State<RentScreen> {
     );
   }
 
-  // Rent button
-  Widget _buildRentButton() {
-    return SizedBox(
-      width: 350,
-      height: 50,
+  Widget _buildRentButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(16),
           ),
-          padding: EdgeInsets.zero,
+          elevation: 4,
         ),
         onPressed: () {
           // Show success dialog
@@ -348,7 +584,16 @@ class _RentScreenState extends State<RentScreen> {
             context: context,
             builder:
                 (context) => AlertDialog(
-                  title: Text('Success!'),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  title: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 24),
+                      SizedBox(width: 8),
+                      Text('Success!'),
+                    ],
+                  ),
                   content: Text(
                     'You have successfully rented ${widget.product.name} for ${_endDate.difference(_startDate).inDays + 1} days.',
                   ),
@@ -358,18 +603,30 @@ class _RentScreenState extends State<RentScreen> {
                         Navigator.of(context).pop();
                         Navigator.of(context).pop(); // Go back to home screen
                       },
-                      child: Text('OK'),
+                      child: Text(
+                        'OK',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
           );
         },
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: const [
+            Icon(Icons.shopping_cart_checkout, size: 20),
+            SizedBox(width: 8),
             Text(
               "Rent Now",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),

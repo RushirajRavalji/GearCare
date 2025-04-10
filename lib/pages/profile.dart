@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/firebase_auth_service.dart';
 import 'package:gearcare/pages/login.dart';
+import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/pages/registerstate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,10 +19,10 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // Colors
-  Color primaryColor = const Color(0xFF3A86FF);
-  Color secondaryColor = const Color(0xFFE2EEFF);
+  Color primaryColor = Color(0xFF2E576C);
+  Color secondaryColor = Color.fromARGB(17, 200, 206, 210);
   Color accentColor = const Color(0xFF8D99AE);
-  Color backgroundColor = const Color(0xFFF8F9FA);
+  Color backgroundColor = Colors.white;
   Color textColor = const Color(0xFF2B2D42);
 
   double w = 0;
@@ -156,8 +157,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: textColor, size: 20),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.menu_rounded, size: 26),
+          onPressed:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CustomDrawer()),
+              ),
         ),
         title: Text(
           "Your Profile",

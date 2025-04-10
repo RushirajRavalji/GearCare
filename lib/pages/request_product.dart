@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gearcare/pages/menu.dart';
 
 class RequestProduct extends StatefulWidget {
   const RequestProduct({super.key});
-
   @override
   _RequestProductState createState() => _RequestProductState();
 }
@@ -13,8 +13,21 @@ class _RequestProductState extends State<RequestProduct> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Transparent AppBar with gradient background
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded, size: 26),
+          onPressed:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CustomDrawer()),
+              ),
+        ),
+        title: Center(
+          child: const Text(
+            "Request Product",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -23,117 +36,177 @@ class _RequestProductState extends State<RequestProduct> {
                 // Handle "Ask for product" action
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF2E576C),
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Color(0xFF2E576C),
+                elevation: 3,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
                 ),
               ),
-              child: const Text("Ask for product"),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, size: 16),
+                  SizedBox(width: 4),
+                  Text(
+                    "Ask for product",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        // Creates a soft gradient background behind the AppBar
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
+        backgroundColor: Color(0xFF2E576C),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
           ),
         ),
       ),
-      // Body with padding and scrollable content
       body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.grey[50]!, Colors.grey[100]!],
+          ),
+        ),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildRequestItem(context),
-                _buildRequestItem(context),
+                const Padding(
+                  padding: EdgeInsets.only(left: 8.0, bottom: 16.0),
+                  child: Text(
+                    "My Requests",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E576C),
+                    ),
+                  ),
+                ),
+                _buildRequestItem(context, "Product Request #1"),
+                _buildRequestItem(context, "Product Request #2"),
               ],
             ),
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Add new request
+        },
+        backgroundColor: Color(0xFF2E576C),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
-  // First and second "card"
-  Widget _buildRequestItem(BuildContext context) {
+  Widget _buildRequestItem(BuildContext context, String title) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          // Soft shadow for a card-like look
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 6,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 1,
             offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        // Lays out the text field, placeholder lines, and buttons
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // "From whom" text field
+            Row(
+              children: [
+                const Icon(Icons.shopping_basket, color: Color(0xFF2E576C)),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E576C),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 30),
             TextField(
               controller: _fromWhomController,
               decoration: InputDecoration(
-                hintText: 'from whom',
+                hintText: 'From whom',
+                hintStyle: TextStyle(color: Colors.grey[400]),
                 filled: true,
-                fillColor: const Color(0xFFF0F0F0),
+                fillColor: Colors.grey[50],
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(
+                  Icons.person_outline,
+                  color: Colors.grey,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 16,
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            _buildPlaceholderLine(context, "Description line 1"),
             const SizedBox(height: 8),
-            // Placeholder lines to mimic the text in the screenshot
-            _buildPlaceholderLine(),
-            const SizedBox(height: 4),
-            _buildPlaceholderLine(),
-            const SizedBox(height: 8),
-            // Location button
-            ElevatedButton(
+            _buildPlaceholderLine(context, "Description line 2"),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
               onPressed: () {
                 // Add location selection logic
               },
+              icon: const Icon(Icons.location_on_outlined),
+              label: const Text('Select Location'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Color(0xFF2E576C),
+                elevation: 0,
+                side: const BorderSide(color: Color(0xFF2E576C)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('Location'),
             ),
-            const SizedBox(height: 8),
-            // Send button (darker teal/blue)
-            ElevatedButton(
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
               onPressed: () {
                 // Add send logic
               },
+              icon: const Icon(Icons.send),
+              label: const Text('Send Request'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF2E576C),
                 foregroundColor: Colors.white,
+                elevation: 3,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('Send'),
             ),
           ],
         ),
@@ -141,14 +214,15 @@ class _RequestProductState extends State<RequestProduct> {
     );
   }
 
-  // A simple grey bar to mimic text lines in the screenshot
-  Widget _buildPlaceholderLine() {
+  Widget _buildPlaceholderLine(BuildContext context, String hintText) {
     return Container(
-      height: 12,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(4),
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
       ),
+      child: Text(hintText, style: TextStyle(color: Colors.grey[400])),
     );
   }
 

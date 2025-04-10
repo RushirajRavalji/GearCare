@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+import 'package:gearcare/pages/menu.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:gearcare/models/product_models.dart';
@@ -46,8 +47,12 @@ class _AddproductState extends State<Addproduct> {
         backgroundColor: Colors.white,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.menu_rounded, size: 26),
+          onPressed:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CustomDrawer()),
+              ),
         ),
         title: Text(
           "Add New Product",

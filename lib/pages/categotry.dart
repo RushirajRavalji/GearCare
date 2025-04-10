@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gearcare/pages/menu.dart';
 
 class Category extends StatefulWidget {
   const Category({super.key});
@@ -11,7 +12,7 @@ class _CategoryState extends State<Category> {
   Widget build(BuildContext context) {
     // Define the colors for styling
     Color c1 = const Color.fromRGBO(211, 232, 246, 1);
-    Color accentColor = const Color(0xFF3D7EFF);
+    Color accentColor = Color.fromARGB(17, 200, 206, 210);
 
     // Category titles for demonstration
     List<String> categoryTitles = [
@@ -31,8 +32,12 @@ class _CategoryState extends State<Category> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: accentColor, size: 22),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.menu_rounded, size: 26),
+          onPressed:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CustomDrawer()),
+              ),
         ),
         title: const Text(
           "Categories",
