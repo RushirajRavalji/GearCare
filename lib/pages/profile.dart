@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/firebase_auth_service.dart';
@@ -31,6 +32,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // List to store switch states
   List<bool> switchValues = List.generate(8, (index) => false);
+
+  // Add a flag to track if profile was updated
+  bool _profileUpdated = false;
 
   @override
   void initState() {
@@ -114,28 +118,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       setState(() {
         isLoading = true;
+        errorMessage = null;
       });
-      // Get user data from shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      final String? userId = prefs.getString('uid');
-      if (userId != null) {
-        // Get user data from Firestore
-        final userDoc =
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(userId)
-                .get();
-        if (userDoc.exists) {
-          setState(() {
-            nameController.text = userDoc['name'] ?? '';
-            emailController.text = userDoc['email'] ?? '';
-            mobileController.text = userDoc['mobile'] ?? '';
-            // Load profile image if exists
-            if (userDoc['profileImageUrl'] != null) {
-              _profileImageUrl = userDoc['profileImageUrl'];
-            }
-          });
-        }
+
+      // Get current user
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Get user data from Firestore
+      final userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .get();
+
+      if (userDoc.exists) {
+        final userData = userDoc.data();
+
+        setState(() {
+          nameController.text = userData?['name'] ?? '';
+          emailController.text = userData?['email'] ?? '';
+          mobileController.text = userData?['mobile'] ?? '';
+
+          // Load profile image if exists
+          if (userData?['profileImageUrl'] != null) {
+            _profileImageUrl = userData!['profileImageUrl'];
+
+            // Update SharedPreferences with the latest profile URL
+            _updateProfileImageCache(_profileImageUrl!);
+          }
+        });
       }
     } catch (e) {
       setState(() {
@@ -148,131 +165,150 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _updateProfileImageCache(String imageUrl) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profileImageUrl', imageUrl);
+    } catch (e) {
+      print('Error updating profile image cache: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     w = MediaQuery.of(context).size.width;
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded, size: 26),
-          onPressed:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CustomDrawer()),
-              ),
-        ),
-        title: Text(
-          "Your Profile",
-          style: TextStyle(
-            color: textColor,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+    return WillPopScope(
+      // Return whether profile was updated when navigating back
+      onWillPop: () async {
+        Navigator.of(context).pop(_profileUpdated);
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              // Return whether profile was updated when using back button
+              Navigator.of(context).pop(_profileUpdated);
+            },
           ),
+          title: Text(
+            "Your Profile",
+            style: TextStyle(
+              color: textColor,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator(color: primaryColor))
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Error message
-                    if (errorMessage != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline, color: Colors.red),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                errorMessage!,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // No account message with register button
-                    if (FirebaseAuth.instance.currentUser == null)
-                      _buildNoAccountSection(),
-
-                    // Profile Section - Only show if logged in
-                    if (FirebaseAuth.instance.currentUser != null)
-                      _buildProfileSection(),
-
-                    const SizedBox(height: 20),
-
-                    if (FirebaseAuth.instance.currentUser != null)
-                      _buildDivider(),
-
-                    const SizedBox(height: 20),
-
-                    // Subscription Box with Progress - Only show if logged in
-                    if (FirebaseAuth.instance.currentUser != null)
-                      _buildSubscriptionBox1(),
-
-                    const SizedBox(height: 20),
-
-                    // Settings Section (with Toggles) - Only show if logged in
-                    if (FirebaseAuth.instance.currentUser != null)
-                      _buildSettingsSection(),
-
-                    const SizedBox(height: 25),
-
-                    // Logout Button - Only show if logged in
-                    if (FirebaseAuth.instance.currentUser != null)
-                      SizedBox(
-                        width: w - 40,
-                        height: 54,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade50,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+        body:
+            isLoading
+                ? Center(child: CircularProgressIndicator(color: primaryColor))
+                : SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Error message
+                      if (errorMessage != null)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red.shade200),
                           ),
-                          onPressed: _logout,
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                "Logout",
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.red,
                               ),
                               const SizedBox(width: 10),
-                              Icon(
-                                Icons.logout,
-                                color: Colors.red.shade700,
-                                size: 18,
+                              Expanded(
+                                child: Text(
+                                  errorMessage!,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
 
-                    const SizedBox(height: 30),
-                  ],
+                      // No account message with register button
+                      if (FirebaseAuth.instance.currentUser == null)
+                        _buildNoAccountSection(),
+
+                      // Profile Section - Only show if logged in
+                      if (FirebaseAuth.instance.currentUser != null)
+                        _buildProfileSection(),
+
+                      const SizedBox(height: 20),
+
+                      if (FirebaseAuth.instance.currentUser != null)
+                        _buildDivider(),
+
+                      const SizedBox(height: 20),
+
+                      // Subscription Box with Progress - Only show if logged in
+                      if (FirebaseAuth.instance.currentUser != null)
+                        _buildSubscriptionBox1(),
+
+                      const SizedBox(height: 20),
+
+                      // Settings Section (with Toggles) - Only show if logged in
+                      if (FirebaseAuth.instance.currentUser != null)
+                        _buildSettingsSection(),
+
+                      const SizedBox(height: 25),
+
+                      // Logout Button - Only show if logged in
+                      if (FirebaseAuth.instance.currentUser != null)
+                        SizedBox(
+                          width: w - 40,
+                          height: 54,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade50,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: _logout,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Logout",
+                                  style: TextStyle(
+                                    color: Colors.red.shade700,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Icon(
+                                  Icons.logout,
+                                  color: Colors.red.shade700,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 30),
+                    ],
+                  ),
                 ),
-              ),
+      ),
     );
   }
 
@@ -558,9 +594,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   ImageProvider? _getProfileImage() {
     if (_image != null) {
+      // For local file, use FileImage with cacheHeight/cacheWidth to reduce memory usage
       return FileImage(File(_image!.path));
     } else if (_profileImageUrl != null) {
-      return NetworkImage(_profileImageUrl!);
+      if (_profileImageUrl!.startsWith('data:image')) {
+        try {
+          // Handle base64 image with memory optimization
+          final bytes = base64Decode(_profileImageUrl!.split(',')[1]);
+          return MemoryImage(
+            bytes,
+            // Set cache size to reduce memory usage
+            scale: 0.5,
+          );
+        } catch (e) {
+          print('Error decoding base64 image: $e');
+          return null;
+        }
+      } else {
+        // Handle regular URL
+        return NetworkImage(_profileImageUrl!);
+      }
     }
     return null;
   }
@@ -568,7 +621,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Image Picker Method
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 600,
+      maxHeight: 600,
+      imageQuality: 50,
+    );
+
     if (image != null) {
       setState(() {
         _image = image;
@@ -578,33 +637,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Helper method to efficiently convert image to base64
+  Future<String> _imageToOptimizedBase64(File imageFile) async {
+    try {
+      // Read the image file as bytes - the image picker already
+      // gives us a compressed image with the parameters we specified
+      final bytes = await imageFile.readAsBytes();
+
+      // Convert to base64 and add the data URL prefix
+      final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+
+      print(
+        'Profile image size: ${(bytes.length / 1024).toStringAsFixed(2)}KB',
+      );
+
+      return base64String;
+    } catch (e) {
+      print('Error converting image to base64: $e');
+      throw Exception('Failed to convert image to base64: $e');
+    }
+  }
+
   Future<void> _uploadProfileImage() async {
     if (_image == null) return;
     try {
       setState(() {
         isLoading = true;
+        errorMessage = null;
       });
       final User? user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
-      // Create reference to upload image
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('profile_images')
-          .child('${user.uid}.jpg');
-      // Upload file
-      await storageRef.putFile(File(_image!.path));
-      // Get download URL
-      final downloadUrl = await storageRef.getDownloadURL();
-      // Update Firestore with image URL
+
+      // Convert image to optimized base64 string
+      final base64Image = await _imageToOptimizedBase64(File(_image!.path));
+
+      // Update Firestore with base64 image data
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'profileImageUrl': downloadUrl},
+        {
+          'profileImageUrl': base64Image,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
       );
+
       // Save to shared preferences
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('profileImageUrl', downloadUrl);
+      await prefs.setString('profileImageUrl', base64Image);
+
       setState(() {
-        _profileImageUrl = downloadUrl;
+        _profileImageUrl = base64Image;
+        // Flag that profile was updated
+        _profileUpdated = true;
       });
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile picture updated successfully'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     } catch (e) {
       setState(() {
         errorMessage = 'Failed to upload image: $e';
@@ -630,6 +727,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         profileImageUrl: _profileImageUrl,
       );
       if (!mounted) return;
+
+      // Flag that profile was updated
+      _profileUpdated = true;
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(

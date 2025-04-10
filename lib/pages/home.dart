@@ -1,3 +1,5 @@
+import 'dart:async'; // Add this import for Timer
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:gearcare/pages/rentscreen.dart';
 import 'package:gearcare/pages/profile.dart';
@@ -5,6 +7,9 @@ import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/pages/addproduct.dart';
 import 'package:gearcare/models/product_models.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -40,12 +45,73 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     Icons.music_note,
   ];
 
+  // Cache for profile image URL to avoid repeated Firestore queries
+  String? _cachedProfileUrl;
+  Future<String?>? _profileUrlFuture;
+
+  // For auto-scroll timer
+  Timer? _autoScrollTimer;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentPage);
     _loadProductsFromStorage();
-    _startAutoScroll();
+
+    // Load profile image cache once on initialization
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshProfileImageCache(false);
+
+      // Start auto-scroll after products are loaded
+      if (_upperProducts.isNotEmpty) {
+        _startAutoScroll();
+      }
+    });
+  }
+
+  // Add flag to control whether setState is called
+  Future<void> _refreshProfileImageCache([bool updateUI = true]) async {
+    try {
+      // Clear the cached profile URL to ensure fresh data
+      _cachedProfileUrl = null;
+      _profileUrlFuture = null;
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Fetch fresh data from Firestore to update the cache
+        final userDoc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
+
+        if (userDoc.exists && userDoc.data()?['profileImageUrl'] != null) {
+          final profileUrl = userDoc.data()!['profileImageUrl'] as String;
+
+          // Update the cache with the latest URL
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('profileImageUrl', profileUrl);
+
+          // Cache the new URL
+          _cachedProfileUrl = profileUrl;
+
+          // If it's a large base64 string, we might want to optimize it
+          if (profileUrl.length > 100 * 1024) {
+            // If larger than ~100KB
+            print(
+              'Warning: Profile image is quite large (${(profileUrl.length / 1024).toStringAsFixed(2)}KB)',
+            );
+          }
+
+          // Only update UI if requested and the widget is still mounted
+          if (updateUI && mounted) {
+            setState(() {});
+          }
+        }
+      }
+    } catch (e) {
+      print('Error refreshing profile image cache: $e');
+    }
   }
 
   // Load products from Firebase
@@ -78,20 +144,27 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   void _startAutoScroll() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 3));
-      if (!mounted) return false;
-      if (_upperProducts.isNotEmpty) {
-        setState(() {
-          _currentPage = (_currentPage + 1) % _upperProducts.length;
-          _pageController.animateToPage(
-            _currentPage,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-          );
-        });
+    // Cancel any existing timer
+    _autoScrollTimer?.cancel();
+
+    // Create a new timer that runs every 3 seconds
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (!mounted || _upperProducts.isEmpty) {
+        timer.cancel();
+        return;
       }
-      return true;
+
+      final nextPage = (_currentPage + 1) % _upperProducts.length;
+
+      // Only animate if on different page
+      if (_currentPage != nextPage && mounted) {
+        // Avoid setState during animation to prevent jittery behavior
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
     });
   }
 
@@ -110,6 +183,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Cancel auto-scroll timer
+    _autoScrollTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -127,10 +202,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       );
     }
 
+    // Use const for widgets that don't change to improve performance
     return Scaffold(
       backgroundColor: backgroundGrey,
       body: SafeArea(
         child: SingleChildScrollView(
+          // Disable physics if there's any jitter during scrolling
+          physics: const ClampingScrollPhysics(),
           child: Column(
             children: [
               _buildTopBar(context, primaryBlue),
@@ -164,7 +242,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             MaterialPageRoute(
               builder: (context) => Addproduct(onProductAdded: _addProduct),
             ),
-          );
+          ).then((_) {
+            // Only refresh if products were added
+            if (_upperProducts.isNotEmpty &&
+                (_autoScrollTimer == null || !_autoScrollTimer!.isActive)) {
+              _startAutoScroll();
+            }
+          });
         },
         backgroundColor: primaryBlue,
         elevation: 4,
@@ -216,25 +300,164 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ],
           ),
           GestureDetector(
-            onTap:
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfileScreen()),
-                ),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-                border: Border.all(color: primaryColor, width: 2),
-              ),
-              child: const Icon(Icons.person, color: Colors.black54, size: 22),
+            onTap: () async {
+              final needsRefresh = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+
+              // Only refresh if explicitly requested (profile was updated)
+              if (needsRefresh == true) {
+                // Clear the cache to force reload
+                _cachedProfileUrl = null;
+                _profileUrlFuture = null;
+                _refreshProfileImageCache();
+              }
+            },
+            child: FutureBuilder<String?>(
+              // Initialize the future only once and reuse it
+              future: _profileUrlFuture ??= _getProfileImageUrl(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: primaryColor, width: 2),
+                    ),
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                    ),
+                  );
+                }
+
+                final profileUrl = snapshot.data;
+
+                if (profileUrl != null && profileUrl.isNotEmpty) {
+                  if (profileUrl.startsWith('data:image')) {
+                    // For base64 images, use a memory-efficient approach
+                    // Extract just the base64 part
+                    final base64Part = profileUrl.split(',')[1];
+
+                    // Pre-compute image size
+                    const double imageSize = 40;
+
+                    return Container(
+                      width: imageSize,
+                      height: imageSize,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: primaryColor, width: 2),
+                      ),
+                      child: ClipOval(
+                        child: Image.memory(
+                          base64Decode(base64Part),
+                          fit: BoxFit.cover,
+                          width: imageSize,
+                          height: imageSize,
+                          // Add cacheWidth to limit memory usage
+                          cacheWidth: 120, // 3x display size for quality
+                          gaplessPlayback:
+                              true, // Prevent flickering during updates
+                        ),
+                      ),
+                    );
+                  } else {
+                    // For network images
+                    return Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: primaryColor, width: 2),
+                      ),
+                      child: ClipOval(
+                        child: Image.network(
+                          profileUrl,
+                          fit: BoxFit.cover,
+                          width: 40,
+                          height: 40,
+                          // Add caching parameters
+                          cacheWidth: 120,
+                          gaplessPlayback: true,
+                          errorBuilder:
+                              (context, error, stackTrace) => Icon(
+                                Icons.person,
+                                color: Colors.black54,
+                                size: 22,
+                              ),
+                        ),
+                      ),
+                    );
+                  }
+                }
+
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: primaryColor, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.black54,
+                    size: 22,
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<String?> _getProfileImageUrl() async {
+    // Return cached result if available
+    if (_cachedProfileUrl != null) {
+      return _cachedProfileUrl;
+    }
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+
+      // First try to get from SharedPreferences for faster loading
+      final prefs = await SharedPreferences.getInstance();
+      final cachedUrl = prefs.getString('profileImageUrl');
+
+      if (cachedUrl != null && cachedUrl.isNotEmpty) {
+        // Cache the result
+        _cachedProfileUrl = cachedUrl;
+        return cachedUrl;
+      }
+
+      // If not in cache, fetch from Firestore
+      final userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
+      if (userDoc.exists && userDoc.data()?['profileImageUrl'] != null) {
+        final profileUrl = userDoc.data()!['profileImageUrl'] as String;
+        // Cache the URL for future use
+        await prefs.setString('profileImageUrl', profileUrl);
+        // Cache the result
+        _cachedProfileUrl = profileUrl;
+        return profileUrl;
+      }
+
+      return null;
+    } catch (e) {
+      print('Error fetching profile image: $e');
+      return null;
+    }
   }
 
   Widget _buildSearchBar(double screenWidth, Color primaryColor) {
@@ -365,9 +588,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 controller: _pageController,
                 itemCount: _upperProducts.length,
                 onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
+                  // Update current page without rebuilding entire widget
+                  _currentPage = index;
                 },
                 itemBuilder:
                     (context, index) =>

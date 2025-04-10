@@ -21,8 +21,33 @@ class FirebaseAuthService {
         password: password,
       );
 
-      // Save user data locally
-      await _saveUserDataLocally(uid: credential.user!.uid, email: email);
+      if (credential.user == null) {
+        throw Exception('Failed to authenticate user');
+      }
+
+      // Update last login timestamp
+      await _firestore.collection('users').doc(credential.user!.uid).update({
+        'lastLogin': FieldValue.serverTimestamp(),
+      });
+
+      // Get user data including profile image
+      final userDoc =
+          await _firestore.collection('users').doc(credential.user!.uid).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data();
+
+        // Save user data locally with all available fields
+        await _saveUserDataLocally(
+          uid: credential.user!.uid,
+          email: email,
+          name: userData?['name'],
+          mobile: userData?['mobile'],
+          profileImageUrl: userData?['profileImageUrl'],
+        );
+      } else {
+        // If user document doesn't exist yet, just save basic info
+        await _saveUserDataLocally(uid: credential.user!.uid, email: email);
+      }
 
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -42,15 +67,19 @@ class FirebaseAuthService {
         password: password,
       );
 
+      if (credential.user == null) {
+        throw Exception('Failed to create user');
+      }
+
       await _firestore.collection('users').doc(credential.user!.uid).set({
         'name': name,
         'email': email,
         'mobile': mobile,
         'createdAt': FieldValue.serverTimestamp(),
+        'lastLogin': FieldValue.serverTimestamp(),
       });
 
       await credential.user!.updateDisplayName(name);
-
       await _saveUserDataLocally(
         uid: credential.user!.uid,
         name: name,
@@ -73,11 +102,14 @@ class FirebaseAuthService {
       final user = _auth.currentUser;
       if (user == null) throw Exception('User not logged in');
 
-      final updateData = <String, dynamic>{'name': name};
+      final updateData = <String, dynamic>{
+        'name': name,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
       if (mobile != null) updateData['mobile'] = mobile;
-      if (profileImageUrl != null) {
+      if (profileImageUrl != null)
         updateData['profileImageUrl'] = profileImageUrl;
-      }
 
       await _firestore.collection('users').doc(user.uid).update(updateData);
       await user.updateDisplayName(name);
@@ -89,10 +121,7 @@ class FirebaseAuthService {
         await prefs.setString('profileImageUrl', profileImageUrl);
       }
     } catch (e) {
-      throw FirebaseException(
-        plugin: 'firebase_auth',
-        message: 'Failed to update profile: $e',
-      );
+      throw Exception('Failed to update profile: $e');
     }
   }
 
@@ -102,7 +131,7 @@ class FirebaseAuthService {
       await prefs.clear();
       await _auth.signOut();
     } catch (e) {
-      print('Error during sign out: $e');
+      throw Exception('Failed to sign out: $e');
     }
   }
 
@@ -124,10 +153,7 @@ class FirebaseAuthService {
 
       return doc.data() as Map<String, dynamic>;
     } catch (e) {
-      throw FirebaseException(
-        plugin: 'firebase_auth',
-        message: 'Failed to get user data: $e',
-      );
+      throw Exception('Failed to get user data: $e');
     }
   }
 
@@ -138,13 +164,17 @@ class FirebaseAuthService {
     String? mobile,
     String? profileImageUrl,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('uid', uid);
-    await prefs.setString('email', email);
-    if (name != null) await prefs.setString('name', name);
-    if (mobile != null) await prefs.setString('mobile', mobile);
-    if (profileImageUrl != null) {
-      await prefs.setString('profileImageUrl', profileImageUrl);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('uid', uid);
+      await prefs.setString('email', email);
+      if (name != null) await prefs.setString('name', name);
+      if (mobile != null) await prefs.setString('mobile', mobile);
+      if (profileImageUrl != null) {
+        await prefs.setString('profileImageUrl', profileImageUrl);
+      }
+    } catch (e) {
+      throw Exception('Failed to save user data locally: $e');
     }
   }
 
@@ -164,6 +194,10 @@ class FirebaseAuthService {
         return Exception('Email/password accounts are not enabled.');
       case 'too-many-requests':
         return Exception('Too many requests. Try again later.');
+      case 'user-disabled':
+        return Exception('This account has been disabled.');
+      case 'network-request-failed':
+        return Exception('Network error. Please check your connection.');
       default:
         return Exception(e.message ?? 'An unknown error occurred.');
     }
