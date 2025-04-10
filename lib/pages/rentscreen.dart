@@ -49,16 +49,6 @@ class _RentScreenState extends State<RentScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu_rounded, size: 26, color: Colors.white),
-            onPressed:
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CustomDrawer()),
-                ),
-          ),
-        ],
       ),
       body: Stack(
         children: [

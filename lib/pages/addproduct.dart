@@ -164,7 +164,7 @@ class _AddproductState extends State<Addproduct> {
                                       ),
                                       child: Icon(
                                         Icons.camera_alt,
-                                        color: Colors.blue,
+                                        color: Color(0xFF2E576C),
                                       ),
                                     ),
                                     title: Text(
@@ -233,7 +233,7 @@ class _AddproductState extends State<Addproduct> {
                                     Container(
                                       padding: EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: Colors.blue,
+                                        color: Color(0xFF2E576C),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
@@ -396,8 +396,8 @@ class _AddproductState extends State<Addproduct> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _saveProduct,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.black,
+                      backgroundColor: Color(0xFF2E576C),
+                      foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -508,7 +508,7 @@ class _AddproductState extends State<Addproduct> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.blue, width: 2),
+            borderSide: BorderSide(color: Color(0xFF2E576C), width: 2),
           ),
           labelText: label,
           labelStyle: TextStyle(
@@ -543,10 +543,13 @@ class _AddproductState extends State<Addproduct> {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.grey[100],
+            color:
+                isSelected
+                    ? Color(0xFF2E576C).withOpacity(0.1)
+                    : Colors.grey[100],
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? Colors.blue : Colors.transparent,
+              color: isSelected ? Color(0xFF2E576C) : Colors.transparent,
               width: 2,
             ),
           ),
@@ -557,7 +560,7 @@ class _AddproductState extends State<Addproduct> {
                 isSelected
                     ? Icons.radio_button_checked
                     : Icons.radio_button_off,
-                color: isSelected ? Colors.blue : Colors.grey[400],
+                color: isSelected ? Color(0xFF2E576C) : Colors.grey[400],
                 size: 20,
               ),
               SizedBox(width: 8),
@@ -567,7 +570,7 @@ class _AddproductState extends State<Addproduct> {
                   style: TextStyle(
                     fontWeight:
                         isSelected ? FontWeight.w600 : FontWeight.normal,
-                    color: isSelected ? Colors.blue : Colors.black87,
+                    color: isSelected ? Color(0xFF2E576C) : Colors.black87,
                   ),
                 ),
               ),

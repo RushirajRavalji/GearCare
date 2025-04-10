@@ -177,11 +177,6 @@ class _CustomDrawerState extends State<CustomDrawer>
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            Icons.close,
-                            color: primaryColor,
-                            size: 22,
-                          ),
                         ),
                       ),
                     ),
