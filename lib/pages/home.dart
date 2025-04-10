@@ -232,7 +232,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               _buildScrollableContainer(screenWidth, primaryBlue),
               const SizedBox(height: 25),
               _buildCategoryHeading(screenWidth),
-              const SizedBox(height: 10),
+              const SizedBox(height: 15),
               _buildCircleCategories(screenWidth, primaryBlue),
               const SizedBox(height: 25),
               _buildRecommendedHeading(screenWidth),
@@ -829,7 +829,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Widget _buildCircleCategories(double screenWidth, Color primaryColor) {
     return SizedBox(
-      height: 100,
+      height: 102,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
