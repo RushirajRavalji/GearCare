@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:gearcare/localStorage/rental_history_service.dart';
 import 'package:gearcare/models/product_models.dart';
+import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
 
 class RentScreen extends StatefulWidget {
   final Product product;
-  const RentScreen({super.key, required this.product});
+
+  const RentScreen({Key? key, required this.product}) : super(key: key);
+
   @override
-  State<RentScreen> createState() => _RentScreenState();
+  _RentScreenState createState() => _RentScreenState();
 }
 
 class _RentScreenState extends State<RentScreen> {
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(Duration(days: 7));
   int _quantity = 1;
+  int _selectedDays = 1;
+  bool _isLoading = false;
+  final RentalHistoryService _rentalService = RentalHistoryService();
   double get _totalCost {
     final days = _endDate.difference(_startDate).inDays + 1;
     return widget.product.price * days * _quantity;
@@ -22,54 +29,42 @@ class _RentScreenState extends State<RentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.black,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 18,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Rent Equipment',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_rounded, size: 26, color: Colors.white),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CustomDrawer()),
+                ),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
-          // Header with back button
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 120,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'Rent Equipment',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    SizedBox(width: 42), // Balance the layout
-                  ],
-                ),
-              ),
-            ),
-          ),
           // Main content
           Container(
-            margin: const EdgeInsets.only(top: 100),
+            margin: const EdgeInsets.only(top: 20),
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(30),
@@ -602,43 +597,7 @@ class _RentScreenState extends State<RentScreen> {
           ),
           elevation: 4,
         ),
-        onPressed: () {
-          // Show success dialog
-          showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  title: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 24),
-                      SizedBox(width: 8),
-                      Text('Success!'),
-                    ],
-                  ),
-                  content: Text(
-                    'You have successfully rented ${widget.product.name} for ${_endDate.difference(_startDate).inDays + 1} days.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop(); // Go back to home screen
-                      },
-                      child: Text(
-                        'OK',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-          );
-        },
+        onPressed: _isLoading ? null : _handleRent,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
@@ -656,5 +615,104 @@ class _RentScreenState extends State<RentScreen> {
         ),
       ),
     );
+  }
+
+  void _handleRent() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Calculate the duration in days
+      final durationDays = _endDate.difference(_startDate).inDays + 1;
+
+      // Record the rental in the history
+      await _rentalService.recordRental(
+        widget.product,
+        _startDate,
+        _endDate,
+        _quantity,
+        _totalCost,
+      );
+
+      // Show success dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 24),
+                    SizedBox(width: 8),
+                    Text('Success!'),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'You have successfully rented ${widget.product.name} for $durationDays days.',
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'You can view your rental details in the Rental History section.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop(); // Go back to home screen
+                    },
+                    child: Text(
+                      'OK',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+        );
+      }
+    } catch (e) {
+      // Show error dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 24),
+                    SizedBox(width: 8),
+                    Text('Error'),
+                  ],
+                ),
+                content: Text('Failed to record rental: $e'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

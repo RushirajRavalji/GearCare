@@ -27,7 +27,7 @@ class _RegisterState extends State<Register> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFE3F2FD), Colors.white],
+            colors: [Color.fromARGB(255, 181, 194, 201), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -157,7 +157,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: Colors.blue.shade400,
+                                color: Color(0xFF2E576C),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -200,7 +200,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.email_outlined,
-                                color: Colors.blue.shade400,
+                                color: Color(0xFF2E576C),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -248,7 +248,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.phone_outlined,
-                                color: Colors.blue.shade400,
+                                color: Color(0xFF2E576C),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -291,7 +291,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
-                                color: Colors.blue.shade400,
+                                color: Color(0xFF2E576C),
                               ),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -336,10 +336,10 @@ class _RegisterState extends State<Register> {
                           child: ElevatedButton(
                             onPressed: isLoading ? null : () => _register(),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade600,
+                              backgroundColor: Color(0xFF2E576C),
                               foregroundColor: Colors.white,
                               elevation: 5,
-                              shadowColor: Colors.blue.withOpacity(0.5),
+                              shadowColor: Color(0xFF2E576C).withOpacity(0.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),

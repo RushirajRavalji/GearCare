@@ -29,7 +29,7 @@ class _LoginState extends State<Login> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFE3F2FD), Colors.white],
+            colors: [Color.fromARGB(255, 181, 194, 201), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -48,12 +48,12 @@ class _LoginState extends State<Login> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.blue.shade100,
+                        color: Color.fromARGB(39, 46, 87, 108),
                       ),
                       child: Icon(
                         Icons.build_rounded,
                         size: 60,
-                        color: Colors.blueAccent.shade700,
+                        color: Color(0xFF2E576C),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -124,7 +124,7 @@ class _LoginState extends State<Login> {
                           hintStyle: TextStyle(color: Colors.grey.shade400),
                           prefixIcon: Icon(
                             Icons.email_outlined,
-                            color: Colors.blue.shade400,
+                            color: Color(0xFF2E576C),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -172,7 +172,7 @@ class _LoginState extends State<Login> {
                           hintStyle: TextStyle(color: Colors.grey.shade400),
                           prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: Colors.blue.shade400,
+                            color: Color(0xFF2E576C),
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -235,10 +235,10 @@ class _LoginState extends State<Login> {
                       child: ElevatedButton(
                         onPressed: isLoading ? null : () => _signIn(),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
+                          backgroundColor: Color(0xFF2E576C),
                           foregroundColor: Colors.white,
                           elevation: 5,
-                          shadowColor: Colors.blue.withOpacity(0.5),
+                          shadowColor: Color(0xFF2E576C).withOpacity(0.5),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),

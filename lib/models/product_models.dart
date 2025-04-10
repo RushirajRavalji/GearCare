@@ -4,39 +4,62 @@ import 'package:gearcare/localStorage/FirebaseStorageService.dart';
 import 'package:uuid/uuid.dart';
 
 class Product {
+  final String id;
   final String name;
   final double price;
   final String description;
   final String imagePath; // This will store the base64 string
-  String? id; // Optional ID for Firestore
+  bool isRented;
 
   Product({
+    required this.id,
     required this.name,
     required this.price,
     required this.description,
     required this.imagePath,
-    this.id,
+    this.isRented = false,
   });
 
-  // Convert product to a Map for Firestore
+  // Create a copy of this product with updated values
+  Product copyWith({
+    String? id,
+    String? name,
+    double? price,
+    String? description,
+    String? imagePath,
+    bool? isRented,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      description: description ?? this.description,
+      imagePath: imagePath ?? this.imagePath,
+      isRented: isRented ?? this.isRented,
+    );
+  }
+
+  // Convert to a map for storing in SharedPreferences
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'price': price,
       'description': description,
-      'imagePath': imagePath, // Store base64 string
-      'id': id ?? Uuid().v4(), // Generate ID if not exists
+      'imagePath': imagePath,
+      'isRented': isRented,
     };
   }
 
-  // Create product from a Map from Firestore
+  // Create a product from a map from SharedPreferences
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      name: map['name'] ?? '',
-      price: (map['price'] ?? 0.0).toDouble(),
-      description: map['description'] ?? '',
-      imagePath: map['imagePath'] ?? '',
       id: map['id'],
+      name: map['name'],
+      price: map['price'],
+      description: map['description'],
+      imagePath: map['imagePath'],
+      isRented: map['isRented'] ?? false,
     );
   }
 

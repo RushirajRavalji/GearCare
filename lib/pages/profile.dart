@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/firebase_auth_service.dart';
+import 'package:gearcare/localStorage/rental_history_service.dart';
 import 'package:gearcare/pages/login.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/pages/registerstate.dart';
@@ -10,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:gearcare/pages/rental_history.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -510,6 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             controller: nameController,
             label: 'Full Name',
             icon: Icons.person_outline,
+            enabled: false,
           ),
           const SizedBox(height: 16),
           _buildProfileTextField(
@@ -524,6 +527,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             label: 'Mobile Number',
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
+            enabled: false,
           ),
           const SizedBox(height: 25),
           SizedBox(
@@ -802,11 +806,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Navigate to order history page or show a dialog
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Viewing Order History..."),
-                      duration: Duration(seconds: 2),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RentalHistoryScreen(),
                     ),
                   );
                 },
@@ -1073,6 +1076,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
+          SizedBox(height: 16),
+          _buildProfileOption(
+            icon: Icons.lock_outline,
+            title: 'Privacy Settings',
+            onTap: () {
+              // Add navigation to Privacy Settings
+            },
+          ),
+          SizedBox(height: 16),
+          _buildProfileOption(
+            icon: Icons.history,
+            title: 'Rental History',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const RentalHistoryScreen(),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -1086,6 +1110,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+
+  Widget _buildProfileOption({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: secondaryColor.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.transparent),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.grey, size: 18),
+            ),
+            const SizedBox(width: 16),
+            // Setting label
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
