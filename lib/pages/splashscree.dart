@@ -1,0 +1,144 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+
+// This is your splash screen that will show for 2-3 seconds
+class SplashScreen extends StatefulWidget {
+  final Widget nextScreen;
+
+  const SplashScreen({Key? key, required this.nextScreen}) : super(key: key);
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  String _displayText = "";
+  final String _fullText = "G e a r  C a r e";
+  int _currentIndex = 0;
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Start the animated typing effect
+    _startTypingAnimation();
+
+    // Navigate to next screen after splash duration
+    Timer(const Duration(milliseconds: 3000), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => widget.nextScreen),
+      );
+    });
+  }
+
+  void _startTypingAnimation() {
+    const typingSpeed = Duration(milliseconds: 120);
+    _timer = Timer.periodic(typingSpeed, (timer) {
+      if (_currentIndex < _fullText.length) {
+        setState(() {
+          _displayText += _fullText[_currentIndex];
+          _currentIndex++;
+        });
+      } else {
+        _timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Your animated text
+            Text(
+              _displayText,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 4,
+              ),
+            ),
+
+            // Blinking cursor at the end of text
+            if (_currentIndex < _fullText.length)
+              Positioned(
+                left: _getTextWidth(context) + 8,
+                child: _buildBlinkingCursor(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlinkingCursor() {
+    return AnimatedOpacity(
+      opacity: DateTime.now().millisecondsSinceEpoch % 1000 > 500 ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 100),
+      child: Container(height: 30, width: 3, color: Colors.black87),
+    );
+  }
+
+  // Helper method to calculate the current text width for cursor positioning
+  double _getTextWidth(BuildContext context) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(
+        text: _displayText,
+        style: const TextStyle(
+          fontSize: 40,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 4,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    return textPainter.width;
+  }
+}
+
+// Example of how to use the splash screen
+// In your main.dart file:
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Gear Care',
+      debugShowCheckedModeBanner: false,
+      home: SplashScreen(
+        nextScreen: MainScreen(), // Replace with your main app screen
+      ),
+    );
+  }
+}
+
+// Dummy main screen (replace with your actual main screen)
+class MainScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Gear Care')),
+      body: const Center(child: Text('Welcome to Gear Care!')),
+    );
+  }
+}

@@ -9,7 +9,6 @@ import 'package:gearcare/models/product_models.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
-
   @override
   _CustomDrawerState createState() => _CustomDrawerState();
 }
@@ -18,7 +17,6 @@ class _CustomDrawerState extends State<CustomDrawer>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
-  bool _isClosing = false;
 
   // Colors
   final Color primaryColor = Color(0xFF2E576C);
@@ -52,11 +50,8 @@ class _CustomDrawerState extends State<CustomDrawer>
     super.dispose();
   }
 
+  // Simplified close drawer function
   void _closeDrawer() {
-    if (_isClosing) return;
-    setState(() {
-      _isClosing = true;
-    });
     _animationController.reverse().then((_) {
       if (mounted) {
         Navigator.of(context).pop();
@@ -64,30 +59,14 @@ class _CustomDrawerState extends State<CustomDrawer>
     });
   }
 
+  // Simplified navigation function
   void _navigateToScreen(Widget screen) {
-    // Close drawer first
-    _closeDrawer();
+    Navigator.of(context).pop(); // Close the drawer
 
-    // Navigate after animation completes
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation1, animation2) => screen,
-            transitionDuration: const Duration(milliseconds: 300),
-            transitionsBuilder: (context, animation1, animation2, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(animation1),
-                child: child,
-              );
-            },
-          ),
-        );
-      }
-    });
+    // Navigate to the screen
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (context) => screen));
   }
 
   @override

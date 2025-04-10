@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/pages/menu.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class About extends StatelessWidget {
   const About({super.key});
+
+  void _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      throw 'Could not launch \$url';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,9 +20,7 @@ class About extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: Color(0xFF2E576C),
-        // backgroundColor: Colors.blue,
         elevation: 0,
-
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded, size: 26),
           onPressed:
@@ -37,7 +45,6 @@ class About extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // App Logo and Version
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -83,10 +90,7 @@ class About extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // How this app works
               _buildInfoCard(
                 context,
                 title: "How this app works",
@@ -95,10 +99,7 @@ class About extends StatelessWidget {
                     "Learn about the features and functionality of the application.",
                 onPressed: () {},
               ),
-
               const SizedBox(height: 16),
-
-              // Other details
               _buildInfoCard(
                 context,
                 title: "Other details",
@@ -107,10 +108,7 @@ class About extends StatelessWidget {
                     "Find additional information about the application and its policies.",
                 onPressed: () {},
               ),
-
               const SizedBox(height: 16),
-
-              // Terms and Privacy
               _buildInfoCard(
                 context,
                 title: "Terms & Privacy",
@@ -118,75 +116,7 @@ class About extends StatelessWidget {
                 description: "Read our terms of service and privacy policy.",
                 onPressed: () {},
               ),
-
               const SizedBox(height: 24),
-
-              // Developer info
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Developer",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2E576C),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.grey[200],
-                          radius: 24,
-                          child: Icon(Icons.code, color: Color(0xFF2E576C)),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "App Developer",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "contact@developer.com",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Social links
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -215,19 +145,36 @@ class About extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildSocialButton(Icons.language, "Website"),
-                        _buildSocialButton(Icons.facebook, "Facebook"),
-                        _buildSocialButton(Icons.camera_alt, "Instagram"),
-                        _buildSocialButton(Icons.email, "Email"),
+                        _buildSocialButton(
+                          Icons.language,
+                          "Website",
+                          () => _launchURL("https://rushirajravalji.in"),
+                        ),
+                        _buildSocialButton(
+                          Icons.camera_alt,
+                          "Instagram",
+                          () => _launchURL(
+                            "https://www.instagram.com/rushiraj_ravalji/",
+                          ),
+                        ),
+                        _buildSocialButton(
+                          Icons.code,
+                          "GitHub",
+                          () =>
+                              _launchURL("https://github.com/RushirajRavalji"),
+                        ),
+                        _buildSocialButton(
+                          Icons.email,
+                          "Email",
+                          () =>
+                              _launchURL("mailto:rushiraj11.ravalji@gmail.com"),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Copyright notice
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -253,7 +200,6 @@ class About extends StatelessWidget {
   }) {
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: Colors.white,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -300,17 +246,24 @@ class About extends StatelessWidget {
     );
   }
 
-  Widget _buildSocialButton(IconData icon, String label) {
+  Widget _buildSocialButton(
+    IconData icon,
+    String label,
+    VoidCallback onPressed,
+  ) {
     return Column(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Color(0xFF2E576C).withOpacity(0.1),
-            shape: BoxShape.circle,
+        GestureDetector(
+          onTap: onPressed,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Color(0xFF2E576C).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Color(0xFF2E576C), size: 24),
           ),
-          child: Icon(icon, color: Color(0xFF2E576C), size: 24),
         ),
         const SizedBox(height: 8),
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),

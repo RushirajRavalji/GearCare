@@ -39,9 +39,7 @@ class _RequestProductState extends State<RequestProduct> {
                 backgroundColor: Colors.white,
                 foregroundColor: Color(0xFF2E576C),
                 elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -63,12 +61,6 @@ class _RequestProductState extends State<RequestProduct> {
         ],
         elevation: 0,
         backgroundColor: Color(0xFF2E576C),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
       ),
       body: Container(
         decoration: BoxDecoration(

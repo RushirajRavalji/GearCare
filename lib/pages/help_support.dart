@@ -42,12 +42,6 @@ class _HelpSupportState extends State<HelpSupport> {
             fontSize: 20,
           ),
         ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),

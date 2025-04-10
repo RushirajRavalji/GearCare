@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:gearcare/firebase_options.dart';
 import 'package:gearcare/pages/home.dart';
 import 'package:gearcare/pages/login.dart';
+import 'package:gearcare/pages/splashscree.dart';
 import 'package:gearcare/theme.dart';
 
 void main() async {
@@ -31,7 +32,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const Login(),
+      home: const SplashScreen(nextScreen: Login()),
     );
   }
 }
