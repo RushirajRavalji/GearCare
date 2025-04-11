@@ -4,12 +4,20 @@ import 'package:gearcare/pages/addproduct.dart';
 import 'package:gearcare/pages/categotry.dart';
 import 'package:gearcare/pages/help_support.dart';
 import 'package:gearcare/pages/home.dart';
-
+import 'package:gearcare/pages/profile.dart';
+import 'package:gearcare/pages/rental_history.dart';
 import 'package:gearcare/pages/request_product.dart';
+import 'package:gearcare/theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gearcare/widget/Base64ImageWidget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:gearcare/models/product_models.dart';
 
 class CustomDrawer extends StatefulWidget {
-  const CustomDrawer({super.key});
+  const CustomDrawer({Key? key}) : super(key: key);
+
   @override
   _CustomDrawerState createState() => _CustomDrawerState();
 }
@@ -19,16 +27,14 @@ class _CustomDrawerState extends State<CustomDrawer>
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
 
-  // Colors
-  final Color primaryColor = Color(0xFF2E576C);
-  final Color bgColor = const Color(0xFFF0F7FF);
-  final Color iconBgColor = Color.fromARGB(17, 200, 206, 210);
-  final Color textColor = const Color(0xFF2B2D42);
-  final Color highlightColor = const Color(0xFF8BBCFF);
+  String? _profileImageUrl;
+  String _userName = "Guest User";
+  String _userEmail = "";
 
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     // Initialize animation controller
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -70,6 +76,14 @@ class _CustomDrawerState extends State<CustomDrawer>
     ).pushReplacement(MaterialPageRoute(builder: (context) => screen));
   }
 
+  void _loadUserData() {
+    // Implement the logic to load user data from Firestore or SharedPreferences
+    // For now, we'll use mock data
+    _profileImageUrl = "https://example.com/profile.jpg";
+    _userName = "John Doe";
+    _userEmail = "john.doe@example.com";
+  }
+
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
@@ -109,7 +123,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                         width: drawerWidth * 0.85,
                         height: 180,
                         decoration: BoxDecoration(
-                          color: bgColor,
+                          color: AppTheme.bgColor,
                           borderRadius: const BorderRadius.only(
                             bottomRight: Radius.circular(100),
                           ),
@@ -137,7 +151,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                             ),
                             child: Icon(
                               Icons.build_circle_outlined,
-                              color: primaryColor,
+                              color: AppTheme.primaryColor,
                               size: 32,
                             ),
                           ),
@@ -148,7 +162,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                               Text(
                                 "GearCare",
                                 style: TextStyle(
-                                  color: textColor,
+                                  color: AppTheme.textColor,
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -156,7 +170,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                               Text(
                                 "Maintenance Made Easy",
                                 style: TextStyle(
-                                  color: textColor.withOpacity(0.7),
+                                  color: AppTheme.textColor.withOpacity(0.7),
                                   fontSize: 12,
                                 ),
                               ),
@@ -258,7 +272,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                         child: Text(
                           "Version 1.0.0",
                           style: TextStyle(
-                            color: textColor.withOpacity(0.5),
+                            color: AppTheme.textColor.withOpacity(0.5),
                             fontSize: 12,
                           ),
                         ),
@@ -291,7 +305,7 @@ class _CustomDrawerState extends State<CustomDrawer>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: isActive ? bgColor : Colors.transparent,
+        color: isActive ? AppTheme.bgColor : Colors.transparent,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Material(
@@ -307,12 +321,13 @@ class _CustomDrawerState extends State<CustomDrawer>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isActive ? primaryColor : iconBgColor,
+                    color:
+                        isActive ? AppTheme.primaryColor : AppTheme.iconBgColor,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     icon,
-                    color: isActive ? Colors.white : primaryColor,
+                    color: isActive ? Colors.white : AppTheme.primaryColor,
                     size: 22,
                   ),
                 ),
@@ -322,7 +337,8 @@ class _CustomDrawerState extends State<CustomDrawer>
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                    color: isActive ? primaryColor : textColor,
+                    color:
+                        isActive ? AppTheme.primaryColor : AppTheme.textColor,
                   ),
                 ),
                 const Spacer(),
@@ -331,7 +347,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                     width: 5,
                     height: 25,
                     decoration: BoxDecoration(
-                      color: primaryColor,
+                      color: AppTheme.primaryColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),

@@ -1,10 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/FirebaseStorageService.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:gearcare/models/product_models.dart';
+import 'package:gearcare/theme.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ContainerType { upper, bottom }
 
@@ -80,22 +85,17 @@ class _AddproductState extends State<Addproduct> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: true,
+        backgroundColor: AppTheme.backgroundColor,
         leading: IconButton(
-          icon: const Icon(Icons.menu_rounded, size: 26),
-          onPressed:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CustomDrawer()),
-              ),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
         title: Text(
-          _isEditMode ? "Edit Product" : "Add New Product",
-          style: TextStyle(
+          widget.productToEdit != null ? "Edit Product" : "Add Product",
+          style: const TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
-            fontSize: 22,
           ),
         ),
       ),
@@ -151,26 +151,23 @@ class _AddproductState extends State<Addproduct> {
                                     ),
                                   ),
                                   SizedBox(height: 20),
+                                  Divider(
+                                    thickness: 1,
+                                    color: const Color.fromARGB(
+                                      18,
+                                      118,
+                                      118,
+                                      118,
+                                    ),
+                                  ),
                                   ListTile(
-                                    leading: Container(
-                                      padding: EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: const Color.fromARGB(
-                                          255,
-                                          0,
-                                          0,
-                                          0,
-                                        ).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Icon(
-                                        Icons.camera_alt,
-                                        color: Color(0xFF2E576C),
-                                      ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
                                     ),
                                     title: Text(
-                                      'Take a Photo',
+                                      "Take a photo",
                                       style: TextStyle(
+                                        color: AppTheme.primaryColor,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -397,16 +394,16 @@ class _AddproductState extends State<Addproduct> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleAddProduct,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF2E576C),
+                      backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: 4,
+                      elevation: 0,
                       shadowColor: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.4),
+                      ).colorScheme.primary.withOpacity(0.3),
                     ),
                     child:
                         _isLoading

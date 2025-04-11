@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gearcare/localStorage/firebase_auth_service.dart';
 import 'package:gearcare/pages/login.dart';
+import 'package:gearcare/theme.dart';
+import 'package:gearcare/pages/home.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -157,7 +160,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: Color(0xFF2E576C),
+                                color: AppTheme.primaryColor,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -200,7 +203,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.email_outlined,
-                                color: Color(0xFF2E576C),
+                                color: AppTheme.primaryColor,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -248,7 +251,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.phone_outlined,
-                                color: Color(0xFF2E576C),
+                                color: AppTheme.primaryColor,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -291,7 +294,7 @@ class _RegisterState extends State<Register> {
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
-                                color: Color(0xFF2E576C),
+                                color: AppTheme.primaryColor,
                               ),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -336,10 +339,12 @@ class _RegisterState extends State<Register> {
                           child: ElevatedButton(
                             onPressed: isLoading ? null : () => _register(),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF2E576C),
+                              backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
                               elevation: 5,
-                              shadowColor: Color(0xFF2E576C).withOpacity(0.5),
+                              shadowColor: AppTheme.primaryColor.withOpacity(
+                                0.5,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -390,7 +395,7 @@ class _RegisterState extends State<Register> {
                                 "Login",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade700,
+                                  color: AppTheme.primaryColor,
                                   fontSize: 15,
                                 ),
                               ),
@@ -418,24 +423,27 @@ class _RegisterState extends State<Register> {
           errorMessage = null;
         });
         final authService = FirebaseAuthService();
-        await authService.registerWithEmailAndPassword(
+        final credential = await authService.registerWithEmailAndPassword(
           name: nameController.text,
           email: emailController.text.trim(),
           password: passwordController.text,
           mobile: mobileController.text,
         );
+
         // Show success message
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Registration successful. Please login."),
+            content: Text("Registration successful! Welcome to GearCare."),
             backgroundColor: Colors.green,
           ),
         );
-        // Navigate to Login page
-        Navigator.pushReplacement(
+
+        // Navigate directly to Home page
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const Login()),
+          MaterialPageRoute(builder: (context) => const Home()),
+          (route) => false,
         );
       } catch (e) {
         setState(() {

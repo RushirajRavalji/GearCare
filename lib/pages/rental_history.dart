@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/rental_history_service.dart';
 import 'package:gearcare/models/rental_history_model.dart';
 import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/theme.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
 import 'package:intl/intl.dart';
 
@@ -31,10 +32,10 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.backgroundColor,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(
@@ -44,14 +45,9 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           "Rental History",
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            letterSpacing: 0.2,
-          ),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
@@ -201,12 +197,7 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
   }
 
   Widget _buildRentalCard(RentalRecord rental) {
-    final Color statusColor =
-        rental.status == 'active'
-            ? const Color(0xFF4CAF50)
-            : rental.status == 'completed'
-            ? const Color(0xFF2196F3)
-            : const Color(0xFFFF9800);
+    final Color statusColor = AppTheme.getStatusColor(rental.status);
     final dateFormat = DateFormat('MMM dd, yyyy');
     final timeFormat = DateFormat('hh:mm a');
 
@@ -223,11 +214,11 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardBackgroundColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: AppTheme.shadowColor,
             offset: const Offset(0, 4),
             blurRadius: 10,
           ),

@@ -12,6 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gearcare/localStorage/location_service.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:gearcare/theme.dart';
+import 'package:gearcare/pages/categotry.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -205,45 +207,40 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final Color primaryBlue = Color(0xFF2E576C);
-    final Color lightBlueColor = const Color(0xFFD4EBFA);
-    final Color backgroundGrey = const Color(0xFFF9FAFC);
 
     if (_isLoading) {
       return Scaffold(
-        body: Center(child: CircularProgressIndicator(color: primaryBlue)),
+        body: Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+        ),
       );
     }
 
     // Use const for widgets that don't change to improve performance
     return Scaffold(
-      backgroundColor: backgroundGrey,
+      backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           // Disable physics if there's any jitter during scrolling
           physics: const ClampingScrollPhysics(),
           child: Column(
             children: [
-              _buildTopBar(context, primaryBlue),
-              _buildSearchBar(screenWidth, primaryBlue),
+              _buildTopBar(context),
+              _buildSearchBar(screenWidth),
               const SizedBox(height: 20),
               _buildFeaturedHeading(screenWidth),
               const SizedBox(height: 10),
-              _buildScrollableContainer(screenWidth, primaryBlue),
+              _buildScrollableContainer(screenWidth),
               const SizedBox(height: 25),
               _buildCategoryHeading(screenWidth),
               const SizedBox(height: 15),
-              _buildCircleCategories(screenWidth, primaryBlue),
+              _buildCircleCategories(screenWidth),
               const SizedBox(height: 25),
               _buildRecommendedHeading(screenWidth),
               const SizedBox(height: 10),
               _bottomProducts.isEmpty
-                  ? _buildEmptyBottomContainer(screenWidth, lightBlueColor)
-                  : _buildBottomProductsSection(
-                    screenWidth,
-                    lightBlueColor,
-                    primaryBlue,
-                  ),
+                  ? _buildEmptyBottomContainer(screenWidth)
+                  : _buildBottomProductsSection(screenWidth),
             ],
           ),
         ),
@@ -263,14 +260,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             }
           });
         },
-        backgroundColor: primaryBlue,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 4,
         child: const Icon(Icons.add, size: 28),
       ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context, Color primaryColor) {
+  Widget _buildTopBar(BuildContext context) {
     return Container(
       height: 65,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -305,7 +302,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 onLongPress:
                     () => _showLocationDetails(
                       context,
-                      primaryColor,
                     ), // Show details on long press
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -319,7 +315,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.location_on, color: primaryColor, size: 18),
+                      Icon(
+                        Icons.location_on,
+                        color: AppTheme.primaryColor,
+                        size: 18,
+                      ),
                       const SizedBox(width: 4),
                       _isLoadingLocation
                           ? SizedBox(
@@ -328,7 +328,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                primaryColor,
+                                AppTheme.primaryColor,
                               ),
                             ),
                           )
@@ -348,7 +348,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           ),
                       // Add refresh indicator
                       const SizedBox(width: 4),
-                      Icon(Icons.refresh, color: primaryColor, size: 14),
+                      Icon(
+                        Icons.refresh,
+                        color: AppTheme.primaryColor,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ),
@@ -379,9 +383,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.1),
+                      color: AppTheme.primaryColor.withOpacity(0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(color: primaryColor, width: 2),
+                      border: Border.all(
+                        color: AppTheme.primaryColor,
+                        width: 2,
+                      ),
                     ),
                     child: const CircularProgressIndicator(
                       strokeWidth: 2,
@@ -406,7 +413,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       height: imageSize,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: primaryColor, width: 2),
+                        border: Border.all(
+                          color: AppTheme.primaryColor,
+                          width: 2,
+                        ),
                       ),
                       child: ClipOval(
                         child: Image.memory(
@@ -428,7 +438,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: primaryColor, width: 2),
+                        border: Border.all(
+                          color: AppTheme.primaryColor,
+                          width: 2,
+                        ),
                       ),
                       child: ClipOval(
                         child: Image.network(
@@ -455,9 +468,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
+                    color: AppTheme.primaryColor.withOpacity(0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(color: primaryColor, width: 2),
+                    border: Border.all(color: AppTheme.primaryColor, width: 2),
                   ),
                   child: const Icon(
                     Icons.person,
@@ -516,7 +529,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     }
   }
 
-  Widget _buildSearchBar(double screenWidth, Color primaryColor) {
+  Widget _buildSearchBar(double screenWidth) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       child: Container(
@@ -554,7 +567,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               height: 50,
               width: 50,
               decoration: BoxDecoration(
-                color: primaryColor,
+                color: AppTheme.primaryColor,
                 borderRadius: const BorderRadius.horizontal(
                   right: Radius.circular(15),
                 ),
@@ -612,7 +625,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildScrollableContainer(double screenWidth, Color primaryColor) {
+  Widget _buildScrollableContainer(double screenWidth) {
     return SizedBox(
       width: screenWidth,
       height: 280,
@@ -648,17 +661,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   _currentPage = index;
                 },
                 itemBuilder:
-                    (context, index) =>
-                        _buildProductItem(context, index, primaryColor),
+                    (context, index) => _buildProductItem(context, index),
               ),
     );
   }
 
-  Widget _buildProductItem(
-    BuildContext context,
-    int index,
-    Color primaryColor,
-  ) {
+  Widget _buildProductItem(BuildContext context, int index) {
     final product = _upperProducts[index];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -706,7 +714,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: primaryColor,
+                            color: AppTheme.primaryColor,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Text(
@@ -809,7 +817,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           Text(
                             "₹${product.price.toStringAsFixed(2)}/day",
                             style: TextStyle(
-                              color: primaryColor,
+                              color: AppTheme.primaryColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -827,20 +835,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildCircleCategories(double screenWidth, Color primaryColor) {
+  Widget _buildCircleCategories(double screenWidth) {
     return SizedBox(
       height: 102,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: _circleItems.length,
-        itemBuilder:
-            (context, index) => _buildCircleItem(context, index, primaryColor),
+        itemBuilder: (context, index) => _buildCircleItem(context, index),
       ),
     );
   }
 
-  Widget _buildCircleItem(BuildContext context, int index, Color primaryColor) {
+  Widget _buildCircleItem(BuildContext context, int index) {
     return GestureDetector(
       onTap:
           () => Navigator.push(
@@ -862,13 +869,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.2),
+                    color: AppTheme.primaryColor.withOpacity(0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: Icon(_categoryIcons[index], color: primaryColor, size: 28),
+              child: Icon(
+                _categoryIcons[index],
+                color: AppTheme.primaryColor,
+                size: 28,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -884,7 +895,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildEmptyBottomContainer(double screenWidth, Color lightBlueColor) {
+  Widget _buildEmptyBottomContainer(double screenWidth) {
     return Container(
       width: screenWidth - 32,
       height: 150,
@@ -923,11 +934,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildBottomProductsSection(
-    double screenWidth,
-    Color lightBlueColor,
-    Color primaryColor,
-  ) {
+  Widget _buildBottomProductsSection(double screenWidth) {
     return Container(
       width: screenWidth,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -939,10 +946,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         itemBuilder: (context, index) {
           return _buildBottomProductContainer(
             screenWidth,
-            lightBlueColor,
             _bottomProducts[index],
             index,
-            primaryColor,
           );
         },
       ),
@@ -951,10 +956,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Widget _buildBottomProductContainer(
     double screenWidth,
-    Color lightBlueColor,
     Product product,
     int index,
-    Color primaryColor,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -1115,7 +1118,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: primaryColor,
+                      color: AppTheme.primaryColor,
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
@@ -1218,7 +1221,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   // Show detailed location info dialog
-  void _showLocationDetails(BuildContext context, Color primaryColor) async {
+  void _showLocationDetails(BuildContext context) async {
     try {
       final locationData =
           await _locationService.getCurrentLocationWithAddress();
@@ -1231,7 +1234,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             (context) => AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.location_on, color: primaryColor),
+                  Icon(Icons.location_on, color: AppTheme.primaryColor),
                   const SizedBox(width: 8),
                   const Text('Location Details'),
                 ],
@@ -1243,7 +1246,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   _buildLocationDetailRow(
                     'Address:',
                     locationData['address'] ?? 'Unknown',
-                    primaryColor,
+                    AppTheme.primaryColor,
                   ),
                   const SizedBox(height: 8),
                   _buildLocationDetailRow(
@@ -1251,7 +1254,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     locationData.containsKey('latitude')
                         ? locationData['latitude'].toString()
                         : 'N/A',
-                    primaryColor,
+                    AppTheme.primaryColor,
                   ),
                   const SizedBox(height: 8),
                   _buildLocationDetailRow(
@@ -1259,7 +1262,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     locationData.containsKey('longitude')
                         ? locationData['longitude'].toString()
                         : 'N/A',
-                    primaryColor,
+                    AppTheme.primaryColor,
                   ),
                   const SizedBox(height: 8),
                   _buildLocationDetailRow(
@@ -1267,18 +1270,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     locationData.containsKey('timestamp')
                         ? _formatTimestamp(locationData['timestamp'])
                         : 'N/A',
-                    primaryColor,
+                    AppTheme.primaryColor,
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Close', style: TextStyle(color: primaryColor)),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(color: AppTheme.primaryColor),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
+                    backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () {
