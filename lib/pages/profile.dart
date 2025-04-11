@@ -579,10 +579,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         color:
             enabled
                 ? AppTheme.secondaryColor.withOpacity(0.5)
-                : Colors.grey.shade50,
+                : AppTheme.backgroundColor, // Changed to match background color
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: enabled ? AppTheme.secondaryColor : Colors.grey.shade200,
+          color:
+              enabled
+                  ? const Color.fromARGB(17, 1, 89, 148)
+                  : Colors.grey.shade200,
         ),
       ),
       child: TextField(

@@ -14,18 +14,89 @@ class _CategoryState extends State<Category> {
     Color c1 = const Color.fromRGBO(211, 232, 246, 1);
     Color accentColor = Color.fromARGB(17, 200, 206, 210);
 
-    // Category titles for demonstration
-    List<String> categoryTitles = [
-      "Electronics",
-      "Clothing",
-      "Books",
-      "Home",
-      "Beauty",
-      "Sports",
-      "Toys",
-      "Grocery",
-      "Health",
-      "Automotive",
+    // Medical equipment categories
+    List<Map<String, dynamic>> medicalCategories = [
+      {
+        "title": "Diagnostic and Imaging Equipment",
+        "items": [
+          "MRI Scanners",
+          "CT Scanners",
+          "Ultrasound Machines",
+          "Portable X-Ray Units",
+          "Nuclear Imaging Systems",
+          "Fluoroscopy Units",
+          "Mammography Units",
+        ],
+        "icon": Icons.medical_services,
+      },
+      {
+        "title": "Patient Monitoring and Critical Care",
+        "items": [
+          "Vital Signs Monitors",
+          "ICU Monitors",
+          "ECG/EKG Machines",
+          "Infusion Pumps",
+          "Ventilators",
+          "CPAP/BiPAP Machines",
+          "Pulse Oximeters",
+          "Capnography Devices",
+        ],
+        "icon": Icons.monitor_heart,
+      },
+      {
+        "title": "Surgical and Operating Room Equipment",
+        "items": [
+          "Operating Tables",
+          "Surgical Lights",
+          "Anesthesia Machines",
+          "Electrosurgical Units",
+          "Endoscopic Systems",
+        ],
+        "icon": Icons.local_hospital,
+      },
+      {
+        "title": "Life Support and Emergency Equipment",
+        "items": [
+          "Defibrillators",
+          "Cardiac Resuscitation Devices",
+          "Emergency Resuscitation Kits",
+        ],
+        "icon": Icons.emergency,
+      },
+      {
+        "title": "Rehabilitation and Therapy Devices",
+        "items": [
+          "Physical Therapy Equipment",
+          "Patient Lifts",
+          "Transfer Devices",
+          "Rehabilitation Beds",
+        ],
+        "icon": Icons.accessibility_new,
+      },
+      {
+        "title": "Inpatient and Patient Care Support",
+        "items": [
+          "Hospital Beds",
+          "Stretchers",
+          "Mobile Medical Carts",
+          "Workstations",
+          "IV Poles",
+          "Bedside Accessories",
+        ],
+        "icon": Icons.bed,
+      },
+      {
+        "title": "Auxiliary and Specialty Equipment",
+        "items": [
+          "Sterilization Units",
+          "Autoclave Units",
+          "Telemedicine Tools",
+          "Remote Diagnostic Tools",
+          "Mobile Clinics",
+          "Radiology Trucks",
+        ],
+        "icon": Icons.biotech,
+      },
     ];
 
     return Scaffold(
@@ -40,7 +111,7 @@ class _CategoryState extends State<Category> {
               ),
         ),
         title: const Text(
-          "Categories",
+          "Medical Equipment",
           style: TextStyle(
             color: Color(0xFF2D3142),
             fontSize: 28,
@@ -68,7 +139,7 @@ class _CategoryState extends State<Category> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
-                  "Shop by category",
+                  "Browse by category",
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 16,
@@ -80,11 +151,10 @@ class _CategoryState extends State<Category> {
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: 10,
+                itemCount: medicalCategories.length,
                 itemBuilder: (context, index) {
-                  return CategoryCard(
-                    c1,
-                    title: categoryTitles[index],
+                  return MedicalCategoryCard(
+                    category: medicalCategories[index],
                     index: index,
                   );
                 },
@@ -98,16 +168,14 @@ class _CategoryState extends State<Category> {
   }
 }
 
-// Category Card Widget
-class CategoryCard extends StatelessWidget {
-  final Color cardColor;
-  final String title;
+// Medical Category Card Widget
+class MedicalCategoryCard extends StatelessWidget {
+  final Map<String, dynamic> category;
   final int index;
 
-  const CategoryCard(
-    this.cardColor, {
+  const MedicalCategoryCard({
     super.key,
-    required this.title,
+    required this.category,
     required this.index,
   });
 
@@ -122,36 +190,19 @@ class CategoryCard extends StatelessWidget {
       [const Color(0xFFFFF3E0), const Color(0xFFFFE0B2)], // Orange
       [const Color(0xFFE1F5FE), const Color(0xFFB3E5FC)], // Light Blue
       [const Color(0xFFE0F2F1), const Color(0xFFB2DFDB)], // Teal
-      [const Color(0xFFE8EAF6), const Color(0xFFC5CAE9)], // Indigo
-      [const Color(0xFFFFF8E1), const Color(0xFFFFECB3)], // Amber
-      [const Color(0xFFFCE4EC), const Color(0xFFF8BBD0)], // Pink
     ];
 
     // Select gradient based on index
     List<Color> currentGradient = gradients[index % gradients.length];
-
-    // Icons to represent categories
-    List<IconData> categoryIcons = [
-      Icons.devices,
-      Icons.checkroom,
-      Icons.menu_book,
-      Icons.chair,
-      Icons.face,
-      Icons.sports_basketball,
-      Icons.toys,
-      Icons.shopping_basket,
-      Icons.healing,
-      Icons.directions_car,
-    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Title bar with improved design
         Container(
-          width: 180,
-          height: 40,
-          margin: const EdgeInsets.only(top: 8),
+          width: MediaQuery.of(context).size.width * 0.7,
+          height: 45,
+          margin: const EdgeInsets.only(top: 16),
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(12),
@@ -170,27 +221,36 @@ class CategoryCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                title,
-                style: const TextStyle(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(
+                  category['icon'] ?? Icons.medical_services,
                   color: Color(0xFF2D3142),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  size: 22,
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    category['title'],
+                    style: const TextStyle(
+                      color: Color(0xFF2D3142),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(height: 0),
-        // Main card with improved visual design
+        // Main card with subcategories
         Container(
           width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -214,36 +274,53 @@ class CategoryCard extends StatelessWidget {
               ),
             ],
           ),
-          // Subcategory items with icons
-          child: Wrap(
-            spacing: 20,
-            runSpacing: 20,
-            children: List.generate(10, (i) {
-              return Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: currentGradient[1].withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+          // List of subcategory items
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(category['items'].length, (i) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: currentGradient[1].withOpacity(0.3),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.medical_information,
+                          size: 18,
+                          color: Color.lerp(
+                            const Color(0xFF3D7EFF),
+                            const Color(0xFF2D3142),
+                            (i % 7) / 7,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        category['items'][i],
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF2D3142),
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                child: Center(
-                  child: Icon(
-                    categoryIcons[index % categoryIcons.length],
-                    size: 22,
-                    color: Color.lerp(
-                      const Color(0xFF3D7EFF),
-                      const Color(0xFF2D3142),
-                      (i % 10) / 10,
-                    ),
-                  ),
                 ),
               );
             }),

@@ -3,6 +3,7 @@ import 'package:gearcare/localStorage/rental_history_service.dart';
 import 'package:gearcare/models/product_models.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
+import 'package:gearcare/models/rental_history_model.dart';
 
 class RentScreen extends StatefulWidget {
   final Product product;
@@ -617,7 +618,7 @@ class _RentScreenState extends State<RentScreen> {
       final durationDays = _endDate.difference(_startDate).inDays + 1;
 
       // Record the rental in the history
-      await _rentalService.recordRental(
+      final rentalId = await _rentalService.recordRental(
         widget.product,
         _startDate,
         _endDate,
