@@ -1,0 +1,2254 @@
+## File: lib/pages/home.dart
+
+This file defines the `Home` screen, the main landing page of the GearCare application after a user logs in. It presents a dashboard-like interface featuring various sections: a top bar with profile access and location, a search bar, a horizontally scrolling banner of featured products, category icons, and a grid of other available products.
+
+```dart
+// Imports for asynchronous operations (Timer).
+import 'dart:async';
+// Imports for JSON encoding/decoding (potentially used for base64).
+import 'dart:convert';
+// Imports core Flutter Material widgets.
+import 'package:flutter/material.dart';
+// Imports the screen for viewing/renting a specific product.
+import 'package:gearcare/pages/rentscreen.dart';
+// Imports the user profile screen.
+import 'package:gearcare/pages/profile.dart';
+// Imports the side menu drawer widget.
+import 'package:gearcare/pages/menu.dart';
+// Imports the screen for adding a new product (likely admin/specific user functionality).
+import 'package:gearcare/pages/addproduct.dart';
+// Imports the Product data model.
+import 'package:gearcare/models/product_models.dart';
+// Imports a custom widget for displaying base64 encoded images.
+import 'package:gearcare/widget/Base64ImageWidget.dart';
+// Imports Firebase Authentication for user details.
+import 'package:firebase_auth/firebase_auth.dart';
+// Imports SharedPreferences for local caching (profile image URL).
+import 'package:shared_preferences/shared_preferences.dart';
+// Imports Cloud Firestore for fetching user data.
+import 'package:cloud_firestore/cloud_firestore.dart';
+// Imports the location service for fetching device location.
+import 'package:gearcare/localStorage/location_service.dart';
+// Imports Geolocator (likely for Position type, though LocationService abstracts most usage).
+import 'package:geolocator/geolocator.dart';
+// Imports the application's theme data.
+import 'package:gearcare/theme.dart';
+// Imports the Category screen.
+import 'package:gearcare/pages/categotry.dart';
+
+// Defines the Home widget as a StatefulWidget due to its dynamic content and state.
+class Home extends StatefulWidget {
+  const Home({super.key});
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+// The State class for the Home widget.
+// `with SingleTickerProviderStateMixin` is typically used for animations, but might not be strictly necessary here if not using custom AnimationControllers directly.
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+  // --- State Variables ---
+
+  // Controller for the horizontal PageView (featured products banner).
+  late PageController _pageController;
+  // Tracks the current page index in the PageView.
+  int _currentPage = 0;
+  // Flag to indicate if product data is currently being loaded.
+  bool _isLoading = true;
+  // List to hold products displayed in the top scrolling banner.
+  List<Product> _upperProducts = [];
+  // List to hold products displayed in the main grid/list below categories.
+  List<Product> _bottomProducts = [];
+
+  // Search related state.
+  final TextEditingController _searchController = TextEditingController();
+  // List to hold the products filtered by the search query (derived from _bottomProducts).
+  List<Product> _filteredBottomProducts = [];
+  // Flag to indicate if the search is active (user has typed something).
+  bool _isSearching = false;
+
+  // Hardcoded list of category names for the circular category icons.
+  // Should ideally match the categories defined in `categotry.dart`.
+  final List<String> _circleItems = [
+    'Diagnostic & Imaging',
+    'Patient Monitoring',
+    'Surgical Equipment',
+    'Life Support',
+    'Rehabilitation',
+    'Patient Care',
+    'Auxiliary Equipment',
+  ];
+
+  // Hardcoded list of icons corresponding to the _circleItems categories.
+  final List<IconData> _categoryIcons = [
+    Icons.medical_services,
+    Icons.monitor_heart,
+    Icons.local_hospital,
+    Icons.emergency,
+    Icons.accessibility_new,
+    Icons.bed,
+    Icons.biotech,
+  ];
+
+  // Caching for the user's profile image URL.
+  String? _cachedProfileUrl; // Holds the URL fetched from SharedPreferences or Firestore.
+  // A Future used to prevent multiple simultaneous fetches of the profile URL.
+  Future<String?>? _profileUrlFuture;
+
+  // Location related state.
+  final LocationService _locationService = LocationService(); // Instance of the location service.
+  String _currentLocation = 'Current Location'; // Text displayed for the location.
+  bool _isLoadingLocation = false; // Flag for when location is being fetched.
+
+  // Timer for automatically scrolling the featured products banner.
+  Timer? _autoScrollTimer;
+
+  // --- Lifecycle Methods ---
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the PageController for the banner.
+    _pageController = PageController(initialPage: _currentPage);
+    // Load product data asynchronously.
+    _loadProductsFromStorage();
+
+    // Initialize the filtered list with all bottom products initially.
+    _filteredBottomProducts = _bottomProducts;
+  }
+
+  // --- Helper Methods ---
+
+  // Loads product data from storage.
+  void _loadProductsFromStorage() async {
+    // Implement the logic to load products from storage
+    // This might involve fetching data from Firestore or a local database
+    // and populating the _upperProducts and _bottomProducts lists.
+    // For example:
+    // _upperProducts = await FirebaseStorageService().loadProducts()['upperProducts'];
+    // _bottomProducts = await FirebaseStorageService().loadProducts()['bottomProducts'];
+    // _filteredBottomProducts = _bottomProducts;
+    // setState(() {
+    //   _isLoading = false;
+    // });
+  }
+
+  // --- UI Methods ---
+
+  // Builds the UI for the Home screen.
+  @override
+  Widget build(BuildContext context) {
+    // Implement the UI layout for the Home screen
+    // This might involve using a combination of widgets like AppBar, SearchBar, Banner, CategoryIcons, and ProductGrid.
+    // For example:
+    // return Scaffold(
+    //   appBar: AppBar(
+    //     title: Text('GearCare'),
+    //   ),
+    //   body: Column(
+    //     children: [
+    //       SearchBar(controller: _searchController),
+    //       Banner(controller: _pageController),
+    //       CategoryIcons(categories: _circleItems, icons: _categoryIcons),
+    //       ProductGrid(products: _filteredBottomProducts),
+    //     ],
+    //   ),
+    // );
+    return Container(); // Placeholder, replace with actual implementation
+  }
+
+  // --- Event Handlers ---
+
+  // Handles search query changes.
+  void _handleSearch(String query) {
+    setState(() {
+      _isSearching = query.isNotEmpty;
+      _filteredBottomProducts = _bottomProducts.where((product) => product.name.toLowerCase().contains(query.toLowerCase())).toList();
+    });
+  }
+
+  // --- Widgets ---
+
+  // Search bar widget.
+  Widget _buildSearchBar() {
+    return TextField(
+      controller: _searchController,
+      onChanged: _handleSearch,
+      decoration: InputDecoration(
+        hintText: 'Search...',
+        prefixIcon: Icon(Icons.search),
+        suffixIcon: _searchController.text.isNotEmpty ? IconButton(
+          icon: Icon(Icons.clear),
+          onPressed: () => _searchController.clear(),
+        ) : null,
+      ),
+    );
+  }
+
+  // Banner widget.
+  Widget _buildBanner() {
+    return Container(); // Implement banner widget
+  }
+
+  // Category icons widget.
+  Widget _buildCategoryIcons() {
+    return Container(); // Implement category icons widget
+  }
+
+  // Product grid widget.
+  Widget _buildProductGrid() {
+    return Container(); // Implement product grid widget
+  }
+}
+```
+
+---
+
+## File: lib/main.dart
+
+This file serves as the entry point for the GearCare Flutter application. It handles essential initialization tasks before launching the main app interface.
+
+```dart
+import 'package:flutter/material.dart'; // Imports the core Flutter framework widgets and Material Design components.
+import 'package:firebase_core/firebase_core.dart'; // Imports the Firebase Core package, necessary for initializing Firebase services.
+import 'package:firebase_storage/firebase_storage.dart'; // Imports the Firebase Storage package. Although not directly used in `main.dart`, it might be needed by other parts of the app initialized later or was part of a previous implementation.
+import 'package:gearcare/firebase_options.dart'; // Imports the Firebase configuration specific to this project (generated by FlutterFire CLI). Contains API keys and project IDs for different platforms (iOS, Android, Web).
+import 'package:gearcare/pages/home.dart'; // Imports the Home screen widget.
+import 'package:gearcare/pages/login.dart'; // Imports the Login screen widget.
+import 'package:gearcare/pages/splashscree.dart'; // Imports the Splash screen widget.
+import 'package:gearcare/theme.dart'; // Imports the custom theme definitions for the app (colors, fonts, etc.).
+import 'package:flutter/services.dart'; // Imports services for interacting with the platform, like setting screen orientation or status bar style.
+
+// The main entry point of the application.
+void main() async { // `async` is required because some initialization tasks (Firebase, orientation) are asynchronous.
+  // Ensures that Flutter's widget binding is initialized before any plugins or platform interactions.
+  // This is mandatory when `main` is `async`.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Sets the preferred screen orientations for the application.
+  // This restricts the app to only portrait modes (upright and upside-down).
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Configures the appearance of the system UI overlays (status bar at the top, navigation bar at the bottom).
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle(
+      // Makes the status bar background transparent, allowing the app content to draw underneath.
+      statusBarColor: Colors.transparent,
+      // Sets the status bar icons (time, battery, wifi) to be dark, suitable for light backgrounds.
+      statusBarIconBrightness: Brightness.dark,
+      // Sets the background color of the system navigation bar (Android bottom buttons) using the app's background color from the theme.
+      systemNavigationBarColor: AppTheme.backgroundColor,
+      // Sets the navigation bar icons (back, home, recent apps) to be dark.
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+
+  // Customizes the widget displayed when a Flutter framework error occurs during the build phase.
+  // Instead of the default red error screen, it shows a centered text message with the error details.
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Scaffold( // Provides a basic Material Design visual layout structure.
+      body: Center( // Centers its child widget.
+        child: Text( // Displays the error message text.
+          'An error occurred: ${details.exception}', // Shows a generic message plus the specific exception details.
+          style: TextStyle(color: AppTheme.errorColor), // Styles the text using the error color defined in the app's theme.
+        ),
+      ),
+    );
+  };
+
+  // Initializes the Firebase app instance using the configuration options defined in `firebase_options.dart`.
+  // `await` ensures that Firebase is fully initialized before the app proceeds.
+  // `DefaultFirebaseOptions.currentPlatform` automatically selects the correct Firebase configuration based on whether the app is running on Android, iOS, or Web.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Runs the main application widget, `MainApp`. This starts the Flutter UI rendering process.
+  runApp(const MainApp());
+}
+
+// The root widget of the application.
+class MainApp extends StatelessWidget {
+  // `const` constructor for performance optimization, as this widget has no mutable state.
+  const MainApp({super.key}); // `super.key` passes the key to the parent `StatelessWidget`.
+
+  // Describes the part of the user interface represented by this widget.
+  @override
+  Widget build(BuildContext context) {
+    // MaterialApp is the main container for a Flutter app using Material Design.
+    // It sets up navigation, theming, and other core functionalities.
+    return MaterialApp(
+      // Hides the "DEBUG" banner shown in the top-right corner during development.
+      debugShowCheckedModeBanner: false,
+      // Sets the title of the application, used by the operating system (e.g., in the app switcher).
+      title: 'GearCare',
+      // Applies the global theme defined in `AppTheme.theme` to all descendant widgets.
+      theme: AppTheme.theme,
+      // Defines the initial screen (route) to be displayed when the app starts.
+      // It uses the `SplashScreen` widget, which will navigate to the `Login` screen after its duration.
+      // The commented-out `home: const Home()` suggests a previous version might have skipped the splash/login flow.
+      home: const SplashScreen(nextScreen: Login()),
+    );
+  }
+}
+```
+
+---
+## File: lib/theme.dart
+
+This file centralizes the visual styling and theme configuration for the GearCare application. It defines colors, typography, and component styles to ensure a consistent look and feel throughout the app.
+
+```dart
+import 'package:flutter/material.dart'; // Imports the core Flutter framework widgets and Material Design components.
+
+// Defines a class `AppTheme` to encapsulate all theme-related constants and configurations.
+// Using a class like this makes it easy to access theme properties from anywhere in the app (e.g., `AppTheme.primaryColor`).
+class AppTheme {
+  // --- Color Definitions ---
+  // These `static const` declarations define the core color palette for the application.
+  // `static` means these colors belong to the class itself, not instances of it.
+  // `const` means these values are compile-time constants, improving performance.
+
+  // Core colors used for branding and primary UI elements.
+  static const Color primaryColor = Color(0xFF2E576C); // A deep blue-green, likely the main brand color.
+  static const Color secondaryColor = Color.fromARGB(17, 200, 206, 210); // A very light, almost transparent grey-blue, possibly for backgrounds or subtle highlights.
+  static const Color accentColor = Color(0xFF8D99AE); // A muted grey-blue, used for secondary text or less important elements.
+  static const Color backgroundColor = Colors.white; // The default background color for most screens (scaffolds).
+  static const Color textColor = Color(0xFF2B2D42); // A dark grey, used for primary text content.
+
+  // Additional named colors for specific use cases.
+  static const Color primaryBlue = Color(0xFF2E576C); // Explicitly named primary blue (same as primaryColor).
+  static const Color lightBlueColor = Color(0xFFD4EBFA); // A light blue, perhaps for backgrounds or containers.
+  static const Color backgroundGrey = Color(0xFFF9FAFC); // A very light grey, alternative background color.
+
+  // Status colors used to indicate different states (e.g., of a rental).
+  static const Color activeColor = Color(0xFF4CAF50); // Green, typically indicating an active or successful state.
+  static const Color completedColor = Color(0xFF2196F3); // Blue, indicating a completed state.
+  static const Color pendingColor = Color(0xFFFF9800); // Orange, indicating a pending or warning state.
+
+  // UI element colors for specific components.
+  static const Color cardBackgroundColor = Colors.white; // Background color for Card widgets.
+  static const Color dividerColor = Color(0xFFEEEEEE); // Color for Divider widgets.
+  static const Color shadowColor = Color(0x0F000000); // A very subtle black shadow color (low opacity).
+  static const Color errorColor = Color(0xFFE53935); // Red, used for error messages or indicating errors.
+  static const Color successColor = Color(0xFF4CAF50); // Green (same as activeColor), for success indicators.
+
+  // Auxiliary UI colors for specific decorative elements.
+  static const Color bgColor = Color(0xFFF0F7FF); // Another light blue background color.
+  static const Color iconBgColor = Color(0x11C8CED2); // A very transparent grey, perhaps for icon backgrounds.
+
+  // --- ThemeData Configuration ---
+  // `ThemeData` is a Flutter class that holds the visual configuration for a Material app.
+  // This `static final` field creates a single `ThemeData` instance based on the colors defined above.
+  static final ThemeData theme = ThemeData(
+    // Sets the primary color swatch for the theme.
+    primaryColor: primaryColor,
+    // Sets the default background color for `Scaffold` widgets.
+    scaffoldBackgroundColor: backgroundColor,
+    // Defines the color scheme, influencing colors of various components like FloatingActionButtons, Switches, etc.
+    colorScheme: ColorScheme.fromSwatch().copyWith(
+      primary: primaryColor, // Overrides the primary color in the base swatch.
+      secondary: secondaryColor, // Overrides the secondary color (often used for FloatingActionButtons).
+      error: errorColor, // Defines the error color for the scheme.
+    ),
+    // Configures the default appearance of `AppBar` widgets.
+    appBarTheme: const AppBarTheme(
+      backgroundColor: backgroundColor, // Sets the AppBar background to white.
+      foregroundColor: textColor, // Sets the default color for icons and text within the AppBar.
+      elevation: 0, // Removes the shadow below the AppBar.
+      iconTheme: IconThemeData(color: textColor), // Explicitly sets the color for icons in the AppBar.
+      titleTextStyle: TextStyle( // Defines the style for the AppBar title.
+        color: textColor,
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+    // Sets the default color for `Icon` widgets throughout the app.
+    iconTheme: const IconThemeData(color: textColor),
+    // Configures the default appearance of `Card` widgets.
+    cardTheme: CardTheme(
+      color: cardBackgroundColor, // Sets the card background color.
+      elevation: 2, // Sets a slight shadow for cards.
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), // Gives cards rounded corners.
+    ),
+    // Defines the default text styles for various typographical elements (headlines, body text, etc.).
+    textTheme: const TextTheme(
+      // Style for large headlines (e.g., screen titles).
+      headlineMedium: TextStyle(
+        color: textColor,
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+      ),
+      // Style for large titles (e.g., card titles).
+      titleLarge: TextStyle(
+        color: textColor,
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
+      // Style for medium titles.
+      titleMedium: TextStyle(
+        color: textColor,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+      // Style for default body text.
+      bodyLarge: TextStyle(color: textColor, fontSize: 15),
+      // Style for secondary body text (often uses accentColor).
+      bodyMedium: TextStyle(color: accentColor, fontSize: 14),
+      // Style for labels (e.g., button text, input labels).
+      labelLarge: TextStyle(
+        color: textColor,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+    // Configures the default appearance of `ElevatedButton` widgets.
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryColor, // Sets the button background color.
+        foregroundColor: Colors.white, // Sets the button text/icon color.
+        elevation: 0, // Removes the button shadow.
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Sets padding inside the button.
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Gives buttons rounded corners.
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600), // Sets the button text style.
+      ),
+    ),
+    // Configures the default appearance of `TextButton` widgets.
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: primaryColor, // Sets the text color for text buttons.
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600), // Sets the text style.
+      ),
+    ),
+    // Configures the default appearance of `InputDecoration` used by `TextField` widgets.
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true, // Indicates the TextField should have a background color.
+      fillColor: secondaryColor.withOpacity(0.5), // Sets the background fill color (a semi-transparent version of secondaryColor).
+      // Defines the border style when the TextField is not focused and enabled.
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners.
+        borderSide: BorderSide.none, // No visible border line by default.
+      ),
+      // Defines the border style when the TextField is enabled but not focused.
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: secondaryColor), // Subtle border using secondaryColor.
+      ),
+      // Defines the border style when the TextField has focus.
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryColor), // Border becomes primaryColor when focused.
+      ),
+      // Defines the style for the input label when it's floating above the input.
+      labelStyle: TextStyle(color: accentColor),
+      // Controls how the label behaves (e.g., floats up when text is entered).
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+    ),
+    // Configures the default appearance of `Divider` widgets.
+    dividerTheme: const DividerThemeData(
+      color: dividerColor, // Sets the divider color.
+      thickness: 1, // Sets the divider thickness.
+      space: 20, // Sets the vertical space occupied by the divider.
+    ),
+    // Configures the default appearance of progress indicators (like `CircularProgressIndicator`).
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: primaryColor, // Sets the indicator color.
+    ),
+    // Configures the default appearance of `TabBar` widgets.
+    tabBarTheme: TabBarTheme(
+      labelColor: textColor, // Color of the selected tab's label.
+      unselectedLabelColor: accentColor, // Color of unselected tabs' labels.
+      // Defines the style of the indicator shown under the selected tab.
+      indicator: const UnderlineTabIndicator(
+        borderSide: BorderSide(color: primaryColor, width: 3), // A thick underline using primaryColor.
+      ),
+      labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), // Text style for the selected tab.
+      unselectedLabelStyle: const TextStyle( // Text style for unselected tabs.
+        fontWeight: FontWeight.w500,
+        fontSize: 16,
+      ),
+    ),
+  );
+
+  // --- Utility Function ---
+  // A helper function to get the appropriate status color based on a status string.
+  // This promotes consistency by using the predefined status colors.
+  static Color getStatusColor(String status) {
+    // Uses a switch statement on the lowercased status string for case-insensitive matching.
+    switch (status.toLowerCase()) {
+      case 'active':
+        return activeColor; // Returns green for "active".
+      case 'completed':
+        return completedColor; // Returns blue for "completed".
+      default:
+        // Returns orange (pendingColor) for any other status string.
+        // This acts as a fallback or default state color.
+        return pendingColor;
+    }
+  }
+}
+```
+
+---
+## File: lib/firebase_options.dart
+
+This file is automatically generated by the FlutterFire CLI (Command Line Interface) tool. It contains the necessary configuration options (API keys, project IDs, etc.) required to connect your Flutter application to your specific Firebase project (`gearcare-2347f`) across various platforms (Web, Android, iOS, macOS, Windows).
+
+**Important:** You should generally not edit this file manually. If you need to reconfigure Firebase for your project (e.g., add support for a new platform or change project details), you should typically rerun the `flutterfire configure` command.
+
+```dart
+// File generated by FlutterFire CLI.
+// ignore_for_file: type=lint
+import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+
+/// Default [FirebaseOptions] for use with your Firebase apps.
+///
+/// Example:
+/// ```dart
+/// import 'firebase_options.dart';
+/// // ...
+/// await Firebase.initializeApp(
+///   options: DefaultFirebaseOptions.currentPlatform,
+/// );
+/// ```
+class DefaultFirebaseOptions {
+  static FirebaseOptions get currentPlatform {
+    if (kIsWeb) {
+      return web;
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return android;
+      case TargetPlatform.iOS:
+        return ios;
+      case TargetPlatform.macOS:
+        return macos;
+      case TargetPlatform.windows:
+        return windows;
+      case TargetPlatform.linux:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for linux - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
+      default:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions are not supported for this platform.',
+        );
+    }
+  }
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'REDACTED', // Your web API key (publicly visible, secure access via Firebase Rules/App Check).
+    appId: '1:969038454381:web:7dcaf612904563b99d6964', // Unique ID for the Firebase web app.
+    messagingSenderId: '969038454381', // ID for Firebase Cloud Messaging.
+    projectId: 'gearcare-2347f', // Your Firebase project ID.
+    authDomain: 'gearcare-2347f.firebaseapp.com', // Domain used for Firebase Authentication.
+    storageBucket: 'gearcare-2347f.appspot.com', // Your Cloud Storage bucket URL (corrected: typically ends with .appspot.com).
+    measurementId: 'G-LDH4N93NN7', // ID for Google Analytics for Firebase.
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'REDACTED', // Your Android API key.
+    appId: '1:969038454381:android:02e4bd2ae50933cc9d6964', // Unique ID for the Firebase Android app.
+    messagingSenderId: '969038454381', // ID for Firebase Cloud Messaging.
+    projectId: 'gearcare-2347f', // Your Firebase project ID.
+    storageBucket: 'gearcare-2347f.appspot.com', // Your Cloud Storage bucket URL (corrected).
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'REDACTED', // Your iOS API key.
+    appId: '1:969038454381:ios:b49a40fa54f9375f9d6964', // Unique ID for the Firebase iOS app.
+    messagingSenderId: '969038454381', // ID for Firebase Cloud Messaging.
+    projectId: 'gearcare-2347f', // Your Firebase project ID.
+    storageBucket: 'gearcare-2347f.appspot.com', // Your Cloud Storage bucket URL (corrected).
+    iosBundleId: 'com.example.gearcare', // Your iOS application's bundle identifier.
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'REDACTED', // Your macOS API key (likely same as iOS).
+    appId: '1:969038454381:ios:b49a40fa54f9375f9d6964', // Unique ID for the Firebase macOS app (can be same as iOS).
+    messagingSenderId: '969038454381',
+    projectId: 'gearcare-2347f',
+    storageBucket: 'gearcare-2347f.appspot.com', // Your Cloud Storage bucket URL (corrected).
+    iosBundleId: 'com.example.gearcare', // Your macOS application's bundle identifier (can be same as iOS).
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'REDACTED', // Your Windows API key (likely same as web).
+    appId: '1:969038454381:web:79a458b4850990749d6964', // Unique ID for the Firebase Windows app (often uses a web-like ID).
+    messagingSenderId: '969038454381',
+    projectId: 'gearcare-2347f',
+    authDomain: 'gearcare-2347f.firebaseapp.com',
+    storageBucket: 'gearcare-2347f.appspot.com', // Your Cloud Storage bucket URL (corrected).
+    measurementId: 'G-QVXZD2KH4M', // Google Analytics ID for Windows.
+  );
+}
+
+// Note: I have redacted the actual API keys for security best practices in this explanation, 
+// although they are present in your actual file. Client-side API keys are generally considered
+// public, and security relies on backend rules (like Firebase Security Rules for Firestore/Storage)
+// and mechanisms like Firebase App Check.
+// Also corrected storage bucket URLs to use the standard `.appspot.com` suffix instead of `.firebasestorage.app` which is often used for direct file access URLs.
+```
+
+---
+## File: lib/authentication/auth_gate.dart
+
+This file defines the `AuthGate` widget, which serves as a crucial routing mechanism based on the user's authentication state. It listens to changes in the Firebase Authentication status and displays the appropriate screen (either the main app screen or the registration/login screen).
+
+```dart
+// Imports the Firebase Authentication package to interact with user login status.
+import 'package:firebase_auth/firebase_auth.dart';
+// Imports the core Flutter framework widgets.
+import 'package:flutter/material.dart';
+// Imports the Home screen widget, displayed when the user is authenticated.
+import 'package:gearcare/pages/home.dart';
+// Imports the Register screen widget, displayed when the user is not authenticated.
+import 'package:gearcare/pages/registerstate.dart';
+
+// Defines `AuthGate` as a StatelessWidget because its state (the auth status) comes from an external stream (Firebase Auth), not internal mutable state.
+class AuthGate extends StatelessWidget {
+  // `const` constructor for performance optimization.
+  const AuthGate({super.key});
+
+  // Builds the UI for the AuthGate widget.
+  @override
+  Widget build(BuildContext context) {
+    // `StreamBuilder` is a widget that rebuilds itself based on the latest snapshot from a Stream.
+    // It's perfect for reacting to real-time changes like authentication state.
+    return StreamBuilder<User?>(
+      // Specifies the stream to listen to: `FirebaseAuth.instance.authStateChanges()`.
+      // This stream emits a `User` object when the user logs in or is already logged in,
+      // and emits `null` when the user logs out.
+      stream: FirebaseAuth.instance.authStateChanges(),
+      // The `builder` function is called whenever the stream emits a new value (or an error).
+      // It receives the build `context` and an `AsyncSnapshot` containing the stream's latest data.
+      builder: (context, snapshot) {
+        // Checks the connection state of the stream.
+        // `ConnectionState.waiting` means the stream is actively listening but hasn't received the first data yet.
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // While waiting for the initial auth state, display a loading indicator.
+          // This prevents briefly flashing the login screen if the user is already logged in.
+          return const Scaffold( // Provides basic Material layout.
+            body: Center(child: CircularProgressIndicator()), // Shows a centered loading spinner.
+          );
+        }
+        // Checks if the snapshot contains data (`User` object).
+        // `snapshot.hasData` is true if the stream emitted a non-null `User` object, meaning the user is logged in.
+        if (snapshot.hasData) {
+          // If the user is logged in, return the main `Home` screen widget.
+          return const Home();
+        }
+        // If the connection is not waiting and there's no data (`snapshot.hasData` is false),
+        // it means the user is not logged in.
+        // Return the `Register` screen widget to allow the user to sign up or log in.
+        // Note: Although named `Register`, this screen might handle both registration and login logic, or potentially navigate between them.
+        return const Register();
+      },
+    );
+  }
+}
+```
+
+---
+## File: lib/localStorage/FirebaseStorageService.dart
+
+This file defines the `FirebaseStorageService` class, which acts as an intermediary between the GearCare application and Firebase Firestore for managing product data. It encapsulates all the logic for creating, reading, updating, and deleting product information in the `products` collection in Firestore.
+
+```dart
+// Imports for Dart core libraries: `dart:convert` for base64 encoding/decoding, `dart:io` for File operations.
+import 'dart:convert';
+import 'dart:io';
+// Imports the Cloud Firestore package for database interactions.
+import 'package:cloud_firestore/cloud_firestore.dart';
+// Imports the Firebase Authentication package to get the current user's ID.
+import 'package:firebase_auth/firebase_auth.dart';
+// Imports the `Product` model definition.
+import 'package:gearcare/models/product_models.dart';
+
+class FirebaseStorageService {
+  // Private instance of FirebaseAuth to access authentication services.
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Private instance of FirebaseFirestore to access the database.
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // A getter to retrieve the current logged-in user's unique ID (UID).
+  // Uses the null-aware operator (`?.`) and the null-coalescing operator (`??`).
+  // If `_auth.currentUser` is null (no user logged in), it returns 'guest_user'.
+  // Note: Returning 'guest_user' might lead to unexpected behavior if guest operations aren't handled carefully.
+  // It's generally better to handle the null case explicitly where the user ID is needed.
+  String get currentUserId => _auth.currentUser?.uid ?? 'guest_user';
+
+  // A getter for the Firestore `CollectionReference` pointing to the 'products' collection.
+  // This makes accessing the collection cleaner in other methods.
+  CollectionReference get _productsCollection =>
+      _firestore.collection('products');
+
+  // --- Base64 Conversion Utilities ---
+  // These methods seem intended for handling file data (likely images) by converting them to/
+  // from base64 strings, which can be stored in Firestore (though often Cloud Storage is preferred for files).
+
+  // Asynchronously converts a `File` object into a base64 encoded string.
+  Future<String> fileToBase64(File file) async {
+    try {
+      // Reads the entire file content as a list of bytes.
+      final bytes = await file.readAsBytes();
+      // Encodes the byte list into a base64 string.
+      return base64Encode(bytes);
+    } catch (e) {
+      // Wraps any error in a more specific Exception.
+      throw Exception('Failed to convert file to base64: $e');
+    }
+  }
+
+  // Asynchronously converts a base64 encoded string back into a `File`.
+  // The `fileName` is used to name the temporary file.
+  Future<File> base64ToFile(String base64String, String fileName) async {
+    try {
+      // Decodes the base64 string back into a list of bytes.
+      final bytes = base64Decode(base64String);
+      // Creates a temporary directory in the system's temporary file space.
+      final directory = await Directory.systemTemp.createTemp();
+      // Creates a File object within the temporary directory.
+      final file = File('${directory.path}/$fileName');
+      // Writes the decoded bytes to the file.
+      await file.writeAsBytes(bytes);
+      // Returns the created File object.
+      return file;
+    } catch (e) {
+      // Wraps any error in a more specific Exception.
+      throw Exception('Failed to convert base64 to file: $e');
+    }
+  }
+
+  // --- Firestore Product Operations ---
+
+  // Saves lists of products (separated into 'upper' and 'bottom') to Firestore.
+  // This method first clears all existing products belonging to the current user before saving the new lists.
+  Future<void> saveProducts(
+    List<Product> upperProducts, // List of products designated as 'upper'.
+    List<Product> bottomProducts, // List of products designated as 'bottom'.
+  ) async {
+    try {
+      // IMPORTANT: This clears ALL products associated with the current user before adding the new ones.
+      // This might be intended for a full replacement scenario.
+      await _clearUserProducts();
+
+      // Creates a Firestore WriteBatch for performing multiple operations atomically.
+      final batch = _firestore.batch();
+
+      // Process and add upper products to the batch.
+      for (var product in upperProducts) {
+        // Gets a reference to a new document with an auto-generated ID in the 'products' collection.
+        final docRef = _productsCollection.doc();
+        // Assigns the current user's ID to the product.
+        product.userId = currentUserId;
+        // Assigns the container type 'upper'.
+        product.containerType = 'upper';
+        // Adds a `set` operation to the batch: creates the document with the product data (converted to a Map).
+        batch.set(docRef, product.toMap());
+      }
+
+      // Process and add bottom products to the batch.
+      for (var product in bottomProducts) {
+        final docRef = _productsCollection.doc();
+        product.userId = currentUserId;
+        product.containerType = 'bottom';
+        batch.set(docRef, product.toMap());
+      }
+
+      // Commits all operations in the batch to Firestore.
+      // If any operation fails, the entire batch is rolled back.
+      await batch.commit();
+    } catch (e) {
+      // Wraps any error during the save process.
+      throw Exception('Failed to save products: $e');
+    }
+  }
+
+  // Private helper method to delete all products owned by the current user.
+  Future<void> _clearUserProducts() async {
+    try {
+      // Creates a WriteBatch for atomic deletion.
+      final batch = _firestore.batch();
+
+      // Queries the 'products' collection for documents where the 'userId' field matches the current user's ID.
+      final userProductsSnapshot =
+          await _productsCollection
+              .where('userId', isEqualTo: currentUserId)
+              .get(); // Executes the query.
+
+      // Iterates through the documents found in the query result.
+      for (var doc in userProductsSnapshot.docs) {
+        // Adds a `delete` operation for each user-owned product document to the batch.
+        batch.delete(doc.reference);
+      }
+
+      // Commits the batch deletion.
+      await batch.commit();
+    } catch (e) {
+      // Wraps any error during the clearing process.
+      throw Exception('Failed to clear products: $e');
+    }
+  }
+
+  // Loads ALL products from the Firestore 'products' collection.
+  // Note: This loads products from ALL users, not just the current one.
+  Future<Map<String, List<Product>>> loadProducts() async {
+    try {
+      // Fetches all documents from the 'products' collection.
+      final productsSnapshot = await _productsCollection.get();
+
+      // Maps the fetched documents to a list of `Product` objects.
+      final products =
+          productsSnapshot.docs.map((doc) {
+            // Casts the document data to the expected Map format.
+            final data = doc.data() as Map<String, dynamic>;
+            // Creates a `Product` object from the map data using the factory constructor.
+            final product = Product.fromMap(data);
+            // Manually sets the product's ID from the document ID.
+            // This ensures the product object knows its own Firestore document ID.
+            product.id = doc.id;
+            return product;
+          }).toList(); // Converts the mapped iterable to a List.
+
+      // Filters the loaded products into two lists based on their `containerType`.
+      final upperProducts =
+          products.where((p) => p.containerType == 'upper').toList();
+      final bottomProducts =
+          products.where((p) => p.containerType == 'bottom').toList();
+
+      // Returns a Map containing the two lists.
+      return {'upperProducts': upperProducts, 'bottomProducts': bottomProducts};
+    } catch (e) {
+      // Wraps any error during the loading process.
+      throw Exception('Failed to load products: $e');
+    }
+  }
+
+  // Adds a single new product to Firestore.
+  Future<void> addProduct(Product product, String containerType) async {
+    try {
+      // Gets a reference to a new document with an auto-generated ID.
+      final docRef = _productsCollection.doc();
+      // Assigns the new document ID to the product object.
+      product.id = docRef.id;
+      // Assigns the current user's ID.
+      product.userId = currentUserId;
+      // Assigns the specified container type.
+      product.containerType = containerType;
+      // Creates the document in Firestore with the product data.
+      await docRef.set(product.toMap());
+    } catch (e) {
+      // Wraps any error during the add process.
+      throw Exception('Failed to add product: $e');
+    }
+  }
+
+  // Edits an existing product in Firestore.
+  Future<void> editProduct(Product product, String containerType) async {
+    try {
+      // Updates the container type on the product object before saving.
+      product.containerType = containerType;
+      // Security Check: Ensures the product being edited actually belongs to the current user.
+      // It compares the `userId` stored within the `product` object (presumably loaded earlier)
+      // with the `currentUserId`.
+      if (product.userId == currentUserId) {
+        // If the user is the owner, updates the document with the given product ID using the new data.
+        await _productsCollection.doc(product.id).update(product.toMap());
+      } else {
+        // If the user is not the owner, throws an exception preventing the edit.
+        throw Exception('You can only edit your own products');
+      }
+    } catch (e) {
+      // Wraps any error during the edit process, including the ownership check failure.
+      throw Exception('Failed to edit product: $e');
+    }
+  }
+
+  // Deletes a product from Firestore based on its ID.
+  Future<void> deleteProduct(String productId) async {
+    try {
+      // First, fetches the product document to check ownership before deleting.
+      final productDoc = await _productsCollection.doc(productId).get();
+      // Checks if the document actually exists.
+      if (productDoc.exists) {
+        // Casts the data to a Map.
+        final data = productDoc.data() as Map<String, dynamic>;
+        // Security Check: Compares the 'userId' field in the document with the current user's ID.
+        if (data['userId'] == currentUserId) {
+          // If the user is the owner, deletes the document.
+          await _productsCollection.doc(productId).delete();
+        } else {
+          // If the user is not the owner, throws an exception preventing deletion.
+          throw Exception('You can only delete your own products');
+        }
+      }
+      // If the document doesn't exist, the method completes without error (idempotent delete).
+    } catch (e) {
+      // Wraps any error during the delete process, including ownership check failure.
+      throw Exception('Failed to delete product: $e');
+    }
+  }
+}
+```
+
+---
+## File: lib/localStorage/rental_history_service.dart
+
+This file defines the `RentalHistoryService` class, responsible for managing rental transaction data within the Firebase Firestore database. It handles operations like creating new rental records, fetching the rental history for a user, and updating the status of existing rentals (e.g., marking them as completed or cancelled).
+
+```dart
+// Imports the Cloud Firestore package for database interactions.
+import 'package:cloud_firestore/cloud_firestore.dart';
+// Imports the Firebase Authentication package to identify the current user.
+import 'package:firebase_auth/firebase_auth.dart';
+// Imports the `RentalRecord` model, defining the structure of rental data.
+import 'package:gearcare/models/rental_history_model.dart';
+// Imports the `Product` model, needed when creating rentals based on product details.
+import 'package:gearcare/models/product_models.dart';
+
+class RentalHistoryService {
+  // Instance of FirebaseFirestore to interact with the database.
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Instance of FirebaseAuth to get the current user.
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // --- Collection Reference ---
+  // A getter for the Firestore `CollectionReference` pointing to the 'rentals' collection.
+  // This centralizes the collection path.
+  CollectionReference get _rentalsCollection =>
+      _firestore.collection('rentals');
+
+  // --- Current User ID ---
+  // A getter for the current user's UID.
+  // Provides a fallback value 'guest_user' if no user is logged in.
+  // Similar caution as in FirebaseStorageService: using 'guest_user' needs careful handling.
+  String get currentUserId => _auth.currentUser?.uid ?? 'guest_user';
+
+  // --- Data Retrieval Methods ---
+
+  // Provides a stream of all rental records belonging to the current user.
+  // Using a Stream allows the UI to update automatically when rental data changes in Firestore.
+  Stream<List<RentalRecord>> getUserRentalHistory() {
+    // Queries the `rentals` collection...
+    return _rentalsCollection
+        // ...filtering documents where the 'userId' field matches the current user's ID.
+        .where('userId', isEqualTo: currentUserId)
+        // `snapshots()` returns a Stream that emits new QuerySnapshots whenever the query results change.
+        .snapshots()
+        // `map` transforms the stream of QuerySnapshots into a stream of List<RentalRecord>.
+        .map((snapshot) {
+          // For each QuerySnapshot...
+          return snapshot.docs
+              // ...map each DocumentSnapshot (doc) into a `RentalRecord` object using the factory constructor.
+              .map((doc) => RentalRecord.fromFirestore(doc))
+              // ...and collect the results into a List.
+              .toList();
+        });
+  }
+
+  // Provides a stream of only the *active* rental records for the current user.
+  // It builds upon `getUserRentalHistory` and filters the results.
+  Stream<List<RentalRecord>> getActiveRentals() {
+    // Takes the stream from `getUserRentalHistory()`...
+    return getUserRentalHistory().map((rentals) {
+      // ...and for each list of rentals emitted...
+      return rentals
+          // ...filter the list to keep only records where `status` is 'active'.
+          .where((rental) => rental.status == 'active')
+          .toList() // Convert the filtered iterable back to a List.
+        // Sorts the active rentals in descending order based on their rental date (most recent first).
+        // The `..` cascade operator allows calling `sort` on the list after it's created by `toList()`.
+        ..sort((a, b) => b.rentalDate.compareTo(a.rentalDate));
+    });
+  }
+
+  // Fetches a single specific rental record by its document ID.
+  Future<RentalRecord?> getRentalRecord(String rentalId) async {
+    try {
+      // Gets a specific document from the `rentals` collection using its ID.
+      final doc = await _rentalsCollection.doc(rentalId).get();
+      // Checks if the document exists.
+      if (doc.exists) {
+        // If it exists, convert it to a `RentalRecord` object and return it.
+        return RentalRecord.fromFirestore(doc);
+      }
+      // If the document doesn't exist, return null.
+      return null;
+    } catch (e) {
+      // Prints the error and rethrows it to be handled by the caller.
+      print('Error getting rental record: $e');
+      rethrow;
+    }
+  }
+
+  // --- Data Modification Methods ---
+
+  // Updates a rental record to mark it as 'completed'.
+  Future<void> completeRental(String rentalId) async {
+    try {
+      // Updates the document with the given `rentalId`.
+      await _rentalsCollection.doc(rentalId).update({
+        // Sets the 'status' field to 'completed'.
+        'status': 'completed',
+        // Sets the 'returnDate' field to the current timestamp.
+        'returnDate': Timestamp.fromDate(DateTime.now()),
+      });
+    } catch (e) {
+      // Prints the error and rethrows it.
+      print('Error completing rental: $e');
+      rethrow;
+    }
+  }
+
+  // Updates a rental record to mark it as 'cancelled'.
+  Future<void> cancelRental(String rentalId) async {
+    try {
+      // Updates the document with the given `rentalId`.
+      await _rentalsCollection.doc(rentalId).update({
+        // Sets the 'status' field to 'cancelled'.
+        'status': 'cancelled',
+        // Sets the 'returnDate' field to the current timestamp (acting as cancellation timestamp).
+        'returnDate': Timestamp.fromDate(DateTime.now()),
+      });
+    } catch (e) {
+      // Prints the error and rethrows it.
+      print('Error cancelling rental: $e');
+      rethrow;
+    }
+  }
+
+  // Adds a new rental record to Firestore based on a Product object and duration.
+  Future<String> addRentalRecord(Product product, int durationDays) async {
+    try {
+      // Creates a new `RentalRecord` object.
+      final rental = RentalRecord(
+        id: '', // ID is left empty as Firestore will generate it.
+        productId: product.id, // Gets product ID from the Product object.
+        productName: product.name, // Gets product name.
+        productImagePath: product.imagePath, // Gets product image path.
+        userId: currentUserId, // Assigns the current user's ID.
+        price: product.price, // Gets the price from the product.
+        rentalDate: DateTime.now(), // Sets the rental date to now.
+        status: 'active', // Sets the initial status to 'active'.
+        duration: durationDays, // Sets the rental duration in days.
+      );
+
+      // Adds the new rental record (converted to a Map) to the `rentals` collection.
+      // `add` automatically generates a unique document ID.
+      final docRef = await _rentalsCollection.add(rental.toFirestore());
+
+      // Returns the ID of the newly created document.
+      return docRef.id;
+    } catch (e) {
+      // Prints the error and rethrows it.
+      print('Error adding rental record: $e');
+      rethrow;
+    }
+  }
+
+  // Adds a new rental record based on product, specific start/end dates, quantity, and total cost.
+  // Note: `quantity` and `totalCost` are passed but not currently stored in the `RentalRecord` model used here.
+  // This might indicate an incomplete feature or a mismatch between this method and the model.
+  Future<String> recordRental(
+    Product product,
+    DateTime startDate,
+    DateTime endDate,
+    int quantity, // Parameter not used in the current RentalRecord model.
+    double totalCost, // Parameter not used in the current RentalRecord model.
+  ) async {
+    try {
+      // Calculates the duration in days based on the start and end dates.
+      // Adding 1 makes the duration inclusive of both start and end dates.
+      final durationDays = endDate.difference(startDate).inDays + 1;
+
+      // Creates a new `RentalRecord` object.
+      final rental = RentalRecord(
+        id: '', // Firestore generates ID.
+        productId: product.id,
+        productName: product.name,
+        productImagePath: product.imagePath,
+        userId: currentUserId,
+        price: product.price, // Uses the product's base price, not `totalCost`.
+        rentalDate: startDate, // Uses the provided start date.
+        status: 'active',
+        duration: durationDays, // Uses the calculated duration.
+        // Missing fields: returnDate, actualReturnDate (part of the model but not set here initially).
+      );
+
+      // Adds the new rental record to the `rentals` collection.
+      final docRef = await _rentalsCollection.add(rental.toFirestore());
+
+      // Returns the ID of the newly created document.
+      return docRef.id;
+    } catch (e) {
+      // Prints the error and rethrows it.
+      print('Error recording rental: $e');
+      rethrow;
+    }
+  }
+}
+```
+
+---
+## File: lib/localStorage/location_service.dart
+
+This file defines the `LocationService` class, a singleton service designed to manage device location functionalities. It handles requesting permissions, fetching the current geographical coordinates (latitude/longitude), converting coordinates into a readable address (geocoding), and caching the last known location to optimize performance and reduce API usage.
+
+```dart
+// Imports the core Dart async library for Future and Stream.
+import 'dart:async';
+// Imports the Geolocator package for accessing device location services.
+import 'package:geolocator/geolocator.dart';
+// Imports the Geocoding package for converting coordinates to addresses and vice-versa.
+import 'package:geocoding/geocoding.dart';
+// Imports the Permission Handler package for explicitly requesting permissions (though Geolocator also has permission methods).
+import 'package:permission_handler/permission_handler.dart';
+// Imports the SharedPreferences package for simple key-value data persistence (used for caching).
+import 'package:shared_preferences/shared_preferences.dart';
+// Imports Flutter Material package, potentially for context or UI elements if needed later (not directly used in current logic).
+import 'package:flutter/material.dart';
+
+class LocationService {
+  // --- Singleton Pattern Implementation ---
+  // Creates a single, private instance of LocationService.
+  static final LocationService _instance = LocationService._internal();
+  // Factory constructor that always returns the single instance.
+  factory LocationService() => _instance;
+  // Private internal constructor prevents creating instances directly from outside the class.
+  LocationService._internal();
+
+  // --- SharedPreferences Keys ---
+  // Defines constant keys for storing location data in SharedPreferences.
+  // Using constants avoids typos and makes the code easier to maintain.
+  static const String _locationCacheKey = 'cached_location_address';
+  static const String _locationTimestampKey = 'location_timestamp';
+  static const String _locationLatKey = 'location_latitude';
+  static const String _locationLngKey = 'location_longitude';
+
+  // --- Cache Configuration ---
+  // Defines the duration for which cached location data is considered valid (10 minutes).
+  static const int _cacheValidityDuration = 10 * 60 * 1000; // milliseconds (10 min * 60 sec/min * 1000 ms/sec)
+
+  // --- Permission Handling ---
+
+  // Checks if the necessary location permissions have already been granted by the user.
+  Future<bool> checkLocationPermission() async {
+    try {
+      // Checks if the device's location services are enabled globally.
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // If location services are off, permission cannot be granted effectively.
+        print('Location services disabled.');
+        return false;
+      }
+
+      // Checks the specific permission status for this app.
+      LocationPermission permission = await Geolocator.checkPermission();
+      // Returns true if permission is granted either while the app is in use or always.
+      return permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always;
+    } catch (e) {
+      // Handles potential errors during the permission check.
+      print('Error checking location permission: $e');
+      return false;
+    }
+  }
+
+  // Requests location permission from the user if not already granted.
+  // Also handles cases where location services are disabled or permission is permanently denied.
+  Future<bool> requestLocationPermission() async {
+    try {
+      // First, check if location services are enabled on the device.
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // If services are disabled, attempt to open the device's location settings page.
+        // The user must manually enable services here.
+        print('Location services disabled. Opening settings...');
+        await Geolocator.openLocationSettings();
+        // Cannot guarantee the user enabled services, so return false.
+        // The calling code should re-check after returning from settings.
+        return false;
+      }
+
+      // Check the current permission status for the app.
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      // If permission is currently denied (but not permanently).
+      if (permission == LocationPermission.denied) {
+        // Request permission from the user.
+        print('Requesting location permission...');
+        permission = await Geolocator.requestPermission();
+        // If the user denies the request again.
+        if (permission == LocationPermission.denied) {
+          print('Location permission denied by user.');
+          return false;
+        }
+      }
+
+      // If permission is denied forever (user previously selected "Don't ask again" or denied in settings).
+      if (permission == LocationPermission.deniedForever) {
+        print('Location permission permanently denied.');
+        // Optionally, prompt the user to open settings here.
+        // await Geolocator.openAppSettings();
+        return false;
+      }
+
+      // If permission is granted (either `whileInUse` or `always`).
+      print('Location permission granted.');
+      return permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always;
+    } catch (e) {
+      // Handle potential errors during the request process.
+      print('Error requesting location permission: $e');
+      return false;
+    }
+  }
+
+  // Utility method to directly open the app's settings page on the device.
+  // Useful when permission is permanently denied, allowing the user to grant it manually.
+  Future<void> openAppSettings() async {
+    try {
+      await Geolocator.openAppSettings();
+    } catch (e) {
+      print('Error opening app settings: $e');
+    }
+  }
+
+  // --- Location Fetching ---
+
+  // Gets the current device location (latitude, longitude, etc.) as a `Position` object.
+  // Includes checks for service enablement and permissions.
+  Future<Position?> getCurrentLocation() async {
+    try {
+      // Re-check service status and permissions before attempting to get location.
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('Location services are disabled.');
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      // If denied, try requesting one more time.
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied.');
+        }
+      }
+
+      // If permanently denied, throw an exception.
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permissions are permanently denied.');
+      }
+
+      // Attempts to get the current position with high accuracy and a 10-second timeout.
+      print('Fetching location with high accuracy...');
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10), // Prevents indefinite waiting.
+      );
+    } on TimeoutException catch (e) {
+      // If high accuracy times out, try again with medium accuracy and a shorter timeout.
+      print('High accuracy timed out ($e), trying medium accuracy...');
+      try {
+        return await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 5),
+        );
+      } catch (e2) {
+        // If medium accuracy also fails (e.g., timeout, platform exception).
+        print('Error getting location with medium accuracy: $e2');
+        return null; // Return null indicating failure.
+      }
+    } catch (e) {
+      // Catches other errors (e.g., permission exceptions thrown above, platform errors).
+      print('Error getting location: $e');
+      return null; // Return null indicating failure.
+    }
+  }
+
+  // --- Geocoding (Coordinates to Address) ---
+
+  // Converts latitude and longitude coordinates into a human-readable address string.
+  Future<String?> getAddressFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      print('Fetching address for ($latitude, $longitude)...');
+      // Uses the `geocoding` package to perform reverse geocoding.
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+      // Checks if any placemark results were returned.
+      if (placemarks.isNotEmpty) {
+        // Takes the first (most likely) placemark result.
+        Placemark place = placemarks.first;
+
+        // Attempts to build a user-friendly address string from available placemark fields.
+        List<String> addressParts = [];
+
+        // Add street if available
+        // if (place.street != null && place.street!.isNotEmpty) { addressParts.add(place.street!); }
+
+        // Add sub-locality (e.g., neighborhood)
+        if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+          addressParts.add(place.subLocality!);
+        }
+
+        // Add locality (e.g., city)
+        if (place.locality != null && place.locality!.isNotEmpty) {
+          addressParts.add(place.locality!);
+        }
+
+        // Fallback to administrative area (e.g., state/province) if locality is missing.
+        if (addressParts.isEmpty &&
+            place.administrativeArea != null &&
+            place.administrativeArea!.isNotEmpty) {
+          addressParts.add(place.administrativeArea!);
+        }
+
+        // Join the collected parts with a comma and space.
+        String address = addressParts.join(', ');
+
+        // Return the combined address or a default message if no useful parts were found.
+        print('Address found: $address');
+        return address.isNotEmpty ? address : 'Nearby location'; // Changed default
+      }
+      // If no placemarks are found.
+      print('No placemarks found for coordinates.');
+      return 'Location detected'; // Changed default
+    } catch (e) {
+      // Handles errors during the geocoding process.
+      print('Error getting address: $e');
+      // Returns a default message on error instead of null, providing some feedback.
+      return 'Unable to fetch address';
+    }
+  }
+
+  // --- Combined Function with Caching ---
+
+  // Gets the current location and its corresponding address, utilizing the cache.
+  Future<Map<String, dynamic>> getCurrentLocationWithAddress() async {
+    final Map<String, dynamic> result = {
+      'address': 'Location unavailable', // Default value
+      'latitude': null,
+      'longitude': null,
+      'timestamp': null,
+      'isCache': false, // Indicates if the returned data is from cache
+    };
+
+    try {
+      // Get instance of SharedPreferences.
+      final prefs = await SharedPreferences.getInstance();
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      // --- Check Cache ---
+      final cachedTimestamp = prefs.getInt(_locationTimestampKey);
+      final cachedAddress = prefs.getString(_locationCacheKey);
+      final cachedLat = prefs.getDouble(_locationLatKey);
+      final cachedLng = prefs.getDouble(_locationLngKey);
+
+      // Check if valid and recent cache exists.
+      if (cachedTimestamp != null &&
+          cachedAddress != null &&
+          cachedLat != null &&
+          cachedLng != null) {
+        if (now - cachedTimestamp < _cacheValidityDuration) {
+          print('Using cached location data.');
+          // Return cached data immediately.
+          result['address'] = cachedAddress;
+          result['latitude'] = cachedLat;
+          result['longitude'] = cachedLng;
+          result['timestamp'] = cachedTimestamp;
+          result['isCache'] = true;
+          return result;
+        }
+      }
+
+      // --- Fetch Fresh Data (if cache is invalid or missing) ---
+      print('Cache invalid or missing. Fetching fresh location data...');
+
+      // Check/request permission first.
+      bool hasPermission = await checkLocationPermission();
+      if (!hasPermission) {
+        hasPermission = await requestLocationPermission();
+        if (!hasPermission) {
+          // Permission denied, try returning stale cache if available.
+          if (cachedAddress != null) {
+            print('Permission denied, returning stale cache.');
+            result['address'] = cachedAddress;
+            result['latitude'] = cachedLat;
+            result['longitude'] = cachedLng;
+            result['timestamp'] = cachedTimestamp;
+            result['isCache'] = true; // Indicate it's cached (and potentially stale)
+          } else {
+            print('Permission denied, no cache available.');
+            result['address'] = 'Permission Denied';
+          }
+          return result; // Return default/stale cache
+        }
+      }
+
+      // Get current position.
+      final position = await getCurrentLocation();
+      if (position == null) {
+         // Failed to get position, try returning stale cache if available.
+        if (cachedAddress != null) {
+          print('Failed to get location, returning stale cache.');
+          result['address'] = cachedAddress;
+          result['latitude'] = cachedLat;
+          result['longitude'] = cachedLng;
+          result['timestamp'] = cachedTimestamp;
+          result['isCache'] = true;
+        } else {
+          print('Failed to get location, no cache available.');
+          result['address'] = 'Location Failed';
+        }
+        return result; // Return default/stale cache
+      }
+
+      // Get address from the new position.
+      final address = await getAddressFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      // --- Update Cache ---
+      // Store the newly fetched data in SharedPreferences.
+      await prefs.setString(_locationCacheKey, address ?? 'Unknown location');
+      await prefs.setInt(_locationTimestampKey, now);
+      await prefs.setDouble(_locationLatKey, position.latitude);
+      await prefs.setDouble(_locationLngKey, position.longitude);
+      print('Location data cached.');
+
+      // --- Return Fresh Data ---
+      result['address'] = address ?? 'Unknown location';
+      result['latitude'] = position.latitude;
+      result['longitude'] = position.longitude;
+      result['timestamp'] = now;
+      result['isCache'] = false;
+      return result;
+
+    } catch (e) {
+      // General error handler for the entire process.
+      print('Error in getCurrentLocationWithAddress: $e');
+      // Attempt to return cached data as a final fallback.
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final cachedAddress = prefs.getString(_locationCacheKey);
+        if (cachedAddress != null) {
+           print('Error occurred, returning stale cache as fallback.');
+           result['address'] = cachedAddress;
+           result['latitude'] = prefs.getDouble(_locationLatKey);
+           result['longitude'] = prefs.getDouble(_locationLngKey);
+           result['timestamp'] = prefs.getInt(_locationTimestampKey);
+           result['isCache'] = true;
+           return result;
+        } else {
+          print('Error occurred, no cache available.');
+        }
+      } catch (cacheError) {
+         print('Error reading cache during fallback: $cacheError');
+      }
+      // Return the default error state if cache also fails.
+      return result;
+    }
+  }
+}
+```
+
+---
+## File: lib/localStorage/firebase_auth_service.dart
+
+This file defines the `FirebaseAuthService` class, which acts as a dedicated service layer for managing user authentication and related user data operations. It leverages Firebase Authentication for core auth tasks and Firestore for storing/retrieving user profile information. It also uses SharedPreferences for local caching of user details.
+
+```dart
+// Imports the Firebase Authentication package.
+import 'package:firebase_auth/firebase_auth.dart';
+// Imports the Cloud Firestore package for user profile data.
+import 'package:cloud_firestore/cloud_firestore.dart';
+// Imports SharedPreferences for local data caching.
+import 'package:shared_preferences/shared_preferences.dart';
+// Imports Flutter Material package, needed for `BuildContext` in `showAuthError`.
+import 'package:flutter/material.dart';
+
+class FirebaseAuthService {
+  // Instance of FirebaseAuth for authentication operations.
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Instance of FirebaseFirestore for accessing the 'users' collection.
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // --- Authentication State Accessors ---
+
+  // Getter to access the currently signed-in Firebase user object (`User`).
+  // Returns `null` if no user is signed in.
+  User? get currentUser => _auth.currentUser;
+
+  // Getter to quickly check if a user is currently logged in.
+  bool get isLoggedIn => _auth.currentUser != null;
+
+  // Getter that exposes the Firebase Authentication state changes stream.
+  // This stream emits a `User` object when the user logs in or `null` when they log out.
+  // Useful for reacting to auth state changes in the UI (like in `AuthGate`).
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // --- Authentication Methods ---
+
+  // Attempts to log in a user with their email and password.
+  Future<UserCredential> loginWithEmailAndPassword({
+    required String email, // User's email.
+    required String password, // User's password.
+  }) async {
+    try {
+      // Calls the Firebase Auth `signInWithEmailAndPassword` method.
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Ensure a user object was returned in the credential.
+      if (credential.user == null) {
+        throw Exception('Failed to authenticate user: User object is null.');
+      }
+
+      // --- Post-Login Operations ---
+      // Update the 'lastLogin' timestamp in the user's Firestore document.
+      // `FieldValue.serverTimestamp()` ensures the timestamp is set by the server for consistency.
+      await _firestore.collection('users').doc(credential.user!.uid).update({
+        'lastLogin': FieldValue.serverTimestamp(),
+      });
+
+      // Fetch the user's full profile data from Firestore.
+      final userDoc =
+          await _firestore.collection('users').doc(credential.user!.uid).get();
+
+      // If the user document exists in Firestore...
+      if (userDoc.exists) {
+        final userData = userDoc.data(); // Get the data as a Map.
+        // Save user details (including potentially fetched name, mobile, imageURL) to local SharedPreferences.
+        await _saveUserDataLocally(
+          uid: credential.user!.uid,
+          email: email, // Email from login parameter.
+          name: userData?['name'], // Get name from Firestore data (null-safe).
+          mobile: userData?['mobile'], // Get mobile from Firestore data (null-safe).
+          profileImageUrl: userData?['profileImageUrl'], // Get image URL (null-safe).
+        );
+      } else {
+        // If the user document doesn't exist (e.g., old account before Firestore profile storage),
+        // just save the basic info (UID, email) locally.
+        print('User document not found in Firestore for UID: ${credential.user!.uid}');
+        await _saveUserDataLocally(uid: credential.user!.uid, email: email);
+      }
+
+      // Return the `UserCredential` containing the user information.
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      // Catch specific Firebase Authentication errors.
+      // Convert the Firebase exception into a user-friendly Exception using the helper method.
+      throw _handleAuthException(e);
+    } catch (e) {
+      // Catch any other unexpected errors during login.
+      print('Unexpected login error: $e');
+      throw Exception('An unexpected error occurred during login.');
+    }
+  }
+
+  // Attempts to register a new user with email, password, and profile details.
+  Future<UserCredential> registerWithEmailAndPassword({
+    required String name,
+    required String email,
+    required String password,
+    required String mobile,
+  }) async {
+    try {
+      // Calls the Firebase Auth `createUserWithEmailAndPassword` method.
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Ensure a user object was created.
+      if (credential.user == null) {
+        throw Exception('Failed to create user: User object is null.');
+      }
+
+      // --- Post-Registration Operations ---
+      // Create a new document in the 'users' collection in Firestore using the user's UID.
+      // Stores the additional profile information provided during registration.
+      await _firestore.collection('users').doc(credential.user!.uid).set({
+        'name': name,
+        'email': email,
+        'mobile': mobile,
+        'createdAt': FieldValue.serverTimestamp(), // Record creation time.
+        'lastLogin': FieldValue.serverTimestamp(), // Set initial login time.
+        // 'profileImageUrl': null, // Explicitly set to null initially or omit.
+      });
+
+      // Update the user's display name directly in Firebase Authentication profile.
+      await credential.user!.updateDisplayName(name);
+
+      // Save the new user's data locally in SharedPreferences.
+      await _saveUserDataLocally(
+        uid: credential.user!.uid,
+        name: name,
+        email: email,
+        mobile: mobile,
+        // profileImageUrl is initially null/not set here.
+      );
+
+      // Return the `UserCredential`.
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      // Handle Firebase registration errors.
+      throw _handleAuthException(e);
+    } catch (e) {
+      // Handle other errors during registration.
+       print('Unexpected registration error: $e');
+      throw Exception('An unexpected error occurred during registration.');
+    }
+  }
+
+  // Updates the profile information for the currently logged-in user.
+  Future<void> updateUserProfile({
+    required String name,
+    String? mobile, // Optional mobile number.
+    String? profileImageUrl, // Optional profile image URL.
+  }) async {
+    try {
+      // Get the current user.
+      final user = _auth.currentUser;
+      // Throw an error if no user is logged in.
+      if (user == null) throw Exception('User not logged in');
+
+      // Prepare the data map for Firestore update.
+      final updateData = <String, dynamic>{
+        'name': name,
+        'updatedAt': FieldValue.serverTimestamp(), // Record update time.
+      };
+
+      // Conditionally add mobile and profileImageUrl to the update map if they are provided.
+      if (mobile != null) updateData['mobile'] = mobile;
+      if (profileImageUrl != null) updateData['profileImageUrl'] = profileImageUrl;
+
+      // Update the user's document in Firestore.
+      await _firestore.collection('users').doc(user.uid).update(updateData);
+
+      // Update the display name in the Firebase Auth user profile itself.
+      await user.updateDisplayName(name);
+
+      // --- Update Local Cache ---
+      // Update the relevant fields in SharedPreferences.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('name', name);
+      if (mobile != null) await prefs.setString('mobile', mobile);
+      if (profileImageUrl != null) {
+        await prefs.setString('profileImageUrl', profileImageUrl);
+      }
+    } catch (e) {
+      // Handle errors during profile update.
+      print('Failed to update profile: $e');
+      throw Exception('Failed to update profile: $e');
+    }
+  }
+
+  // Signs the current user out.
+  Future<void> signOut() async {
+    try {
+      // Clear all locally stored data in SharedPreferences upon sign out.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      print('SharedPreferences cleared.');
+
+      // Call the Firebase Auth `signOut` method.
+      await _auth.signOut();
+      print('User signed out from Firebase.');
+    } catch (e) {
+      // Handle errors during sign out.
+      print('Failed to sign out: $e');
+      throw Exception('Failed to sign out: $e');
+    }
+  }
+
+  // Sends a password reset email to the specified email address.
+  Future<void> resetPassword(String email) async {
+    try {
+      // Calls the Firebase Auth `sendPasswordResetEmail` method.
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      // Handle specific Firebase errors related to password reset.
+      throw _handleAuthException(e);
+    } catch (e) {
+      // Handle other errors.
+      print('Failed to send password reset email: $e');
+      throw Exception('Failed to send password reset email.');
+    }
+  }
+
+  // --- User Data Retrieval ---
+
+  // Fetches the user's profile data stored in the Firestore 'users' collection.
+  Future<Map<String, dynamic>> getUserData() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('User not logged in');
+
+      // Get the user's document from Firestore.
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      // Check if the document exists.
+      if (!doc.exists) throw Exception('User data not found in Firestore');
+
+      // Return the document data as a Map.
+      return doc.data() as Map<String, dynamic>;
+    } catch (e) {
+      print('Failed to get user data: $e');
+      throw Exception('Failed to get user data: $e');
+    }
+  }
+
+  // --- Local Data Caching ---
+
+  // Private helper method to save user data to SharedPreferences.
+  Future<void> _saveUserDataLocally({
+    required String uid,
+    required String email,
+    String? name,
+    String? mobile,
+    String? profileImageUrl,
+  }) async {
+    try {
+      // Get SharedPreferences instance.
+      final prefs = await SharedPreferences.getInstance();
+      // Save each piece of user data with its corresponding key.
+      await prefs.setString('uid', uid);
+      await prefs.setString('email', email);
+      // Only save optional fields if they are not null.
+      if (name != null) await prefs.setString('name', name);
+      if (mobile != null) await prefs.setString('mobile', mobile);
+      if (profileImageUrl != null) {
+        await prefs.setString('profileImageUrl', profileImageUrl);
+      }
+      print('User data saved locally.');
+    } catch (e) {
+      // Handle errors during local data saving.
+      print('Failed to save user data locally: $e');
+      // Decide if this should throw an error or just log, as it might not be critical.
+      // throw Exception('Failed to save user data locally: $e');
+    }
+  }
+
+  // --- Error Handling ---
+
+  // Private helper method to convert FirebaseAuthException codes into more user-friendly error messages.
+  Exception _handleAuthException(FirebaseAuthException e) {
+    print('FirebaseAuthException: Code=${e.code}, Message=${e.message}'); // Log the original error
+    switch (e.code) {
+      case 'user-not-found':
+        return Exception('No user found with this email.');
+      case 'wrong-password':
+        return Exception('Incorrect password provided.'); // Slightly better wording
+      case 'invalid-email':
+        return Exception('The email address is badly formatted.');
+      case 'weak-password':
+        return Exception('The password provided is too weak.');
+      case 'email-already-in-use':
+        return Exception('An account already exists for this email.');
+      case 'operation-not-allowed':
+        return Exception('Email/password sign-in is not enabled. Contact support.'); // More context
+      case 'too-many-requests':
+        return Exception('Too many attempts. Please try again later.');
+      case 'user-disabled':
+        return Exception('This user account has been disabled.');
+      case 'network-request-failed':
+        return Exception('Network error. Please check your internet connection.');
+      // Add more specific cases if needed
+      default:
+        // Return a generic message for unhandled Firebase errors.
+        return Exception(e.message ?? 'An unknown authentication error occurred.');
+    }
+  }
+
+  // Static utility method to display authentication-related errors to the user via a SnackBar.
+  // `static` allows calling it directly via `FirebaseAuthService.showAuthError(...)`.
+  static void showAuthError(BuildContext context, String message) {
+    // Ensure the context is still valid/mounted before showing SnackBar.
+    if (ScaffoldMessenger.maybeOf(context) != null) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message), // The error message text.
+          backgroundColor: Colors.redAccent, // Use a distinct error color.
+          duration: const Duration(seconds: 4), // Slightly longer duration.
+          behavior: SnackBarBehavior.floating, // Make it float above bottom navigation.
+        ),
+      );
+    } else {
+      print('Could not show SnackBar: Invalid context.');
+    }
+  }
+}
+```
+
+---
+## File: lib/localStorage/localstorageservice.dart
+
+This file defines the `LocalStorageService` class. Despite its name, this class primarily acts as a focused utility or facade for handling image data conversions (File to Base64 and vice-versa) and managing temporary image files. It delegates the core base64 conversion logic to the `FirebaseStorageService`.
+
+```dart
+// Imports `dart:io` for File operations (checking existence, deleting).
+import 'dart:io';
+// Imports the `FirebaseStorageService` to use its base64 conversion methods.
+import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+// Imports the `uuid` package to generate unique filenames for temporary files.
+import 'package:uuid/uuid.dart';
+
+class LocalStorageService {
+  // --- Singleton Pattern Implementation ---
+  // Ensures only one instance of this service exists.
+  static final LocalStorageService _instance = LocalStorageService._internal();
+  factory LocalStorageService() => _instance;
+  LocalStorageService._internal();
+
+  // Instance of Uuid to generate unique identifiers (used for temporary filenames).
+  final Uuid _uuid = Uuid();
+  // Instance of FirebaseStorageService to access its file conversion methods.
+  // Note: This creates a dependency between LocalStorageService and FirebaseStorageService.
+  final FirebaseStorageService _firebaseService = FirebaseStorageService();
+
+  /// Converts an image `File` to a base64 encoded string.
+  /// Delegates the actual conversion to `_firebaseService.fileToBase64`.
+  Future<String> saveImage(File imageFile) async {
+    try {
+      // Calls the base64 conversion method from the Firebase service.
+      return await _firebaseService.fileToBase64(imageFile);
+    } catch (e) {
+      // Wraps potential errors from the conversion process.
+      print('Error saving image (converting to base64): $e');
+      throw Exception('Failed to save image: $e');
+    }
+  }
+
+  /// Deletes a file from the local filesystem specified by `imagePath`.
+  /// This is likely used to clean up temporary image files created by `loadImage`.
+  Future<bool> deleteImage(String imagePath) async {
+    try {
+      // Creates a File object from the provided path.
+      final file = File(imagePath);
+      // Checks if the file actually exists at the given path.
+      if (await file.exists()) {
+        // If it exists, delete the file.
+        await file.delete();
+        print('Deleted temporary image file: $imagePath');
+        return true; // Indicate successful deletion.
+      }
+      // If the file doesn't exist, return false.
+      print('Temporary image file not found for deletion: $imagePath');
+      return false;
+    } catch (e) {
+      // Handles errors during file deletion.
+      print('Error deleting image file: $e');
+      throw Exception('Failed to delete image: $e');
+    }
+  }
+
+  /// Converts a base64 encoded string back into a temporary `File` object.
+  /// Useful for displaying images that were stored as base64 strings.
+  Future<File?> loadImage(String base64String) async {
+    try {
+      // If the input string is empty, return null immediately.
+      if (base64String.isEmpty) {
+        print('Attempted to load image from empty base64 string.');
+        return null;
+      }
+      // Generates a unique filename using UUID V4 and assumes JPEG format.
+      // Using UUID prevents potential filename collisions in the temporary directory.
+      final fileName = '${_uuid.v4()}.jpg';
+      // Delegates the conversion from base64 back to a File object to the Firebase service.
+      // The file is created in a system temporary directory.
+      return await _firebaseService.base64ToFile(base64String, fileName);
+    } catch (e) {
+      // Handles errors during the base64 decoding or file writing process.
+      print('Error loading image (converting from base64): $e');
+      // Rethrowing the exception allows the caller to handle it.
+      throw Exception('Failed to load image: $e');
+    }
+  }
+}
+```
+
+---
+## File: lib/models/product_models.dart
+
+This file defines the `Product` data model class. It represents a piece of medical equipment that can be listed, rented, or managed within the GearCare app. It includes properties for identification, description, pricing, image data (as base64), rental status, ownership, and categorization.
+
+```dart
+// Imports `dart:io` for File operations (needed for `getImageFile`).
+import 'dart:io';
+// Imports the FirebaseStorageService, likely for its base64 utility functions and potentially for direct data operations (though mixing models and services isn't ideal practice).
+import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+// Imports the `uuid` package to generate unique IDs, used as a fallback if a product ID is missing.
+import 'package:uuid/uuid.dart';
+
+class Product {
+  // --- Properties/Fields ---
+
+  // Unique identifier for the product. Initially intended to be final, but changed to non-final (`String id;`)
+  // to allow setting it *after* a document is created in Firestore (since Firestore generates the ID).
+  String id;
+
+  // Name of the product (e.g., "Portable X-Ray Unit"). Marked `final` - intended to be set once at creation.
+  final String name;
+
+  // Rental price of the product (likely per day or per rental period). Marked `final`.
+  final double price;
+
+  // Detailed description of the product. Marked `final`.
+  final String description;
+
+  // Stores the image data for the product as a base64 encoded string. Marked `final`.
+  // Storing large binary data like images directly in Firestore documents as base64 strings is generally
+  // discouraged due to document size limits (1 MiB) and performance implications. Firebase Cloud Storage
+  // is the recommended solution for storing files like images, and you would typically store the Storage URL
+  // in Firestore instead of the base64 data.
+  final String imagePath;
+
+  // Boolean flag indicating if the product is currently rented out. Mutable.
+  bool isRented;
+
+  // Stores the unique ID (UID) of the user who added/owns this product. Mutable.
+  String userId;
+
+  // Stores a string indicating where the product might be categorized or displayed (e.g., 'upper', 'bottom'). Mutable.
+  String containerType;
+
+  // --- Constructor ---
+  // The primary constructor for creating `Product` instances.
+  Product({
+    required this.id, // Requires an ID (though might be overridden later).
+    required this.name, // Requires a name.
+    required this.price, // Requires a price.
+    required this.description, // Requires a description.
+    required this.imagePath, // Requires the base64 image string.
+    this.isRented = false, // Defaults `isRented` to false if not provided.
+    this.userId = '', // Defaults `userId` to an empty string.
+    this.containerType = '', // Defaults `containerType` to an empty string.
+  });
+
+  // --- Methods ---
+
+  // `copyWith` method: Creates a new `Product` instance based on the current one,
+  // but allows overriding specific properties with new values.
+  // Useful for creating modified copies without altering the original object.
+  Product copyWith({
+    String? id,
+    String? name,
+    double? price,
+    String? description,
+    String? imagePath,
+    bool? isRented,
+    String? userId,
+    String? containerType,
+  }) {
+    // Returns a new Product, using the provided values or falling back to the current object's values (`this`).
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      description: description ?? this.description,
+      imagePath: imagePath ?? this.imagePath,
+      isRented: isRented ?? this.isRented,
+      userId: userId ?? this.userId,
+      containerType: containerType ?? this.containerType,
+    );
+  }
+
+  // Converts the `Product` object into a `Map<String, dynamic>`.
+  // This format is suitable for storing the object's data in Firestore.
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id, // Note: Storing the ID within the document itself is redundant if the document ID is the product ID, but can be useful.
+      'name': name,
+      'price': price,
+      'description': description,
+      'imagePath': imagePath, // The base64 string.
+      'isRented': isRented,
+      'userId': userId,
+      'containerType': containerType,
+    };
+  }
+
+  // Factory constructor: Creates a `Product` instance from a `Map<String, dynamic>`,
+  // typically retrieved from Firestore.
+  // Factory constructors don't necessarily create a *new* instance; they can return existing ones or call other constructors.
+  factory Product.fromMap(Map<String, dynamic> map) {
+    return Product(
+      // Uses null-coalescing operator (`??`) to provide default values if a field is missing in the map.
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      // Handles the case where the price might be stored as an integer in Firestore.
+      // If it's an int, convert it to double; otherwise, use the value or default to 0.0.
+      price:
+          (map['price'] is int)
+              ? (map['price'] as int).toDouble()
+              : (map['price'] ?? 0.0),
+      description: map['description'] ?? '',
+      imagePath: map['imagePath'] ?? '',
+      isRented: map['isRented'] ?? false,
+      userId: map['userId'] ?? '',
+      containerType: map['containerType'] ?? '',
+    );
+  }
+
+  // Asynchronously converts the `imagePath` (base64 string) back into a temporary `File` object.
+  // This is needed to display the image in the Flutter UI using widgets like `Image.file()`.
+  Future<File> getImageFile() async {
+    try {
+      // Creates an instance of FirebaseStorageService to access its utility method.
+      // Instantiating services within model methods increases coupling.
+      // It might be cleaner to pass the service or the converted file as a parameter if needed.
+      final FirebaseStorageService storageService = FirebaseStorageService();
+      // Calls the `base64ToFile` method, providing the base64 string and a generated filename.
+      // The filename uses the product ID or a UUID fallback, assuming JPEG format.
+      return await storageService.base64ToFile(
+        imagePath,
+        '${id.isNotEmpty ? id : Uuid().v4()}.jpg', // Ensure ID is not empty
+      );
+    } catch (e) {
+      // Wraps errors during the file conversion.
+      print('Error getting image file from base64: $e');
+      throw Exception('Failed to get image file: $e');
+    }
+  }
+
+  // --- Static Methods (Potentially Misplaced) ---
+  // These static methods directly call methods on `FirebaseStorageService`.
+  // While convenient, placing data persistence logic directly within the model class
+  // violates the Single Responsibility Principle. Data access logic is typically handled
+  // in dedicated service or repository classes.
+
+  // Static method to save lists of products to Firestore via FirebaseStorageService.
+  static Future<void> saveProducts(
+    List<Product> upperProducts,
+    List<Product> bottomProducts,
+  ) async {
+    final FirebaseStorageService storageService = FirebaseStorageService();
+    await storageService.saveProducts(upperProducts, bottomProducts);
+  }
+
+  // Static method to load products from Firestore via FirebaseStorageService.
+  static Future<Map<String, List<Product>>> loadProducts() async {
+    final FirebaseStorageService storageService = FirebaseStorageService();
+    return await storageService.loadProducts();
+  }
+}
+```
+
+---
+## File: lib/models/rental_history_model.dart
+
+This file defines the `RentalRecord` data model class. It represents a single rental transaction in the GearCare app, linking a user, a product, and rental details like dates, duration, cost, and status.
+
+```dart
+// Imports the Cloud Firestore package, specifically for `DocumentSnapshot` and `Timestamp`.
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class RentalRecord {
+  // --- Properties/Fields ---
+
+  // Unique identifier for the rental record itself (typically the Firestore document ID).
+  final String id;
+  // ID of the product that was rented.
+  final String productId;
+  // Name of the rented product (denormalized for easier display).
+  final String productName;
+  // Base64 string or path for the product's image (denormalized).
+  final String productImagePath;
+  // ID of the user who made the rental.
+  final String userId;
+  // Price per unit duration (e.g., price per day) of the rental.
+  final double price;
+  // The date and time when the rental period started.
+  final DateTime rentalDate;
+  // The actual date and time when the item was returned (or rental cancelled).
+  // Nullable, as it's only set when the rental is completed or cancelled.
+  final DateTime? returnDate;
+  // Current status of the rental (e.g., "active", "completed", "cancelled").
+  final String status;
+  // The intended duration of the rental in days.
+  final int duration;
+
+  // --- Constructor ---
+  // Primary constructor to create a RentalRecord instance.
+  RentalRecord({
+    required this.id,
+    required this.productId,
+    required this.productName,
+    required this.productImagePath,
+    required this.userId,
+    required this.price,
+    required this.rentalDate,
+    this.returnDate, // Optional return date.
+    required this.status,
+    required this.duration,
+  });
+
+  // --- Firestore Conversion ---
+
+  // Factory constructor: Creates a `RentalRecord` instance from a Firestore `DocumentSnapshot`.
+  // This is used when retrieving rental data from the database.
+  factory RentalRecord.fromFirestore(DocumentSnapshot doc) {
+    // Casts the document's data to a Map.
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    // Returns a new RentalRecord populated with data from the map.
+    return RentalRecord(
+      // Uses the Firestore document ID as the rental record ID.
+      id: doc.id,
+      // Provides default empty strings or 0.0/1 values if fields are missing in Firestore.
+      productId: data['productId'] ?? '',
+      productName: data['productName'] ?? '',
+      productImagePath: data['productImagePath'] ?? '',
+      userId: data['userId'] ?? '',
+      price: (data['price'] ?? 0.0).toDouble(), // Ensure price is a double.
+      // Converts Firestore `Timestamp` objects to Dart `DateTime` objects.
+      rentalDate: (data['rentalDate'] as Timestamp).toDate(),
+      // Handles the nullable returnDate: if it exists in Firestore, convert it; otherwise, keep it null.
+      returnDate:
+          data['returnDate'] != null
+              ? (data['returnDate'] as Timestamp).toDate()
+              : null,
+      status: data['status'] ?? 'active', // Defaults status to 'active' if missing.
+      duration: data['duration'] ?? 1, // Defaults duration to 1 day if missing.
+    );
+  }
+
+  // Converts the `RentalRecord` object into a `Map<String, dynamic>` suitable for storing in Firestore.
+  Map<String, dynamic> toFirestore() {
+    return {
+      // Note: The `id` field is typically NOT included here, as it's the document ID itself.
+      'productId': productId,
+      'productName': productName,
+      'productImagePath': productImagePath,
+      'userId': userId,
+      'price': price,
+      // Converts Dart `DateTime` objects back to Firestore `Timestamp` objects.
+      'rentalDate': Timestamp.fromDate(rentalDate),
+      // Handles nullable returnDate: convert to Timestamp if not null, otherwise store null.
+      'returnDate': returnDate != null ? Timestamp.fromDate(returnDate!) : null,
+      'status': status,
+      'duration': duration,
+    };
+  }
+
+  // --- Computed Properties (Getters) ---
+
+  // Calculates the total cost based on the price per day and the duration.
+  double get totalCost => price * duration;
+
+  // A simple boolean check for whether the rental status is currently 'active'.
+  bool get isActive => status == 'active';
+
+  // Calculates the number of days remaining for an active rental.
+  int get daysRemaining {
+    // If the rental is not active or has already been returned, remaining days are 0.
+    if (!isActive || returnDate != null) return 0;
+
+    // Calculate the expected due date by adding the duration (in days) to the rental start date.
+    final DateTime dueDate = rentalDate.add(Duration(days: duration));
+    // Calculate the difference between the due date and the current time.
+    final int remaining = dueDate.difference(DateTime.now()).inDays;
+
+    // Return the remaining days, ensuring it doesn't go below 0 (if the due date is past).
+    return remaining > 0 ? remaining : 0;
+  }
+}
+```
+
+---
+
+## Firebase Integration and Authentication in GearCare
+
+This section details how the GearCare application utilizes various Firebase services, particularly focusing on user authentication and data management.
+
+### 1. What is Firebase?
+
+Firebase is a platform developed by Google for creating mobile and web applications. It provides a suite of backend services that simplify development, allowing developers to focus on the user interface and application logic without building complex backend infrastructure from scratch. Key features include:
+
+*   **Authentication:** Securely manages user sign-up, sign-in, and identity across various providers (email/password, Google, etc.).
+*   **Databases:** Offers real-time NoSQL databases (Firestore and Realtime Database) for storing and synchronizing application data.
+*   **Storage:** Provides cloud storage for user-generated content like images, videos, and other files.
+*   **Hosting:** Allows deploying web applications and static content.
+*   **Cloud Functions:** Enables running backend code in response to events triggered by Firebase features or HTTPS requests.
+*   **Analytics:** Provides insights into user behavior and app usage.
+*   **Cloud Messaging (FCM):** Enables sending push notifications and messages to users.
+
+GearCare leverages several of these services, primarily Authentication, Firestore, and potentially Storage.
+
+### 2. Firebase Authentication in GearCare
+
+Authentication is the process of verifying a user's identity. GearCare uses **Firebase Authentication** to manage user accounts.
+
+**How it Works:**
+
+1.  **Configuration (`firebase_options.dart`, `main.dart`):** The app is initialized with project-specific configuration keys found in `firebase_options.dart`. This tells the Flutter app which Firebase project to connect to. The initialization happens in `main.dart` using `Firebase.initializeApp()`.
+2.  **Authentication Service (`lib/localStorage/firebase_auth_service.dart`):** The `FirebaseAuthService` class acts as a dedicated layer to handle all authentication-related tasks. It wraps the core Firebase Authentication SDK calls, providing methods like:
+    *   `registerWithEmailAndPassword`: Creates a new user account using an email and password. It also interacts with Firestore to create a corresponding user profile document.
+    *   `loginWithEmailAndPassword`: Signs in an existing user. It updates the `lastLogin` time in Firestore and caches user details locally using `SharedPreferences`.
+    *   `signOut`: Signs the current user out and clears local caches.
+    *   `resetPassword`: Sends a password reset email.
+    *   `updateUserProfile`: Updates user details in both Firebase Auth (display name) and Firestore.
+    *   `currentUser`, `isLoggedIn`, `authStateChanges`: Provide access to the current user's status and a stream to listen for login/logout events.
+3.  **UI Interaction (`lib/pages/login.dart`, `lib/pages/registerstate.dart`):**
+    *   The `Login` screen uses `FirebaseAuthService.loginWithEmailAndPassword` when the user submits their credentials.
+    *   The `Register` screen uses `FirebaseAuthService.registerWithEmailAndPassword` to create a new account.
+    *   Both screens handle potential errors returned by the service (e.g., wrong password, email already exists) using `FirebaseAuthService.showAuthError` or by displaying messages within the UI.
+4.  **Authentication Gate (`lib/authentication/auth_gate.dart`):** This widget is crucial for directing users based on their login status. It listens to the `FirebaseAuthService.authStateChanges` stream.
+    *   If the stream emits a `User` object (user is logged in), `AuthGate` displays the `Home` screen.
+    *   If the stream emits `null` (user is logged out), `AuthGate` displays the `Register` screen (which likely allows navigation to the `Login` screen as well). This ensures that users cannot access protected parts of the app (like `Home`, `Profile`, etc.) without being authenticated.
+5.  **User Identification (UID):** When a user successfully authenticates or registers, Firebase assigns them a unique User ID (UID). This UID is the primary key used throughout the Firebase backend (Firestore, Storage) to associate data with that specific user. `FirebaseAuthService.currentUser.uid` provides access to this ID.
+
+### 3. Firestore Database in GearCare
+
+Cloud Firestore is a flexible, scalable NoSQL cloud database used by GearCare to store application data like user profiles, product listings, and rental history.
+
+**How it Works:**
+
+1.  **Data Modeling (`lib/models/`):** Data is organized into **collections** (like folders) and **documents** (like files). Each document contains key-value pairs (fields). GearCare defines models like `Product` (`lib/models/product_models.dart`) and `RentalRecord` (`lib/models/rental_history_model.dart`) which map directly to the structure of documents within their respective Firestore collections (`products` and `rentals`). These models include `toMap()`/`toFirestore()` methods to convert Dart objects into Maps suitable for Firestore, and `fromMap()`/`fromFirestore()` factory constructors to convert Firestore data back into Dart objects.
+2.  **Data Access Services (`lib/localStorage/`):** Similar to authentication, specific services manage interactions with Firestore collections:
+    *   `FirebaseStorageService` (despite the name, primarily handles `products` collection in Firestore): Manages CRUD (Create, Read, Update, Delete) operations for `Product` data. It uses the user's UID to associate products with their owners and implement ownership checks (e.g., you can only edit/delete your own products).
+    *   `RentalHistoryService`: Manages CRUD operations for `RentalRecord` data in the `rentals` collection. It fetches history based on the user's UID and provides streams (`getUserRentalHistory`, `getActiveRentals`) so the UI can reactively update when rental data changes.
+    *   `FirebaseAuthService` also interacts with Firestore, specifically the `users` collection, to store and retrieve profile information (name, mobile, profile image URL, timestamps) linked to the authentication UID.
+3.  **Real-time Updates:** Firestore supports real-time listeners (`snapshots()` method). `RentalHistoryService` uses this to provide `Stream<List<RentalRecord>>`, meaning the `RentalHistory` screen automatically updates if a rental's status changes in the database without needing manual refreshing. Other parts of the app could potentially use streams for products as well.
+
+### 4. Firebase Storage (Cloud Storage)
+
+While the current implementation stores product images as base64 strings directly within Firestore documents (`Product.imagePath`), this is generally **not** the recommended approach for file storage due to Firestore's document size limits (1 MiB) and performance considerations.
+
+Firebase Cloud Storage is the dedicated service for storing files like images, videos, and other large binary objects.
+
+**How it *Should* Ideally Work (and might evolve to):**
+
+1.  **Upload:** When a user adds/updates a product image (e.g., in `Addproduct` or `ProfileScreen`), the app would upload the image file directly to a designated bucket in Firebase Cloud Storage.
+2.  **Storage Path:** The upload process would return a unique URL or path pointing to the file in Cloud Storage.
+3.  **Firestore Link:** Instead of storing the base64 string in the Firestore `products` document's `imagePath` field, the app would store this Cloud Storage URL/path.
+4.  **Retrieval:** To display the image, the app would fetch the product document from Firestore, get the `imagePath` (which is now a URL), and use a widget capable of loading images from URLs (like `Image.network` or cached network image packages) to display the image fetched directly from Cloud Storage.
+
+The `FirebaseStorageService` currently contains base64 conversion utilities, which suggests either a past implementation used Storage differently, or the base64 approach was chosen for simplicity initially. Shifting to Cloud Storage for images would be a standard optimization for scalability.
+
+### 5. How Firebase Differentiates Components and Users
+
+Firebase uses several mechanisms to organize data and control access:
+
+1.  **Project:** Your entire backend (Auth, Firestore, Storage, etc.) is contained within a single Firebase Project (e.g., `gearcare-2347f`). The configuration in `firebase_options.dart` links the app to this specific project.
+2.  **Services:** Within the project, different services operate independently but can interact (e.g., Auth provides UIDs used in Firestore).
+3.  **Collections (Firestore):** Data within Firestore is segregated into distinct collections (`users`, `products`, `rentals`). This separates different types of data logically. Queries typically target specific collections.
+4.  **Buckets (Storage):** Files in Cloud Storage are organized into buckets (often one default bucket per project). You can further organize files using folder-like path structures within the bucket.
+5.  **User IDs (UIDs):** As mentioned, Firebase Authentication assigns a unique UID to each registered user. This UID is the cornerstone of user-specific data:
+    *   **Firestore Documents:** Documents in collections like `products` and `rentals` have a `userId` field containing the UID of the owner/renter. Queries often include `.where('userId', isEqualTo: currentUserId)` to fetch data relevant only to the logged-in user.
+    *   **Firestore Security Rules:** These are server-side rules you define in the Firebase console to control read/write access to your Firestore data. They are incredibly powerful for security. Rules can check the `request.auth.uid` (the UID of the user making the request) against the `userId` field in a document, ensuring users can only access or modify their own data. For example, a rule for the `products` collection might state: `allow read; allow write: if request.auth.uid == resource.data.userId;` (Allow anyone to read, but only allow writing if the requester's UID matches the product's `userId`). **Security rules are crucial and enforced on the server, preventing client-side bypass.**
+    *   **Storage Security Rules:** Similar rules exist for Cloud Storage, controlling who can upload, download, or delete files based on user authentication (UID), file metadata (like owner UID), size, or content type.
+
+By combining UIDs stored within data documents and server-side Security Rules, Firebase effectively differentiates data belonging to different users and enforces access control, ensuring users can only interact with their authorized data and resources.

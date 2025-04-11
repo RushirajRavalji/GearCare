@@ -10,63 +10,14 @@ class Category extends StatefulWidget {
 }
 
 class _CategoryState extends State<Category> {
-  // Search functionality
+  // Add search controller
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
   String _searchQuery = '';
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  // Filter items based on search query
-  List<Map<String, dynamic>> _filterCategories(
-    List<Map<String, dynamic>> categories,
-    String query,
-  ) {
-    if (query.isEmpty) {
-      return categories;
-    }
-
-    final lowercaseQuery = query.toLowerCase();
-
-    return categories
-        .map((category) {
-          // Create a copy of the category
-          final Map<String, dynamic> filteredCategory = Map.from(category);
-
-          // Filter items that match the query
-          final List<String> filteredItems =
-              (category['items'] as List<dynamic>)
-                  .where(
-                    (item) =>
-                        item.toString().toLowerCase().contains(lowercaseQuery),
-                  )
-                  .cast<String>()
-                  .toList();
-
-          // Title also matches?
-          final bool titleMatches = category['title']
-              .toString()
-              .toLowerCase()
-              .contains(lowercaseQuery);
-
-          // Replace items with filtered items
-          filteredCategory['items'] = filteredItems;
-          // Mark if the title matches for highlighting
-          filteredCategory['titleMatches'] = titleMatches;
-
-          return filteredCategory;
-        })
-        .where(
-          (category) =>
-              // Keep categories with matching items or matching title
-              (category['items'] as List).isNotEmpty ||
-              category['titleMatches'] == true,
-        )
-        .toList();
   }
 
   @override
@@ -161,18 +112,45 @@ class _CategoryState extends State<Category> {
     ];
 
     // Filter categories based on search query
-    final filteredCategories = _filterCategories(
-      medicalCategories,
-      _searchQuery,
-    );
+    List<Map<String, dynamic>> filteredCategories = medicalCategories;
+    if (_searchQuery.isNotEmpty) {
+      filteredCategories =
+          medicalCategories
+              .map((category) {
+                // Create a copy of the category
+                final Map<String, dynamic> newCategory = Map.from(category);
+
+                // Filter items that match the search query
+                List<String> filteredItems =
+                    List<String>.from(category['items'])
+                        .where(
+                          (item) => item.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ),
+                        )
+                        .toList();
+
+                // Update the items in the new category
+                newCategory['items'] = filteredItems;
+
+                return newCategory;
+              })
+              .where(
+                (category) =>
+                    (category['items'] as List).isNotEmpty ||
+                    category['title'].toString().toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ),
+              )
+              .toList();
+    }
 
     // Create a scroll controller
     final ScrollController scrollController = ScrollController();
 
-    // Scroll to the selected category if initialCategoryIndex is provided and not searching
+    // Scroll to the selected category if initialCategoryIndex is provided
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isSearching &&
-          widget.initialCategoryIndex != null &&
+      if (widget.initialCategoryIndex != null &&
           widget.initialCategoryIndex! < medicalCategories.length) {
         scrollController.animateTo(
           widget.initialCategoryIndex! *
@@ -198,189 +176,125 @@ class _CategoryState extends State<Category> {
           "Medical Equipment",
           style: TextStyle(
             color: Color(0xFF2D3142),
-            fontSize: 22,
+            fontSize: 28,
             fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search medical equipment...',
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                  suffixIcon:
-                      _searchQuery.isNotEmpty
-                          ? IconButton(
-                            icon: Icon(Icons.clear, color: Colors.grey[600]),
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _searchQuery = '';
-                                FocusScope.of(context).unfocus();
-                              });
-                            },
-                          )
-                          : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
-            ),
-          ),
-
-          // Search results count
-          if (_searchQuery.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Found ${filteredCategories.isEmpty ? 'no' : filteredCategories.length} ${filteredCategories.length == 1 ? 'category' : 'categories'} matching '${_searchQuery}'",
-                style: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-
-          // Main content
-          Expanded(
-            child:
-                filteredCategories.isEmpty && _searchQuery.isNotEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 70,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            "No results found for '$_searchQuery'",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Try a different search term",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    : SingleChildScrollView(
-                      controller: scrollController,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 15),
-                            // Header text
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: Text(
-                                _searchQuery.isNotEmpty
-                                    ? "Search results"
-                                    : "Browse by category",
-                                style: TextStyle(
-                                  color: Colors.grey[700],
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            // Scrollable Category List
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: filteredCategories.length,
-                              itemBuilder: (context, index) {
-                                return MedicalCategoryCard(
-                                  category: filteredCategories[index],
-                                  index: index,
-                                  isHighlighted:
-                                      !_isSearching &&
-                                      widget.initialCategoryIndex == index,
-                                  searchQuery: _searchQuery,
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-                        ),
-                      ),
+      body: SingleChildScrollView(
+        controller: scrollController,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 15),
+              // Add Search field
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Show search dialog
-  void _showSearchDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Search Medical Equipment"),
-            content: TextField(
-              autofocus: true,
-              decoration: const InputDecoration(
-                hintText: "Enter search term...",
-                prefixIcon: Icon(Icons.search),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: "Search medical equipment...",
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF2D3142),
+                    ),
+                    suffixIcon:
+                        _searchQuery.isNotEmpty
+                            ? IconButton(
+                              icon: const Icon(
+                                Icons.clear,
+                                color: Color(0xFF2D3142),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                            : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _searchQuery = '';
-                  });
+              const SizedBox(height: 10),
+              // Header text
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  "Browse by category",
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              // Show message when no results found
+              if (_searchQuery.isNotEmpty && filteredCategories.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 70,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No results found for '$_searchQuery'",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              // Scrollable Category List with filtered results
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredCategories.length,
+                itemBuilder: (context, index) {
+                  return MedicalCategoryCard(
+                    category: filteredCategories[index],
+                    index: index,
+                    isHighlighted: widget.initialCategoryIndex == index,
+                  );
                 },
-                child: const Text("CANCEL"),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text("SEARCH"),
-              ),
+              const SizedBox(height: 20),
             ],
           ),
+        ),
+      ),
     );
   }
 }
@@ -390,14 +304,12 @@ class MedicalCategoryCard extends StatelessWidget {
   final Map<String, dynamic> category;
   final int index;
   final bool isHighlighted;
-  final String searchQuery;
 
   const MedicalCategoryCard({
     super.key,
     required this.category,
     required this.index,
     this.isHighlighted = false,
-    this.searchQuery = '',
   });
 
   @override
@@ -420,9 +332,6 @@ class MedicalCategoryCard extends StatelessWidget {
     final borderColor =
         isHighlighted ? Colors.amber.withOpacity(0.8) : Colors.transparent;
     final boxShadowOpacity = isHighlighted ? 0.6 : 0.4;
-
-    // Check if title matches search for highlighting
-    final bool titleMatches = category['titleMatches'] == true;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,14 +359,8 @@ class MedicalCategoryCard extends StatelessWidget {
               ),
             ],
             border: Border.all(
-              color:
-                  titleMatches && searchQuery.isNotEmpty
-                      ? Colors.green.withOpacity(0.8)
-                      : borderColor,
-              width:
-                  (titleMatches && searchQuery.isNotEmpty) || isHighlighted
-                      ? 2.0
-                      : 0.0,
+              color: borderColor,
+              width: isHighlighted ? 2.0 : 0.0,
             ),
           ),
           child: Padding(
@@ -471,20 +374,14 @@ class MedicalCategoryCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: highlightSearchText(
+                  child: Text(
                     category['title'],
-                    searchQuery,
-                    const TextStyle(
+                    style: const TextStyle(
                       color: Color(0xFF2D3142),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
-                    const TextStyle(
-                      color: Color(0xFF2D3142),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      backgroundColor: Color(0xFFFFEB3B),
-                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -519,14 +416,8 @@ class MedicalCategoryCard extends StatelessWidget {
               ),
             ],
             border: Border.all(
-              color:
-                  titleMatches && searchQuery.isNotEmpty
-                      ? Colors.green.withOpacity(0.8)
-                      : borderColor,
-              width:
-                  (titleMatches && searchQuery.isNotEmpty) || isHighlighted
-                      ? 2.0
-                      : 0.0,
+              color: borderColor,
+              width: isHighlighted ? 2.0 : 0.0,
             ),
           ),
           // List of subcategory items
@@ -566,19 +457,12 @@ class MedicalCategoryCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: highlightSearchText(
+                      child: Text(
                         category['items'][i],
-                        searchQuery,
-                        const TextStyle(
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF2D3142),
-                        ),
-                        TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          backgroundColor: Colors.yellow[300],
                         ),
                       ),
                     ),
@@ -589,60 +473,6 @@ class MedicalCategoryCard extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  // Helper function to highlight search text
-  Widget highlightSearchText(
-    String text,
-    String query,
-    TextStyle style,
-    TextStyle highlightStyle,
-  ) {
-    if (query.isEmpty) {
-      return Text(text, style: style, overflow: TextOverflow.ellipsis);
-    }
-
-    final lowercaseText = text.toLowerCase();
-    final lowercaseQuery = query.toLowerCase();
-
-    if (!lowercaseText.contains(lowercaseQuery)) {
-      return Text(text, style: style, overflow: TextOverflow.ellipsis);
-    }
-
-    // Split text into parts based on where the query appears
-    final List<TextSpan> spans = [];
-    int start = 0;
-    int matchIndex;
-
-    while ((matchIndex = lowercaseText.indexOf(lowercaseQuery, start)) != -1) {
-      // Add text before match
-      if (matchIndex > start) {
-        spans.add(
-          TextSpan(text: text.substring(start, matchIndex), style: style),
-        );
-      }
-
-      // Add highlighted match
-      spans.add(
-        TextSpan(
-          text: text.substring(matchIndex, matchIndex + query.length),
-          style: highlightStyle,
-        ),
-      );
-
-      // Move start position
-      start = matchIndex + query.length;
-    }
-
-    // Add any remaining text
-    if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: style));
-    }
-
-    return RichText(
-      text: TextSpan(children: spans),
-      overflow: TextOverflow.ellipsis,
     );
   }
 }
