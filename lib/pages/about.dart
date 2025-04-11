@@ -5,13 +5,50 @@ import 'package:url_launcher/url_launcher.dart';
 class About extends StatelessWidget {
   const About({super.key});
 
-  void _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      throw 'Could not launch \$url';
+  Future<void> _launchURL(String urlString, BuildContext context) async {
+    try {
+      final Uri url = Uri.parse(urlString);
+
+      // For email links
+      if (urlString.startsWith('mailto:')) {
+        final emailLaunchable = await canLaunchUrl(url);
+        if (emailLaunchable) {
+          await launchUrl(url);
+        } else {
+          _showErrorDialog(context, 'Could not launch email app');
+        }
+        return;
+      }
+
+      // For web URLs
+      final bool nativeAppLaunchable = await canLaunchUrl(url);
+
+      if (nativeAppLaunchable) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        _showErrorDialog(context, 'Could not open $urlString');
+      }
+    } catch (e) {
+      print('Error launching URL: $e');
+      _showErrorDialog(context, 'Error opening link');
     }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -97,7 +134,16 @@ class About extends StatelessWidget {
                 icon: Icons.info_outline,
                 description:
                     "Learn about the features and functionality of the application.",
-                onPressed: () {},
+                onPressed: () {
+                  _showInfoDialog(
+                    context,
+                    "How GearCare Works",
+                    "GearCare is a platform that allows users to rent and lend equipment. "
+                        "Browse through different categories, search for specific gear, "
+                        "and connect with owners to arrange rentals. You can also add your own "
+                        "gear to rent out to others.",
+                  );
+                },
               ),
               const SizedBox(height: 16),
               _buildInfoCard(
@@ -106,7 +152,16 @@ class About extends StatelessWidget {
                 icon: Icons.list_alt,
                 description:
                     "Find additional information about the application and its policies.",
-                onPressed: () {},
+                onPressed: () {
+                  _showInfoDialog(
+                    context,
+                    "Additional Information",
+                    "GearCare was created to make gear rental easy and accessible. "
+                        "We're committed to providing a seamless experience for both renters "
+                        "and lenders. The app is currently in version 1.0.0 and we're continuously "
+                        "working on improvements and new features.",
+                  );
+                },
               ),
               const SizedBox(height: 16),
               _buildInfoCard(
@@ -114,7 +169,15 @@ class About extends StatelessWidget {
                 title: "Terms & Privacy",
                 icon: Icons.policy_outlined,
                 description: "Read our terms of service and privacy policy.",
-                onPressed: () {},
+                onPressed: () {
+                  _showInfoDialog(
+                    context,
+                    "Terms & Privacy",
+                    "By using GearCare, you agree to our terms of service and privacy policy. "
+                        "We respect your privacy and are committed to protecting your personal data. "
+                        "For full details, please visit our website.",
+                  );
+                },
               ),
               const SizedBox(height: 24),
               Container(
@@ -148,26 +211,28 @@ class About extends StatelessWidget {
                         _buildSocialButton(
                           Icons.language,
                           "Website",
-                          () => _launchURL("https://rushirajravalji.in"),
+                          () => _launchURL("https://flutter.dev", context),
                         ),
                         _buildSocialButton(
                           Icons.camera_alt,
                           "Instagram",
                           () => _launchURL(
-                            "https://www.instagram.com/rushiraj_ravalji/",
+                            "https://instagram.com/flutterdev",
+                            context,
                           ),
                         ),
                         _buildSocialButton(
                           Icons.code,
                           "GitHub",
-                          () =>
-                              _launchURL("https://github.com/RushirajRavalji"),
+                          () => _launchURL(
+                            "https://github.com/flutter/flutter",
+                            context,
+                          ),
                         ),
                         _buildSocialButton(
                           Icons.email,
                           "Email",
-                          () =>
-                              _launchURL("mailto:rushiraj11.ravalji@gmail.com"),
+                          () => _launchURL("mailto:info@example.com", context),
                         ),
                       ],
                     ),
@@ -253,21 +318,75 @@ class About extends StatelessWidget {
   ) {
     return Column(
       children: [
-        GestureDetector(
-          onTap: onPressed,
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Color(0xFF2E576C).withOpacity(0.1),
-              shape: BoxShape.circle,
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(24),
+            splashColor: const Color(0xFF2E576C).withOpacity(0.3),
+            highlightColor: const Color(0xFF2E576C).withOpacity(0.1),
+            child: Ink(
+              width: 55,
+              height: 55,
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E576C).withOpacity(0.1),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(icon, color: const Color(0xFF2E576C), size: 28),
+              ),
             ),
-            child: Icon(icon, color: Color(0xFF2E576C), size: 24),
           ),
         ),
         const SizedBox(height: 8),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF2E576C),
+          ),
+        ),
       ],
+    );
+  }
+
+  // Helper method to show info dialogs
+  void _showInfoDialog(BuildContext context, String title, String content) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFF2E576C),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(content),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                "Close",
+                style: TextStyle(color: Color(0xFF2E576C)),
+              ),
+            ),
+          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        );
+      },
     );
   }
 }
