@@ -28,6 +28,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   // Separate lists for upper and bottom products
   List<Product> _upperProducts = [];
   List<Product> _bottomProducts = [];
+  // Search functionality
+  final TextEditingController _searchController = TextEditingController();
+  List<Product> _filteredBottomProducts = [];
+  bool _isSearching = false;
   final List<String> _circleItems = [
     'Electronics',
     'Furniture',
@@ -66,6 +70,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     super.initState();
     _pageController = PageController(initialPage: _currentPage);
     _loadProductsFromStorage();
+
+    // Initialize filtered products
+    _filteredBottomProducts = _bottomProducts;
 
     // Load profile image cache once on initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -201,6 +208,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     // Cancel auto-scroll timer
     _autoScrollTimer?.cancel();
     _pageController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -244,25 +252,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Addproduct(onProductAdded: _addProduct),
-            ),
-          ).then((_) {
-            // Only refresh if products were added
-            if (_upperProducts.isNotEmpty &&
-                (_autoScrollTimer == null || !_autoScrollTimer!.isActive)) {
-              _startAutoScroll();
-            }
-          });
-        },
-        backgroundColor: AppTheme.primaryColor,
-        elevation: 4,
-        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
@@ -532,23 +521,27 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget _buildSearchBar(double screenWidth) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 50,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(15),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
               child: TextField(
+                controller: _searchController,
+                onChanged: _filterProducts,
                 decoration: InputDecoration(
                   hintText: "Search for gear to rent...",
                   hintStyle: TextStyle(
@@ -563,19 +556,26 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
-            Container(
-              height: 50,
-              width: 50,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
-                borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(15),
-                ),
+          ),
+          Container(
+            height: 50,
+            width: 50,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor,
+              borderRadius: const BorderRadius.horizontal(
+                right: Radius.circular(15),
               ),
-              child: const Icon(Icons.search, color: Colors.white, size: 24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
+            child: const Icon(Icons.search, color: Colors.white, size: 24),
+          ),
+        ],
       ),
     );
   }
@@ -616,9 +616,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            "Recommended For You",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            _isSearching ? "Search Results" : "Recommended For You",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -697,100 +697,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
-                  child: Stack(
-                    children: [
-                      Base64ImageWidget(
-                        base64String: product.imagePath,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                      Positioned(
-                        top: 15,
-                        right: 15,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            "Featured",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: PopupMenuButton<String>(
-                          color: Colors.white,
-                          elevation: 20,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.more_vert,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              _editProduct(product, ContainerType.upper);
-                            } else if (value == 'delete') {
-                              _showDeleteConfirmation(
-                                product,
-                                ContainerType.upper,
-                              );
-                            }
-                          },
-                          itemBuilder:
-                              (context) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 20),
-                                      SizedBox(width: 10),
-                                      Text('Edit'),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                        size: 20,
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                        ),
-                      ),
-                    ],
+                  child: Base64ImageWidget(
+                    base64String: product.imagePath,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
                   ),
                 ),
               ),
@@ -895,46 +806,32 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildEmptyBottomContainer(double screenWidth) {
-    return Container(
-      width: screenWidth - 32,
-      height: 150,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.add_box_outlined, size: 50, color: Colors.grey.shade400),
-          const SizedBox(height: 12),
-          const Text(
-            "No recommendations yet",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Add products to display here",
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBottomProductsSection(double screenWidth) {
+    final productsToShow =
+        _isSearching ? _filteredBottomProducts : _bottomProducts;
+
+    if (_isSearching && productsToShow.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.search_off, size: 50, color: Colors.grey.shade400),
+              const SizedBox(height: 10),
+              Text(
+                "No matching products found",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       width: screenWidth,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -942,11 +839,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         padding: const EdgeInsets.only(bottom: 80),
-        itemCount: _bottomProducts.length,
+        itemCount: productsToShow.length,
         itemBuilder: (context, index) {
           return _buildBottomProductContainer(
             screenWidth,
-            _bottomProducts[index],
+            productsToShow[index],
             index,
           );
         },
@@ -1388,6 +1285,68 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       const SnackBar(
         content: Text('Product deleted successfully'),
         duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // Search functionality
+  void _filterProducts(String query) {
+    setState(() {
+      _isSearching = query.isNotEmpty;
+      if (query.isEmpty) {
+        _filteredBottomProducts = _bottomProducts;
+      } else {
+        _filteredBottomProducts =
+            _bottomProducts
+                .where(
+                  (product) =>
+                      product.name.toLowerCase().contains(
+                        query.toLowerCase(),
+                      ) ||
+                      product.description.toLowerCase().contains(
+                        query.toLowerCase(),
+                      ),
+                )
+                .toList();
+      }
+    });
+  }
+
+  Widget _buildEmptyBottomContainer(double screenWidth) {
+    return Container(
+      width: screenWidth - 32,
+      height: 150,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.add_box_outlined, size: 50, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          const Text(
+            "No recommendations yet",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Add products to display here",
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }
