@@ -8,15 +8,12 @@ class FirebaseStorageService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Get the current user's products collection reference
-  CollectionReference _getUserProductsCollection(String type) {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('${type}Products');
-  }
+  // Get the current user ID
+  String get currentUserId => _auth.currentUser?.uid ?? 'guest_user';
+
+  // Get the public products collection reference
+  CollectionReference get _productsCollection =>
+      _firestore.collection('products');
 
   // Convert File to base64 string
   Future<String> fileToBase64(File file) async {
@@ -47,19 +44,24 @@ class FirebaseStorageService {
     List<Product> bottomProducts,
   ) async {
     try {
-      await _clearAllProducts();
+      // Only clear user's own products
+      await _clearUserProducts();
 
       final batch = _firestore.batch();
 
       // Save upper products
       for (var product in upperProducts) {
-        final docRef = _getUserProductsCollection('upper').doc();
+        final docRef = _productsCollection.doc();
+        product.userId = currentUserId; // Set the userId
+        product.containerType = 'upper'; // Set the container type
         batch.set(docRef, product.toMap());
       }
 
       // Save bottom products
       for (var product in bottomProducts) {
-        final docRef = _getUserProductsCollection('bottom').doc();
+        final docRef = _productsCollection.doc();
+        product.userId = currentUserId; // Set the userId
+        product.containerType = 'bottom'; // Set the container type
         batch.set(docRef, product.toMap());
       }
 
@@ -69,20 +71,18 @@ class FirebaseStorageService {
     }
   }
 
-  // Clear all products from Firestore
-  Future<void> _clearAllProducts() async {
+  // Clear user's products from Firestore
+  Future<void> _clearUserProducts() async {
     try {
       final batch = _firestore.batch();
 
-      // Clear upper products
-      final upperSnapshot = await _getUserProductsCollection('upper').get();
-      for (var doc in upperSnapshot.docs) {
-        batch.delete(doc.reference);
-      }
+      // Get all products owned by this user
+      final userProductsSnapshot =
+          await _productsCollection
+              .where('userId', isEqualTo: currentUserId)
+              .get();
 
-      // Clear bottom products
-      final bottomSnapshot = await _getUserProductsCollection('bottom').get();
-      for (var doc in bottomSnapshot.docs) {
+      for (var doc in userProductsSnapshot.docs) {
         batch.delete(doc.reference);
       }
 
@@ -92,21 +92,26 @@ class FirebaseStorageService {
     }
   }
 
-  // Load products from Firestore
+  // Load all products from Firestore for display
   Future<Map<String, List<Product>>> loadProducts() async {
     try {
-      final upperSnapshot = await _getUserProductsCollection('upper').get();
-      final bottomSnapshot = await _getUserProductsCollection('bottom').get();
+      // Get all products
+      final productsSnapshot = await _productsCollection.get();
 
+      final products =
+          productsSnapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final product = Product.fromMap(data);
+            // Ensure ID is set
+            product.id = doc.id;
+            return product;
+          }).toList();
+
+      // Separate into upper and bottom products
       final upperProducts =
-          upperSnapshot.docs
-              .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>))
-              .toList();
-
+          products.where((p) => p.containerType == 'upper').toList();
       final bottomProducts =
-          bottomSnapshot.docs
-              .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>))
-              .toList();
+          products.where((p) => p.containerType == 'bottom').toList();
 
       return {'upperProducts': upperProducts, 'bottomProducts': bottomProducts};
     } catch (e) {
@@ -117,10 +122,46 @@ class FirebaseStorageService {
   // Add a product to Firestore
   Future<void> addProduct(Product product, String containerType) async {
     try {
-      final docRef = _getUserProductsCollection(containerType).doc();
+      final docRef = _productsCollection.doc();
+      product.id = docRef.id;
+      product.userId = currentUserId; // Set the userId
+      product.containerType = containerType; // Set the container type
       await docRef.set(product.toMap());
     } catch (e) {
       throw Exception('Failed to add product: $e');
+    }
+  }
+
+  // Edit a product in Firestore
+  Future<void> editProduct(Product product, String containerType) async {
+    try {
+      product.containerType = containerType; // Update the container type
+      // Only allow editing if the current user is the owner
+      if (product.userId == currentUserId) {
+        await _productsCollection.doc(product.id).update(product.toMap());
+      } else {
+        throw Exception('You can only edit your own products');
+      }
+    } catch (e) {
+      throw Exception('Failed to edit product: $e');
+    }
+  }
+
+  // Delete a product from Firestore
+  Future<void> deleteProduct(String productId) async {
+    try {
+      // Check if the product belongs to the current user
+      final productDoc = await _productsCollection.doc(productId).get();
+      if (productDoc.exists) {
+        final data = productDoc.data() as Map<String, dynamic>;
+        if (data['userId'] == currentUserId) {
+          await _productsCollection.doc(productId).delete();
+        } else {
+          throw Exception('You can only delete your own products');
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to delete product: $e');
     }
   }
 }

@@ -208,6 +208,17 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
             ? const Color(0xFF2196F3)
             : const Color(0xFFFF9800);
     final dateFormat = DateFormat('MMM dd, yyyy');
+    final timeFormat = DateFormat('hh:mm a');
+
+    // Calculate timeline progress
+    final now = DateTime.now();
+    final endDate = rental.rentalDate.add(Duration(days: rental.duration));
+    final totalDuration = endDate.difference(rental.rentalDate).inDays;
+    final elapsedDays = now.difference(rental.rentalDate).inDays;
+    final progress =
+        rental.status == 'completed'
+            ? 1.0
+            : (elapsedDays / totalDuration).clamp(0.0, 1.0);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -305,27 +316,96 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_month_rounded,
-                              size: 16,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              dateFormat.format(rental.rentalDate),
-                              style: TextStyle(
-                                color: Colors.grey[700],
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_month_rounded,
+                                size: 16,
+                                color: Colors.grey[600],
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  '${dateFormat.format(rental.rentalDate)} at ${timeFormat.format(rental.rentalDate)}',
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+          // Timeline
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Rental Progress',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    Text(
+                      '${(progress * 100).toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width:
+                            (MediaQuery.of(context).size.width - 64) * progress,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Start: ${dateFormat.format(rental.rentalDate)}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    Text(
+                      'End: ${dateFormat.format(endDate)}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -409,23 +489,28 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
                       ),
                     if (rental.status == 'completed' &&
                         rental.returnDate != null)
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.assignment_return_rounded,
-                            size: 18,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Returned: ${dateFormat.format(rental.returnDate!)}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey[700],
+                      Flexible(
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.assignment_return_rounded,
+                              size: 18,
+                              color: Colors.grey,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Returned: ${dateFormat.format(rental.returnDate!)}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[700],
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                   ],
                 ),
@@ -483,9 +568,12 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
                   size: 24,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Return Item',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                const Expanded(
+                  child: Text(
+                    'Return Item',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),

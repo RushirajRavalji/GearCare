@@ -4,6 +4,7 @@ import 'package:gearcare/pages/menu.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:gearcare/models/product_models.dart';
+import 'package:uuid/uuid.dart';
 
 enum ContainerType { upper, bottom }
 
@@ -239,7 +240,7 @@ class _AddproductState extends State<Addproduct> {
                                       child: Icon(
                                         Icons.add_a_photo_rounded,
                                         size: 40,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                                     SizedBox(height: 16),
@@ -394,7 +395,7 @@ class _AddproductState extends State<Addproduct> {
 
                   // Add Product Button
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _saveProduct,
+                    onPressed: _isLoading ? null : _handleAddProduct,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF2E576C),
                       foregroundColor: Colors.white,
@@ -581,109 +582,95 @@ class _AddproductState extends State<Addproduct> {
     );
   }
 
-  // Save product method
-  Future<void> _saveProduct() async {
-    try {
-      // Validate all fields
-      if (_nameController.text.isEmpty) {
-        _showErrorSnackBar('Please enter a product name');
-        return;
-      }
+  // Handle add product button press
+  Future<void> _handleAddProduct() async {
+    if (_isLoading) return;
 
-      if (_priceController.text.isEmpty) {
-        _showErrorSnackBar('Please enter a product price');
-        return;
-      }
-
-      double price;
-      try {
-        price = double.parse(_priceController.text);
-      } catch (e) {
-        _showErrorSnackBar('Please enter a valid price');
-        return;
-      }
-
-      if (_descriptionController.text.isEmpty) {
-        _showErrorSnackBar('Please enter a product description');
-        return;
-      }
-
-      if (_image == null && _existingImageBase64 == null) {
-        _showErrorSnackBar('Please select a product image');
-        return;
-      }
-
-      setState(() {
-        _isLoading = true;
-      });
-
-      // Process image - use existing image or convert new one
-      String imagePath;
-      if (_image != null) {
-        // Convert image to base64
-        imagePath = await _firebaseService.fileToBase64(_image!);
-      } else {
-        // Use existing image
-        imagePath = _existingImageBase64!;
-      }
-
-      // Create or update product
-      Product product;
-      if (_isEditMode) {
-        // Update existing product
-        product = Product(
-          id: _editingProductId!,
-          name: _nameController.text,
-          price: price,
-          description: _descriptionController.text,
-          imagePath: imagePath,
-        );
-      } else {
-        // Create new product
-        product = Product(
-          id:
-              DateTime.now().millisecondsSinceEpoch
-                  .toString(), // Generate unique ID
-          name: _nameController.text,
-          price: price,
-          description: _descriptionController.text,
-          imagePath: imagePath,
-        );
-      }
-
-      // Call the callback function
-      widget.onProductAdded(product, _selectedContainer);
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Show success message
+    // Validate inputs
+    if (_nameController.text.isEmpty ||
+        _priceController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
+        (_image == null && _existingImageBase64 == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isEditMode
-                ? 'Product updated successfully'
-                : 'Product added successfully',
-          ),
-          backgroundColor: Colors.green,
+        const SnackBar(
+          content: Text('Please fill in all fields and add an image'),
+          backgroundColor: Colors.red,
         ),
       );
-
-      // Navigate back to the previous screen
-      Navigator.pop(context);
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      _showErrorSnackBar('Error saving product: $e');
+      return;
     }
-  }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Convert image to base64 if we have a new image
+      final String imageBase64 =
+          _image != null
+              ? await _firebaseService.fileToBase64(_image!)
+              : _existingImageBase64!;
+
+      // Create product object
+      final Product product = Product(
+        id: _isEditMode ? _editingProductId! : const Uuid().v4(),
+        name: _nameController.text,
+        price: double.parse(_priceController.text),
+        description: _descriptionController.text,
+        imagePath: imageBase64,
+        userId: _firebaseService.currentUserId, // Set current user ID
+        containerType:
+            _selectedContainer == ContainerType.upper ? 'upper' : 'bottom',
+      );
+
+      // Add or update product in Firebase
+      if (_isEditMode) {
+        await _firebaseService.editProduct(
+          product,
+          _selectedContainer == ContainerType.upper ? 'upper' : 'bottom',
+        );
+      } else {
+        await _firebaseService.addProduct(
+          product,
+          _selectedContainer == ContainerType.upper ? 'upper' : 'bottom',
+        );
+      }
+
+      // Call the callback
+      widget.onProductAdded(product, _selectedContainer);
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isEditMode
+                  ? 'Product updated successfully'
+                  : 'Product added successfully',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Pop back to previous screen
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      print("Error adding product: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override

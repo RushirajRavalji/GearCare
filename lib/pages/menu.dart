@@ -4,7 +4,7 @@ import 'package:gearcare/pages/addproduct.dart';
 import 'package:gearcare/pages/categotry.dart';
 import 'package:gearcare/pages/help_support.dart';
 import 'package:gearcare/pages/home.dart';
-import 'package:gearcare/pages/rental_history.dart';
+
 import 'package:gearcare/pages/request_product.dart';
 import 'package:gearcare/models/product_models.dart';
 
@@ -223,12 +223,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                               ),
                             ),
                             _buildDivider(),
-                            _buildDrawerItem(
-                              context,
-                              Icons.history_rounded,
-                              "Rental History",
-                              const RentalHistoryScreen(),
-                            ),
+
                             _buildDivider(),
                             _buildDrawerItem(
                               context,
