@@ -32,25 +32,27 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   List<Product> _filteredBottomProducts = [];
   bool _isSearching = false;
+
+  // Updated categories to match medical equipment
   final List<String> _circleItems = [
-    'Electronics',
-    'Furniture',
-    'Vehicles',
-    'Tools',
-    'Sports',
-    'Cameras',
-    'Musical Instruments',
+    'Diagnostic & Imaging',
+    'Patient Monitoring',
+    'Surgical Equipment',
+    'Life Support',
+    'Rehabilitation',
+    'Patient Care',
+    'Auxiliary Equipment',
   ];
 
-  // Icons for categories
+  // Updated icons for medical categories
   final List<IconData> _categoryIcons = [
-    Icons.devices,
-    Icons.chair,
-    Icons.directions_car,
-    Icons.handyman,
-    Icons.sports_soccer,
-    Icons.camera_alt,
-    Icons.music_note,
+    Icons.medical_services,
+    Icons.monitor_heart,
+    Icons.local_hospital,
+    Icons.emergency,
+    Icons.accessibility_new,
+    Icons.bed,
+    Icons.biotech,
   ];
 
   // Cache for profile image URL to avoid repeated Firestore queries
@@ -605,6 +607,22 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             "Categories",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Category()),
+              );
+            },
+            child: Text(
+              "View All",
+              style: TextStyle(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -764,7 +782,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DetailScreen(title: _circleItems[index]),
+              builder: (context) => Category(initialCategoryIndex: index),
             ),
           ),
       child: Container(
@@ -1373,63 +1391,4 @@ class SlideUpPageRoute extends PageRouteBuilder {
         },
         transitionDuration: const Duration(milliseconds: 500),
       );
-}
-
-class DetailScreen extends StatelessWidget {
-  final String title;
-  const DetailScreen({super.key, required this.title});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: const Color(0xFF3498DB),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _getCategoryIcon(title),
-              size: 80,
-              color: const Color(0xFF3498DB),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              "Browse $title",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "Find the best $title to rent",
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Electronics':
-        return Icons.devices;
-      case 'Furniture':
-        return Icons.chair;
-      case 'Vehicles':
-        return Icons.directions_car;
-      case 'Tools':
-        return Icons.handyman;
-      case 'Sports':
-        return Icons.sports_soccer;
-      case 'Cameras':
-        return Icons.camera_alt;
-      case 'Musical Instruments':
-        return Icons.music_note;
-      default:
-        return Icons.category;
-    }
-  }
 }

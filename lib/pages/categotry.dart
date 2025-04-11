@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:gearcare/pages/menu.dart';
 
 class Category extends StatefulWidget {
-  const Category({super.key});
+  final int? initialCategoryIndex;
+
+  const Category({super.key, this.initialCategoryIndex});
   @override
   State<Category> createState() => _CategoryState();
 }
@@ -99,6 +101,22 @@ class _CategoryState extends State<Category> {
       },
     ];
 
+    // Create a scroll controller
+    final ScrollController scrollController = ScrollController();
+
+    // Scroll to the selected category if initialCategoryIndex is provided
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialCategoryIndex != null &&
+          widget.initialCategoryIndex! < medicalCategories.length) {
+        scrollController.animateTo(
+          widget.initialCategoryIndex! *
+              300.0, // Approximate height per category
+          duration: Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -129,6 +147,7 @@ class _CategoryState extends State<Category> {
         ],
       ),
       body: SingleChildScrollView(
+        controller: scrollController,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
@@ -156,6 +175,7 @@ class _CategoryState extends State<Category> {
                   return MedicalCategoryCard(
                     category: medicalCategories[index],
                     index: index,
+                    isHighlighted: widget.initialCategoryIndex == index,
                   );
                 },
               ),
@@ -172,11 +192,13 @@ class _CategoryState extends State<Category> {
 class MedicalCategoryCard extends StatelessWidget {
   final Map<String, dynamic> category;
   final int index;
+  final bool isHighlighted;
 
   const MedicalCategoryCard({
     super.key,
     required this.category,
     required this.index,
+    this.isHighlighted = false,
   });
 
   @override
@@ -194,6 +216,11 @@ class MedicalCategoryCard extends StatelessWidget {
 
     // Select gradient based on index
     List<Color> currentGradient = gradients[index % gradients.length];
+
+    // Enhancement for highlighted category
+    final borderColor =
+        isHighlighted ? Colors.amber.withOpacity(0.8) : Colors.transparent;
+    final boxShadowOpacity = isHighlighted ? 0.6 : 0.4;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,11 +242,15 @@ class MedicalCategoryCard extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: currentGradient[1].withOpacity(0.4),
+                color: currentGradient[1].withOpacity(boxShadowOpacity),
                 blurRadius: 5,
                 offset: const Offset(0, 2),
               ),
             ],
+            border: Border.all(
+              color: borderColor,
+              width: isHighlighted ? 2.0 : 0.0,
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -273,6 +304,10 @@ class MedicalCategoryCard extends StatelessWidget {
                 offset: const Offset(0, 3),
               ),
             ],
+            border: Border.all(
+              color: borderColor,
+              width: isHighlighted ? 2.0 : 0.0,
+            ),
           ),
           // List of subcategory items
           child: Column(
