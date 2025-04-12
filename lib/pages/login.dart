@@ -7,7 +7,10 @@ import 'package:gearcare/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
-  const Login({super.key});
+  final Widget? nextScreen;
+
+  const Login({super.key, this.nextScreen});
+
   @override
   State<Login> createState() => _LoginState();
 }
@@ -224,7 +227,7 @@ class _LoginState extends State<Login> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                // Keep your existing logic or add forgot password functionality
+                                _showForgotPasswordDialog();
                               },
                               child: Text(
                                 'Forgot Password?',
@@ -332,11 +335,13 @@ class _LoginState extends State<Login> {
           password: passwordController.text,
         );
 
-        // Navigate to Home
+        // Navigate to Home or specified next screen
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const Home()),
+          MaterialPageRoute(
+            builder: (context) => widget.nextScreen ?? const Home(),
+          ),
         );
       } on FirebaseAuthException catch (e) {
         setState(() {
@@ -364,5 +369,156 @@ class _LoginState extends State<Login> {
         });
       }
     }
+  }
+
+  // Password reset functionality
+  void _showForgotPasswordDialog() {
+    final TextEditingController resetEmailController = TextEditingController();
+    final GlobalKey<FormState> resetFormKey = GlobalKey<FormState>();
+    bool isResetting = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: Text(
+                  'Reset Password',
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: Form(
+                  key: resetFormKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Enter your email address to receive a password reset link',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: resetEmailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          hintText: 'Email address',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: AppTheme.primaryColor,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value)) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (isResetting)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed:
+                        isResetting
+                            ? null
+                            : () {
+                              Navigator.pop(context);
+                            },
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed:
+                        isResetting
+                            ? null
+                            : () async {
+                              if (resetFormKey.currentState!.validate()) {
+                                setState(() {
+                                  isResetting = true;
+                                });
+
+                                try {
+                                  final authService = FirebaseAuthService();
+                                  await authService.resetPassword(
+                                    resetEmailController.text.trim(),
+                                  );
+
+                                  if (!mounted) return;
+                                  Navigator.pop(context);
+
+                                  // Show success message
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Password reset link sent to ${resetEmailController.text}',
+                                      ),
+                                      backgroundColor: Colors.green,
+                                      duration: const Duration(seconds: 5),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  setState(() {
+                                    isResetting = false;
+                                  });
+
+                                  // Show error message
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                    child: Text(
+                      'Reset Password',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
   }
 }

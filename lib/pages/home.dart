@@ -221,14 +221,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     if (_isLoading) {
       return Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+          child: CircularProgressIndicator(color: AppTheme.currentPrimaryColor),
         ),
       );
     }
 
     // Use const for widgets that don't change to improve performance
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.currentBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           // Disable physics if there's any jitter during scrolling
@@ -259,218 +259,129 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildTopBar(BuildContext context) {
-    return Container(
-      height: 65,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          InkWell(
+            onTap: () {
+              // Open side drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CustomDrawer()),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.currentSecondaryColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.menu,
+                color: AppTheme.currentPrimaryColor,
+                size: 24,
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                // Show location popup
+                _showLocationPopup(context);
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: AppTheme.currentPrimaryColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      _isLoadingLocation
+                          ? "Loading location..."
+                          : _currentLocation,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.currentTextColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    color: AppTheme.currentPrimaryColor,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.menu_rounded, size: 26),
-                onPressed:
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CustomDrawer(),
-                      ),
-                    ),
-              ),
-              const SizedBox(width: 8),
+              // Dark Mode toggle
               GestureDetector(
-                onTap: _fetchCurrentLocation, // Refresh location on tap
-                onLongPress:
-                    () => _showLocationDetails(
-                      context,
-                    ), // Show details on long press
+                onTap: () {
+                  AppTheme.toggleTheme().then((_) {
+                    setState(() {
+                      // Update UI after toggling theme
+                    });
+                  });
+                },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
+                    color: AppTheme.currentSecondaryColor,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: AppTheme.primaryColor,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 4),
-                      _isLoadingLocation
-                          ? SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppTheme.primaryColor,
-                              ),
-                            ),
-                          )
-                          : ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth:
-                                  MediaQuery.of(context).size.width * 0.35,
-                            ),
-                            child: Text(
-                              _currentLocation,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      // Add refresh indicator
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.refresh,
-                        color: AppTheme.primaryColor,
-                        size: 14,
-                      ),
-                    ],
+                  child: Icon(
+                    AppTheme.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                    color: AppTheme.currentPrimaryColor,
+                    size: 24,
                   ),
                 ),
               ),
-            ],
-          ),
-          GestureDetector(
-            onTap: () async {
-              final needsRefresh = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-
-              // Only refresh if explicitly requested (profile was updated)
-              if (needsRefresh == true) {
-                // Clear the cache to force reload
-                _cachedProfileUrl = null;
-                _profileUrlFuture = null;
-                _refreshProfileImageCache();
-              }
-            },
-            child: FutureBuilder<String?>(
-              // Initialize the future only once and reuse it
-              future: _profileUrlFuture ??= _getProfileImageUrl(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.primaryColor,
-                        width: 2,
-                      ),
+              const SizedBox(width: 12),
+              // Profile icon
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
                     ),
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                    ),
-                  );
-                }
-
-                final profileUrl = snapshot.data;
-
-                if (profileUrl != null && profileUrl.isNotEmpty) {
-                  if (profileUrl.startsWith('data:image')) {
-                    // For base64 images, use a memory-efficient approach
-                    // Extract just the base64 part
-                    final base64Part = profileUrl.split(',')[1];
-
-                    // Pre-compute image size
-                    const double imageSize = 40;
-
-                    return Container(
-                      width: imageSize,
-                      height: imageSize,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppTheme.primaryColor,
-                          width: 2,
-                        ),
-                      ),
-                      child: ClipOval(
-                        child: Image.memory(
-                          base64Decode(base64Part),
-                          fit: BoxFit.cover,
-                          width: imageSize,
-                          height: imageSize,
-                          // Add cacheWidth to limit memory usage
-                          cacheWidth: 120, // 3x display size for quality
-                          gaplessPlayback:
-                              true, // Prevent flickering during updates
-                        ),
-                      ),
-                    );
-                  } else {
-                    // For network images
+                  ).then((profileUpdated) {
+                    // Refresh profile image if updated
+                    if (profileUpdated == true) {
+                      _refreshProfileImageCache();
+                    }
+                  });
+                },
+                child: FutureBuilder<String?>(
+                  future: _profileUrlFuture ?? _getProfileImageUrl(),
+                  builder: (context, snapshot) {
                     return Container(
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        color: AppTheme.currentSecondaryColor,
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.currentPrimaryColor.withOpacity(0.5),
                           width: 2,
                         ),
                       ),
-                      child: ClipOval(
-                        child: Image.network(
-                          profileUrl,
-                          fit: BoxFit.cover,
-                          width: 40,
-                          height: 40,
-                          // Add caching parameters
-                          cacheWidth: 120,
-                          gaplessPlayback: true,
-                          errorBuilder:
-                              (context, error, stackTrace) => Icon(
-                                Icons.person,
-                                color: Colors.black54,
-                                size: 22,
-                              ),
-                        ),
-                      ),
+                      child: _buildProfileImage(snapshot),
                     );
-                  }
-                }
-
-                return Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primaryColor, width: 2),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.black54,
-                    size: 22,
-                  ),
-                );
-              },
-            ),
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -528,31 +439,48 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           Expanded(
             child: Container(
               height: 50,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.horizontal(
-                  left: Radius.circular(15),
+              decoration: BoxDecoration(
+                color: AppTheme.currentSearchBarColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                  topRight: Radius.circular(0),
+                  bottomRight: Radius.circular(0),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
               ),
               child: TextField(
                 controller: _searchController,
-                onChanged: _filterProducts,
+                onChanged: (value) {
+                  setState(() {
+                    if (value.trim().isEmpty) {
+                      _isSearching = false;
+                      _filteredBottomProducts = _bottomProducts;
+                    } else {
+                      _isSearching = true;
+                      _filteredBottomProducts =
+                          _bottomProducts
+                              .where(
+                                (product) => product.name
+                                    .toLowerCase()
+                                    .contains(value.toLowerCase()),
+                              )
+                              .toList();
+                    }
+                  });
+                },
                 decoration: InputDecoration(
-                  hintText: "Search for gear to rent...",
+                  hintText: 'Search for gear to rent...',
                   hintStyle: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 15,
+                    color: AppTheme.currentSubtextColor,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: AppTheme.currentSubtextColor,
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
+                    horizontal: 16,
                     vertical: 15,
                   ),
                 ),
@@ -560,20 +488,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
           ),
           Container(
+            width: 55,
             height: 50,
-            width: 50,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor,
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(15),
+              color: AppTheme.currentPrimaryColor,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(12),
+                bottomRight: Radius.circular(12),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: const Icon(Icons.search, color: Colors.white, size: 24),
           ),
@@ -588,9 +510,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             "Featured Gear",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.currentTextColor,
+            ),
           ),
         ],
       ),
@@ -599,13 +525,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Widget _buildCategoryHeading(double screenWidth) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             "Categories",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.currentTextColor,
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -617,9 +547,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             child: Text(
               "View All",
               style: TextStyle(
-                color: AppTheme.primaryColor,
+                color: AppTheme.currentPrimaryColor,
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
               ),
             ),
           ),
@@ -630,13 +559,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Widget _buildRecommendedHeading(double screenWidth) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             _isSearching ? "Search Results" : "Recommended For You",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.currentTextColor,
+            ),
           ),
         ],
       ),
@@ -697,12 +630,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 15,
-                offset: const Offset(0, 3),
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -713,7 +646,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 flex: 7,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
+                    top: Radius.circular(16),
                   ),
                   child: Base64ImageWidget(
                     base64String: product.imagePath,
@@ -736,22 +669,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
+                          color: Color(0xFF333333),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "₹${product.price.toStringAsFixed(2)}/day",
-                            style: TextStyle(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        "₹${product.price.toStringAsFixed(2)}/day",
+                        style: const TextStyle(
+                          color: Color(0xFF2E576C),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -798,15 +727,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                    color: const Color(0xFF2E576C).withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Icon(
                 _categoryIcons[index],
-                color: AppTheme.primaryColor,
+                color: const Color(0xFF2E576C),
                 size: 28,
               ),
             ),
@@ -814,7 +743,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             Text(
               _circleItems[index],
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF333333),
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -877,13 +810,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -903,7 +836,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   width: double.infinity,
                   child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
+                      top: Radius.circular(16),
                     ),
                     child: Base64ImageWidget(
                       base64String: product.imagePath,
@@ -914,27 +847,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   ),
                 ),
                 Positioned(
-                  top: 15,
-                  right: 15,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-                Positioned(
                   top: 10,
                   left: 10,
                   child: PopupMenuButton<String>(
                     color: Colors.white,
-                    elevation: 20,
+                    elevation: 8,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     icon: Container(
                       padding: const EdgeInsets.all(8),
@@ -987,10 +906,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(20),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(16),
                 ),
               ),
               child: Row(
@@ -1004,6 +923,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: Color(0xFF333333),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1033,7 +953,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
+                      color: const Color(0xFF2E576C),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
@@ -1307,29 +1227,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  // Search functionality
-  void _filterProducts(String query) {
-    setState(() {
-      _isSearching = query.isNotEmpty;
-      if (query.isEmpty) {
-        _filteredBottomProducts = _bottomProducts;
-      } else {
-        _filteredBottomProducts =
-            _bottomProducts
-                .where(
-                  (product) =>
-                      product.name.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ||
-                      product.description.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ),
-                )
-                .toList();
-      }
-    });
-  }
-
   Widget _buildEmptyBottomContainer(double screenWidth) {
     return Container(
       width: screenWidth - 32,
@@ -1367,6 +1264,86 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  void _showLocationPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Choose Location',
+              style: TextStyle(
+                color: AppTheme.currentPrimaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.my_location,
+                    color: AppTheme.currentPrimaryColor,
+                  ),
+                  title: const Text('Use current location'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _fetchCurrentLocation();
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: Icon(
+                    Icons.location_city,
+                    color: AppTheme.currentPrimaryColor,
+                  ),
+                  title: const Text('Select from list'),
+                  onTap: () {
+                    // Show a list of locations to select from
+                    Navigator.pop(context);
+                    // Implement location selection
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _buildProfileImage(AsyncSnapshot<String?> snapshot) {
+    if (snapshot.hasData && snapshot.data != null) {
+      final imageUrl = snapshot.data!;
+      if (imageUrl.startsWith('http')) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.network(
+            imageUrl,
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.person, color: AppTheme.currentTextColor);
+            },
+          ),
+        );
+      } else {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Base64ImageWidget(
+            base64String: imageUrl,
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+          ),
+        );
+      }
+    } else {
+      return Icon(Icons.person, color: AppTheme.currentTextColor);
+    }
   }
 }
 

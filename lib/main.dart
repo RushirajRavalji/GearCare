@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:gearcare/firebase_options.dart';
-import 'package:gearcare/pages/home.dart';
+import 'package:gearcare/pages/app_layout.dart';
 import 'package:gearcare/pages/login.dart';
 import 'package:gearcare/pages/splashscree.dart';
 import 'package:gearcare/theme.dart';
@@ -17,13 +17,18 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  // Load theme preferences
+  await AppTheme.loadThemePreference();
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: AppTheme.backgroundColor,
-      systemNavigationBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness:
+          AppTheme.isDarkMode ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: AppTheme.currentBackgroundColor,
+      systemNavigationBarIconBrightness:
+          AppTheme.isDarkMode ? Brightness.light : Brightness.dark,
     ),
   );
 
@@ -32,7 +37,7 @@ void main() async {
       body: Center(
         child: Text(
           'An error occurred: ${details.exception}',
-          style: TextStyle(color: AppTheme.errorColor),
+          style: TextStyle(color: AppTheme.currentErrorColor),
         ),
       ),
     );
@@ -52,8 +57,8 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'GearCare',
       theme: AppTheme.theme,
-      // home: const Home(),
-      home: const SplashScreen(nextScreen: Login()),
+      // Use the SplashScreen with AppLayout as the destination after Login
+      home: const SplashScreen(nextScreen: Login(nextScreen: AppLayout())),
     );
   }
 }

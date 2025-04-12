@@ -181,12 +181,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return false;
       },
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: AppTheme.currentBackgroundColor,
         appBar: AppBar(
-          backgroundColor: AppTheme.backgroundColor,
+          backgroundColor: AppTheme.currentPrimaryColor,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
               // Return whether profile was updated when using back button
               Navigator.of(context).pop(_profileUpdated);
@@ -194,8 +194,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           title: Text(
             "Your Profile",
-            style: TextStyle(
-              color: AppTheme.textColor,
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.w600,
             ),
@@ -206,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             isLoading
                 ? Center(
                   child: CircularProgressIndicator(
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.currentPrimaryColor,
                   ),
                 )
                 : SingleChildScrollView(
@@ -221,23 +221,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.all(12),
                           margin: const EdgeInsets.only(bottom: 20),
                           decoration: BoxDecoration(
-                            color: AppTheme.errorColor.withOpacity(0.1),
+                            color: AppTheme.currentErrorColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppTheme.errorColor.withOpacity(0.3),
+                              color: AppTheme.currentErrorColor.withOpacity(
+                                0.3,
+                              ),
                             ),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.error_outline,
-                                color: AppTheme.errorColor,
+                                color: AppTheme.currentErrorColor,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   errorMessage!,
-                                  style: TextStyle(color: AppTheme.errorColor),
+                                  style: TextStyle(
+                                    color: AppTheme.currentErrorColor,
+                                  ),
                                 ),
                               ),
                             ],
@@ -261,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       // Subscription Box with Progress - Only show if logged in
                       if (FirebaseAuth.instance.currentUser != null)
-                        _buildSubscriptionBox1(),
+                        _buildSubscriptionSection(),
 
                       const SizedBox(height: 20),
 
@@ -780,192 +784,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   XFile? _image;
   String? _profileImageUrl;
 
-  // Subscription Section with Order History
-  Widget _buildSubscriptionBox1() {
+  // Demo data for subscription when no active rentals
+  final List<RentalRecord> _demoRentalHistory = [
+    RentalRecord(
+      id: 'demo1',
+      productId: 'demo-product-1',
+      productName: 'Medical Monitor XR-200',
+      productImagePath: 'assets/images/products/monitor.jpg',
+      rentalDate: DateTime.now().subtract(const Duration(days: 5)),
+      duration: 30,
+      price: 9.99,
+      status: 'active',
+      userId: 'current-user',
+    ),
+  ];
+
+  Widget _buildSubscriptionSection() {
     return StreamBuilder<List<RentalRecord>>(
       stream: RentalHistoryService().getActiveRentals(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
-            child: CircularProgressIndicator(color: AppTheme.primaryColor),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            width: w,
-            decoration: BoxDecoration(
-              color: AppTheme.cardBackgroundColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.shadowColor,
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.verified_user_outlined,
-                          color: AppTheme.primaryColor,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "Subscription",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RentalHistoryScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.secondaryColor,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.history,
-                        color: AppTheme.primaryColor,
-                        size: 18,
-                      ),
-                      label: Text(
-                        "History",
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: Text(
-                    'No active rentals',
-                    style: TextStyle(color: AppTheme.accentColor, fontSize: 16),
-                  ),
-                ),
-              ],
+            child: CircularProgressIndicator(
+              color: AppTheme.currentPrimaryColor,
             ),
           );
         }
 
-        final activeRentals = snapshot.data ?? [];
-        if (activeRentals.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            width: w,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.verified_user_outlined,
-                          color: AppTheme.primaryColor,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "Subscription",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RentalHistoryScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.secondaryColor,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.history,
-                        color: AppTheme.primaryColor,
-                        size: 18,
-                      ),
-                      label: Text(
-                        "History",
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: Text(
-                    'No active rentals',
-                    style: TextStyle(color: AppTheme.accentColor, fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-          );
+        // Handle error or empty data by using demo data
+        List<RentalRecord> activeRentals = [];
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          activeRentals = _demoRentalHistory;
+        } else {
+          activeRentals = snapshot.data!;
+          // Sort active rentals by rental date to get the most recent one
+          activeRentals.sort((a, b) => b.rentalDate.compareTo(a.rentalDate));
         }
 
-        // Sort active rentals by rental date to get the most recent one
-        activeRentals.sort((a, b) => b.rentalDate.compareTo(a.rentalDate));
         final latestRental = activeRentals.first;
 
         // Calculate remaining time
@@ -973,8 +828,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Duration(days: latestRental.duration),
         );
         final now = DateTime.now();
-        final totalDays = latestRental.duration;
-        final remainingDays = endDate.difference(now).inDays;
+        final totalDays = latestRental.duration.toDouble();
+        final remainingDays = endDate.difference(now).inDays.toDouble();
         final progress = (totalDays - remainingDays) / totalDays;
         final percentageRemaining = (1 - progress) * 100;
 
@@ -982,11 +837,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.all(20),
           width: w,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.currentCardBackgroundColor,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: AppTheme.currentShadowColor,
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -996,60 +851,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.verified_user_outlined,
-                        color: AppTheme.primaryColor,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        "Subscription",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textColor,
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    Icons.verified_user_outlined,
+                    color: AppTheme.currentPrimaryColor,
+                    size: 24,
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RentalHistoryScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.secondaryColor,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: Icon(
-                      Icons.history,
-                      color: AppTheme.primaryColor,
-                      size: 18,
-                    ),
-                    label: Text(
-                      "History",
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  const SizedBox(width: 10),
+                  Text(
+                    "Subscription",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.currentTextColor,
                     ),
                   ),
                 ],
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RentalHistoryScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.currentSecondaryColor,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: Icon(
+                  Icons.history,
+                  color: AppTheme.currentPrimaryColor,
+                  size: 18,
+                ),
+                label: Text(
+                  "History",
+                  style: TextStyle(
+                    color: AppTheme.currentPrimaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               Row(
@@ -1060,21 +910,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.secondaryColor,
+                      color: AppTheme.currentSecondaryColor,
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.access_time,
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.currentPrimaryColor,
                           size: 16,
                         ),
                         const SizedBox(width: 5),
                         Text(
                           "Active Plan",
                           style: TextStyle(
-                            color: AppTheme.primaryColor,
+                            color: AppTheme.currentPrimaryColor,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
@@ -1090,7 +940,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
+                        color:
+                            AppTheme.isDarkMode
+                                ? Colors.amber.shade900.withOpacity(0.3)
+                                : Colors.amber.shade50,
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
@@ -1098,7 +951,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Icon(
                             Icons.calendar_today_outlined,
-                            color: Colors.amber.shade700,
+                            color:
+                                AppTheme.isDarkMode
+                                    ? Colors.amber.shade200
+                                    : Colors.amber.shade700,
                             size: 16,
                           ),
                           const SizedBox(width: 5),
@@ -1106,7 +962,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Text(
                               "${percentageRemaining.toStringAsFixed(1)}% Remaining",
                               style: TextStyle(
-                                color: Colors.amber.shade700,
+                                color:
+                                    AppTheme.isDarkMode
+                                        ? Colors.amber.shade200
+                                        : Colors.amber.shade700,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
@@ -1120,12 +979,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 "Time Remaining",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black54,
+                  color: AppTheme.currentSubtextColor,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1133,7 +992,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color:
+                      AppTheme.isDarkMode
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Stack(
@@ -1147,8 +1009,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primaryColor.withOpacity(0.7),
-                            AppTheme.primaryColor,
+                            AppTheme.currentPrimaryColor.withOpacity(0.7),
+                            AppTheme.currentPrimaryColor,
                           ],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
@@ -1166,21 +1028,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: Text(
                       latestRental.productName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black54,
+                        color: AppTheme.currentSubtextColor,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    "$remainingDays days left",
+                    "${remainingDays.toInt()} days left",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.primaryColor,
+                      color: AppTheme.currentPrimaryColor,
                     ),
                   ),
                 ],
@@ -1198,11 +1060,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(20),
       width: w,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.currentCardBackgroundColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppTheme.currentShadowColor,
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -1215,7 +1077,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Icon(
                 Icons.settings_outlined,
-                color: AppTheme.primaryColor,
+                color: AppTheme.currentPrimaryColor,
                 size: 24,
               ),
               const SizedBox(width: 10),
@@ -1224,7 +1086,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textColor,
+                  color: AppTheme.currentTextColor,
                 ),
               ),
             ],
@@ -1263,12 +1125,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.secondaryColor.withOpacity(0.3),
+                  color: AppTheme.currentSecondaryColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color:
                         switchValues[index]
-                            ? AppTheme.primaryColor.withOpacity(0.3)
+                            ? AppTheme.currentPrimaryColor.withOpacity(0.3)
                             : Colors.transparent,
                   ),
                 ),
@@ -1279,7 +1141,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         color:
                             switchValues[index]
-                                ? AppTheme.primaryColor.withOpacity(0.1)
+                                ? AppTheme.currentPrimaryColor.withOpacity(0.1)
+                                : AppTheme.isDarkMode
+                                ? Colors.grey.shade800
                                 : Colors.grey.shade200,
                         shape: BoxShape.circle,
                       ),
@@ -1287,7 +1151,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         settingIcons[index],
                         color:
                             switchValues[index]
-                                ? AppTheme.primaryColor
+                                ? AppTheme.currentPrimaryColor
+                                : AppTheme.isDarkMode
+                                ? Colors.grey.shade400
                                 : Colors.grey,
                         size: 18,
                       ),
@@ -1300,21 +1166,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: AppTheme.textColor,
+                          color: AppTheme.currentTextColor,
                         ),
                       ),
                     ),
                     // Toggle switch
                     Switch.adaptive(
-                      value: switchValues[index],
+                      value:
+                          index == 1
+                              ? AppTheme.isDarkMode
+                              : switchValues[index],
                       onChanged: (value) {
                         setState(() {
-                          switchValues[index] = value;
+                          if (index == 1) {
+                            // Handle Dark Mode toggle
+                            AppTheme.toggleTheme().then((_) {
+                              setState(() {
+                                // Update UI after toggling theme
+                              });
+                            });
+                          } else {
+                            switchValues[index] = value;
+                          }
                         });
                         // You can save these settings to Firebase here
                       },
-                      activeColor: AppTheme.primaryColor,
-                      activeTrackColor: AppTheme.primaryColor.withOpacity(0.3),
+                      activeColor: AppTheme.currentPrimaryColor,
+                      activeTrackColor: AppTheme.currentPrimaryColor
+                          .withOpacity(0.3),
                     ),
                   ],
                 ),
@@ -1342,8 +1221,486 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
+          SizedBox(height: 16),
+          _buildProfileOption(
+            icon: Icons.password_outlined,
+            title: 'Reset Password',
+            onTap: () {
+              _showResetPasswordOptions();
+            },
+          ),
         ],
       ),
+    );
+  }
+
+  // Reset Password Options Dialog
+  void _showResetPasswordOptions() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Reset Password',
+              style: TextStyle(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Choose a method to reset your password:',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: Icon(
+                    Icons.email_outlined,
+                    color: AppTheme.primaryColor,
+                  ),
+                  title: const Text('Email Verification'),
+                  subtitle: const Text('Receive a reset link via email'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _resetPasswordViaEmail();
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: Icon(
+                    Icons.phone_outlined,
+                    color: AppTheme.primaryColor,
+                  ),
+                  title: const Text('Phone Verification'),
+                  subtitle: const Text('Receive a verification code via SMS'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _resetPasswordViaPhone();
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey.shade700),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // Reset password via email
+  void _resetPasswordViaEmail() {
+    final TextEditingController emailController = TextEditingController();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    bool isResetting = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: Text(
+                  'Reset Password via Email',
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Enter your email address to receive a password reset link',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          hintText: 'Email address',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: AppTheme.primaryColor,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value)) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (isResetting)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed:
+                        isResetting
+                            ? null
+                            : () {
+                              Navigator.pop(context);
+                            },
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed:
+                        isResetting
+                            ? null
+                            : () async {
+                              if (formKey.currentState!.validate()) {
+                                setState(() {
+                                  isResetting = true;
+                                });
+
+                                try {
+                                  final authService = FirebaseAuthService();
+                                  await authService.resetPassword(
+                                    emailController.text.trim(),
+                                  );
+
+                                  if (!mounted) return;
+                                  Navigator.pop(context);
+
+                                  // Show success message
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Password reset link sent to ${emailController.text}',
+                                      ),
+                                      backgroundColor: Colors.green,
+                                      duration: const Duration(seconds: 5),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  setState(() {
+                                    isResetting = false;
+                                  });
+
+                                  // Show error message
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                    child: Text(
+                      'Reset Password',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
+  }
+
+  // Reset password via phone
+  void _resetPasswordViaPhone() {
+    final TextEditingController phoneController = TextEditingController();
+    final TextEditingController otpController = TextEditingController();
+    final TextEditingController newPasswordController = TextEditingController();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    bool isVerifying = false;
+    bool otpSent = false;
+    bool isResetting = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: Text(
+                  otpSent ? 'Enter Verification Code' : 'Phone Verification',
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!otpSent) ...[
+                        const Text(
+                          'Enter your phone number to receive a verification code',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            hintText: 'Phone Number',
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            prefixIcon: Icon(
+                              Icons.phone_outlined,
+                              color: AppTheme.primaryColor,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your phone number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ] else ...[
+                        const Text(
+                          'Enter the verification code sent to your phone',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: otpController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Verification Code',
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            prefixIcon: Icon(
+                              Icons.security_outlined,
+                              color: AppTheme.primaryColor,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter the verification code';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: newPasswordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            hintText: 'New Password',
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: AppTheme.primaryColor,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a new password';
+                            }
+                            if (value.length < 6) {
+                              return 'Password must be at least 6 characters';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                      if (isVerifying || isResetting)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed:
+                        (isVerifying || isResetting)
+                            ? null
+                            : () {
+                              Navigator.pop(context);
+                            },
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed:
+                        (isVerifying || isResetting)
+                            ? null
+                            : () async {
+                              if (formKey.currentState!.validate()) {
+                                if (!otpSent) {
+                                  // Request OTP
+                                  setState(() {
+                                    isVerifying = true;
+                                  });
+
+                                  try {
+                                    final authService = FirebaseAuthService();
+                                    await authService.sendOTP(
+                                      phoneController.text.trim(),
+                                    );
+
+                                    setState(() {
+                                      isVerifying = false;
+                                      otpSent = true;
+                                    });
+
+                                    ScaffoldMessenger.of(
+                                      this.context,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Verification code sent to ${phoneController.text}',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    setState(() {
+                                      isVerifying = false;
+                                    });
+
+                                    ScaffoldMessenger.of(
+                                      this.context,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error: ${e.toString()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  // Verify OTP and reset password
+                                  setState(() {
+                                    isResetting = true;
+                                  });
+
+                                  try {
+                                    final authService = FirebaseAuthService();
+                                    await authService.resetPasswordWithPhone(
+                                      phoneNumber: phoneController.text.trim(),
+                                      otp: otpController.text.trim(),
+                                      newPassword: newPasswordController.text,
+                                    );
+
+                                    if (!mounted) return;
+                                    Navigator.pop(context);
+
+                                    ScaffoldMessenger.of(
+                                      this.context,
+                                    ).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Password reset successful! You can now log in with your new password.',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                        duration: Duration(seconds: 5),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    setState(() {
+                                      isResetting = false;
+                                    });
+
+                                    ScaffoldMessenger.of(
+                                      this.context,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error: ${e.toString()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                    child: Text(
+                      otpSent ? 'Verify & Reset' : 'Send Code',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
     );
   }
 

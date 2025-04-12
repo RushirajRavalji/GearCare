@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gearcare/localStorage/firebase_auth_service.dart';
+import 'package:gearcare/pages/app_layout.dart';
 import 'package:gearcare/pages/login.dart';
 import 'package:gearcare/theme.dart';
 import 'package:gearcare/pages/home.dart';
 
 class Register extends StatefulWidget {
-  const Register({super.key});
+  final Widget? nextScreen;
+  
+  const Register({super.key, this.nextScreen});
+  
   @override
   State<Register> createState() => _RegisterState();
 }
@@ -337,7 +341,7 @@ class _RegisterState extends State<Register> {
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: isLoading ? null : () => _register(),
+                            onPressed: isLoading ? null : () => _signUp(),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
@@ -360,7 +364,7 @@ class _RegisterState extends State<Register> {
                                       ),
                                     )
                                     : const Text(
-                                      'Create Account',
+                                      'Register',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -415,39 +419,33 @@ class _RegisterState extends State<Register> {
     );
   }
 
-  Future<void> _register() async {
+  Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
       try {
         setState(() {
           isLoading = true;
           errorMessage = null;
         });
+
         final authService = FirebaseAuthService();
         final credential = await authService.registerWithEmailAndPassword(
-          name: nameController.text,
+          name: nameController.text.trim(),
           email: emailController.text.trim(),
           password: passwordController.text,
-          mobile: mobileController.text,
+          mobile: mobileController.text.trim(),
         );
 
-        // Show success message
+        // Navigate to Home or specified next screen
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Registration successful! Welcome to GearCare."),
-            backgroundColor: Colors.green,
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => widget.nextScreen ?? const AppLayout(),
           ),
         );
-
-        // Navigate directly to Home page
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const Home()),
-          (route) => false,
-        );
-      } catch (e) {
+      } on FirebaseAuthException catch (e) {
         setState(() {
-          errorMessage = e.toString();
+          errorMessage = e.message;
         });
       } finally {
         setState(() {

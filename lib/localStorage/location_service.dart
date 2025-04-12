@@ -15,121 +15,113 @@ class LocationService {
   static const String _locationTimestampKey = 'location_timestamp';
   static const String _locationLatKey = 'location_latitude';
   static const String _locationLngKey = 'location_longitude';
+  static const String _locationEnabledKey = 'locationEnabled';
 
   // Cache validity duration (10 minutes)
   static const int _cacheValidityDuration = 10 * 60 * 1000; // in milliseconds
 
-  // Check if location permissions are granted
-  Future<bool> checkLocationPermission() async {
-    try {
-      // First check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        // Location services are not enabled
-        return false;
-      }
+  static bool _isLocationEnabled = true;
 
-      // Then check permission status
-      LocationPermission permission = await Geolocator.checkPermission();
-      return permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always;
+  // Get current location setting
+  bool get isLocationEnabled => _isLocationEnabled;
+
+  // Load saved location preference
+  Future<void> loadLocationPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isLocationEnabled = prefs.getBool(_locationEnabledKey) ?? true;
     } catch (e) {
-      print('Error checking location permission: $e');
-      return false;
+      debugPrint('Error loading location preference: $e');
+      _isLocationEnabled = true;
     }
   }
 
-  // Request location permissions and services
-  Future<bool> requestLocationPermission() async {
+  // Save location preference
+  Future<void> saveLocationPreference(bool enabled) async {
     try {
-      // First check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        // Try to request location service
-        // This will prompt the user but we need to check again
-        await Geolocator.openLocationSettings();
-        // The result of the above call depends on user action, so we need to check again
-        // but we'll do that in the calling method
-        return false;
-      }
-
-      // Check location permission
-      LocationPermission permission = await Geolocator.checkPermission();
-
-      if (permission == LocationPermission.denied) {
-        // Request permission from the user
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          return false;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        // Permissions are permanently denied
-        return false;
-      }
-
-      // Permission granted
-      return permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always;
+      _isLocationEnabled = enabled;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_locationEnabledKey, enabled);
     } catch (e) {
-      print('Error requesting location permission: $e');
-      return false;
+      debugPrint('Error saving location preference: $e');
     }
   }
 
-  // Open app settings
-  Future<void> openLocationSettings() async {
-    await Geolocator.openAppSettings();
+  // Toggle location service
+  Future<void> toggleLocationService() async {
+    await saveLocationPreference(!_isLocationEnabled);
   }
 
-  // Get the current location
+  // Get the current location if enabled
   Future<Position?> getCurrentLocation() async {
-    try {
-      // Check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        throw Exception('Location services are disabled.');
-      }
-
-      // Check location permission
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw Exception('Location permissions are denied.');
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permissions are permanently denied.');
-      }
-
-      // Get the current position with a timeout
-      return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(
-          seconds: 10,
-        ), // Add timeout to prevent hanging
-      );
-    } catch (e) {
-      print('Error getting location: $e');
-
-      // Try with lower accuracy if high accuracy fails
-      if (e is TimeoutException) {
-        try {
-          return await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.medium,
-            timeLimit: const Duration(seconds: 5),
-          );
-        } catch (e2) {
-          print('Error getting location with medium accuracy: $e2');
-          return null;
-        }
-      }
-
+    if (!_isLocationEnabled) {
       return null;
     }
+
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever
+      return Future.error(
+        'Location permissions are permanently denied, we cannot request permissions.',
+      );
+    }
+
+    // When we reach here, permissions are granted and we can get the location
+    try {
+      return await Geolocator.getCurrentPosition();
+    } catch (e) {
+      debugPrint('Error getting current location: $e');
+      return null;
+    }
+  }
+
+  // Check if location permission is granted
+  Future<bool> checkLocationPermission() async {
+    if (!_isLocationEnabled) {
+      return false;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always;
+  }
+
+  // Request location permission
+  Future<bool> requestLocationPermission() async {
+    if (!_isLocationEnabled) {
+      return false;
+    }
+
+    LocationPermission permission = await Geolocator.requestPermission();
+    return permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always;
+  }
+
+  // Check if device location service is enabled
+  Future<bool> isLocationServiceEnabled() async {
+    if (!_isLocationEnabled) {
+      return false;
+    }
+
+    return await Geolocator.isLocationServiceEnabled();
   }
 
   // Get a human-readable address from coordinates

@@ -123,7 +123,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                         width: drawerWidth * 0.85,
                         height: 180,
                         decoration: BoxDecoration(
-                          color: AppTheme.bgColor,
+                          color: AppTheme.secondaryColor,
                           borderRadius: const BorderRadius.only(
                             bottomRight: Radius.circular(100),
                           ),
@@ -305,7 +305,10 @@ class _CustomDrawerState extends State<CustomDrawer>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: isActive ? AppTheme.bgColor : Colors.transparent,
+        color:
+            isActive
+                ? AppTheme.secondaryColor.withOpacity(0.3)
+                : Colors.transparent,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Material(
@@ -322,7 +325,7 @@ class _CustomDrawerState extends State<CustomDrawer>
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color:
-                        isActive ? AppTheme.primaryColor : AppTheme.iconBgColor,
+                        isActive ? AppTheme.primaryColor : Colors.grey.shade200,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

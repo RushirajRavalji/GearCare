@@ -143,6 +143,69 @@ class FirebaseAuthService {
     }
   }
 
+  // Phone verification methods
+  Future<void> sendOTP(String phoneNumber) async {
+    try {
+      // This is a stub implementation
+      // In a real implementation, you would use Firebase Phone Auth
+      // Example of how you would implement this with Firebase:
+      /*
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification completed (Android only)
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          throw _handleAuthException(e);
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          // Save the verification ID somewhere to use with confirmOTP
+          // You might want to use shared preferences or a state management solution
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          // Called when the auto-retrieval timeout is reached
+        },
+        timeout: const Duration(seconds: 60),
+      );
+      */
+
+      // For this stub, we'll just simulate a successful OTP send
+      await Future.delayed(const Duration(seconds: 2));
+    } catch (e) {
+      throw Exception('Failed to send verification code: $e');
+    }
+  }
+
+  Future<void> resetPasswordWithPhone({
+    required String phoneNumber,
+    required String otp,
+    required String newPassword,
+  }) async {
+    try {
+      // This is a stub implementation
+      // In a real implementation, you would verify the OTP and update the password
+      // Example of how you might implement this:
+      /*
+      // First, create a credential with the verification ID and OTP
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId, // You would store this when sending the OTP
+        smsCode: otp,
+      );
+      
+      // Sign in with the credential
+      await _auth.signInWithCredential(credential);
+      
+      // Then update the password
+      await _auth.currentUser?.updatePassword(newPassword);
+      */
+
+      // For this stub, we'll just simulate a successful password reset
+      await Future.delayed(const Duration(seconds: 2));
+    } catch (e) {
+      throw Exception('Failed to reset password: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> getUserData() async {
     try {
       final user = _auth.currentUser;
