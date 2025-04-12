@@ -1,28 +1,19 @@
 import 'dart:async'; // Add this import for Timer
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:gearcare/data/data_manager.dart';
-import 'package:gearcare/localStorage/FirebaseStorageService.dart';
-import 'package:gearcare/models/product_models.dart' hide ContainerType;
-import 'package:gearcare/pages/addproduct.dart';
-import 'package:gearcare/pages/categotry.dart';
-import 'package:gearcare/pages/menu.dart';
-import 'package:gearcare/theme.dart';
-import 'package:gearcare/widget/Base64ImageWidget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gearcare/pages/rentscreen.dart';
 import 'package:gearcare/pages/profile.dart';
-import 'package:gearcare/pages/category.dart';
-import 'package:gearcare/pages/searchfilter.dart';
-import 'package:gearcare/pages/productdetails.dart';
+import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/pages/addproduct.dart';
+import 'package:gearcare/models/product_models.dart';
+import 'package:gearcare/widget/Base64ImageWidget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gearcare/localStorage/location_service.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:gearcare/theme.dart';
 import 'package:gearcare/pages/categotry.dart';
-import 'package:gearcare/pages/category.dart';
-import 'package:gearcare/pages/searchfilter.dart';
-import 'package:gearcare/localStorage/FirebaseStorageService.dart';
-import 'package:gearcare/pages/productdetails.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -76,43 +67,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   // For auto-scroll timer
   Timer? _autoScrollTimer;
 
-  // DataManager instance
-  final DataManager _dataManager = DataManager();
-
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentPage);
     _loadProductsFromStorage();
-
-    // If we have preloaded data, use it immediately
-    if (_dataManager.featuredProducts != null &&
-        _dataManager.featuredProducts!.isNotEmpty) {
-      setState(() {
-        _upperProducts = _dataManager.featuredProducts!;
-      });
-    }
-
-    if (_dataManager.categoryProducts != null &&
-        _dataManager.categoryProducts!.isNotEmpty) {
-      setState(() {
-        _bottomProducts = _dataManager.categoryProducts!;
-        // Also set filtered products if we're searching
-        if (_isSearching) {
-          _filteredBottomProducts =
-              _bottomProducts
-                  .where(
-                    (product) => product.name.toLowerCase().contains(
-                      _searchController.text.toLowerCase(),
-                    ),
-                  )
-                  .toList();
-        }
-      });
-    }
-
-    // Still refresh products in background to ensure latest data
-    _refreshDataInBackground();
 
     // Initialize filtered products
     _filteredBottomProducts = _bottomProducts;
@@ -120,6 +79,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     // Load profile image cache once on initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshProfileImageCache(false);
+
+      // Reload products to ensure newly added products are visible
+      _loadProductsFromStorage();
 
       // Start auto-scroll after products are loaded
       if (_upperProducts.isNotEmpty) {
@@ -132,37 +94,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         _fetchCurrentLocation();
       });
     });
-  }
-
-  // Refresh data without blocking UI
-  Future<void> _refreshDataInBackground() async {
-    await _dataManager.refreshProductData();
-
-    if (mounted) {
-      setState(() {
-        // Update with fresh data if available
-        if (_dataManager.featuredProducts != null &&
-            _dataManager.featuredProducts!.isNotEmpty) {
-          _upperProducts = _dataManager.featuredProducts!;
-        }
-
-        if (_dataManager.categoryProducts != null &&
-            _dataManager.categoryProducts!.isNotEmpty) {
-          _bottomProducts = _dataManager.categoryProducts!;
-          // Also update filtered products if we're searching
-          if (_isSearching) {
-            _filteredBottomProducts =
-                _bottomProducts
-                    .where(
-                      (product) => product.name.toLowerCase().contains(
-                        _searchController.text.toLowerCase(),
-                      ),
-                    )
-                    .toList();
-          }
-        }
-      });
-    }
   }
 
   // Add flag to control whether setState is called
@@ -265,48 +196,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   // Function to add a new product to either upper or bottom container
-  Future<void> _addProduct(Product product, ContainerType containerType) async {
+  void _addProduct(Product product, ContainerType containerType) {
     setState(() {
       if (containerType == ContainerType.upper) {
-        // Check if product already exists (for edit case)
-        int existingIndex = _upperProducts.indexWhere(
-          (p) => p.id == product.id,
-        );
-        if (existingIndex >= 0) {
-          _upperProducts[existingIndex] = product;
-        } else {
-          _upperProducts.add(product);
-        }
+        _upperProducts.add(product);
       } else {
-        // Check if product already exists (for edit case)
-        int existingIndex = _bottomProducts.indexWhere(
-          (p) => p.id == product.id,
-        );
-        if (existingIndex >= 0) {
-          _bottomProducts[existingIndex] = product;
-        } else {
-          _bottomProducts.add(product);
-        }
-      }
-
-      // Reset search results if we're searching
-      if (_isSearching) {
-        _filteredBottomProducts =
-            _bottomProducts
-                .where(
-                  (product) => product.name.toLowerCase().contains(
-                    _searchController.text.toLowerCase(),
-                  ),
-                )
-                .toList();
+        _bottomProducts.add(product);
       }
     });
-
     // Save products to storage after adding a new one
-    await _saveProductsToStorage();
-
-    // Force refresh from storage to ensure consistency
-    await _loadProductsFromStorage();
+    _saveProductsToStorage();
   }
 
   @override
@@ -363,130 +262,154 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildTopBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          InkWell(
-            onTap: () {
-              // Open side drawer
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CustomDrawer()),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.currentSecondaryColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.menu,
-                color: AppTheme.currentPrimaryColor,
-                size: 24,
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
+    return Container(
+      width: double.infinity,
+      color: AppTheme.isDarkMode ? Color(0xFF121212) : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 10,
+          bottom: 10,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            InkWell(
               onTap: () {
-                // Show location popup
-                _showLocationPopup(context);
+                // Open side drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CustomDrawer()),
+                );
               },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    color: AppTheme.currentPrimaryColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      _isLoadingLocation
-                          ? "Loading location..."
-                          : _currentLocation,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.currentTextColor,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: AppTheme.currentPrimaryColor,
-                    size: 20,
-                  ),
-                ],
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.isDarkMode ? Color(0xFF2A2A2A) : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.menu,
+                  color: AppTheme.currentPrimaryColor,
+                  size: 24,
+                ),
               ),
             ),
-          ),
-          Row(
-            children: [
-              // Dark Mode toggle
-              GestureDetector(
+            Expanded(
+              child: GestureDetector(
                 onTap: () {
-                  AppTheme.toggleTheme().then((_) {
-                    // Force rebuild the entire widget to apply theme changes
-                    setState(() {});
-                  });
+                  // Show location popup
+                  _showLocationPopup(context);
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppTheme.currentSecondaryColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    AppTheme.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                    color: AppTheme.currentPrimaryColor,
-                    size: 24,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Profile icon
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfileScreen(),
+                    border: Border.all(
+                      color: AppTheme.currentPrimaryColor,
+                      width: 1.0,
                     ),
-                  ).then((profileUpdated) {
-                    // Refresh profile image if updated
-                    if (profileUpdated == true) {
-                      _refreshProfileImageCache();
-                    }
-                  });
-                },
-                child: FutureBuilder<String?>(
-                  future: _profileUrlFuture ?? _getProfileImageUrl(),
-                  builder: (context, snapshot) {
-                    return Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppTheme.currentSecondaryColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppTheme.currentPrimaryColor.withOpacity(0.5),
-                          width: 2,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        color: AppTheme.currentPrimaryColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _isLoadingLocation
+                              ? "Loading location..."
+                              : _currentLocation,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.currentTextColor,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      child: _buildProfileImage(snapshot),
-                    );
-                  },
+                      Icon(
+                        Icons.arrow_drop_down,
+                        color: AppTheme.currentPrimaryColor,
+                        size: 20,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+            Row(
+              children: [
+                // Dark Mode toggle
+                GestureDetector(
+                  onTap: () {
+                    AppTheme.toggleTheme().then((_) {
+                      // Force rebuild the entire widget to apply theme changes
+                      setState(() {});
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.currentSecondaryColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      AppTheme.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                      color: AppTheme.currentPrimaryColor,
+                      size: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Profile icon
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
+                    ).then((profileUpdated) {
+                      // Refresh profile image if updated
+                      if (profileUpdated == true) {
+                        _refreshProfileImageCache();
+                      }
+                    });
+                  },
+                  child: FutureBuilder<String?>(
+                    future: _profileUrlFuture ?? _getProfileImageUrl(),
+                    builder: (context, snapshot) {
+                      return Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppTheme.currentSecondaryColor,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.currentPrimaryColor.withOpacity(
+                              0.5,
+                            ),
+                            width: 2,
+                          ),
+                        ),
+                        child: _buildProfileImage(snapshot),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -553,10 +476,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             child: Container(
               height: 50,
               decoration: BoxDecoration(
-                color: searchBarBgColor,
+                color:
+                    AppTheme.isDarkMode ? Color(0xFF2A2A2A) : searchBarBgColor,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   bottomLeft: Radius.circular(12),
+                  topRight: Radius.circular(0),
+                  bottomRight: Radius.circular(0),
                 ),
               ),
               child: TextField(
@@ -593,18 +519,26 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
-
           Container(
-            width: 55,
+            width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: searchButtonColor,
+              color: AppTheme.isDarkMode ? Color(0xFF2A2A2A) : searchBarBgColor,
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(12),
                 bottomRight: Radius.circular(12),
               ),
             ),
-            child: const Icon(Icons.search, color: Colors.white, size: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.currentPrimaryColor,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
+              ),
+              child: const Icon(Icons.search, color: Colors.white, size: 24),
+            ),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/FirebaseStorageService.dart';
 import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/pages/app_layout.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:gearcare/models/product_models.dart';
 import 'package:gearcare/theme.dart';
@@ -637,7 +638,10 @@ class _AddproductState extends State<Addproduct> {
         );
       }
 
-      // Show success message and return to home with refresh
+      // Call the callback
+      widget.onProductAdded(product, _selectedContainer);
+
+      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -650,14 +654,11 @@ class _AddproductState extends State<Addproduct> {
           ),
         );
 
-        // Navigate back to home and pass refresh flag
-        Navigator.of(context).popUntil((route) => route.isFirst);
-
-        // Add a slight delay before triggering a refresh
-        Future.delayed(Duration(milliseconds: 300), () {
-          // Trigger a refresh in the home page by calling the callback again
-          widget.onProductAdded(product, _selectedContainer);
-        });
+        // Instead of just popping, navigate to AppLayout to go directly to home screen
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AppLayout()),
+          (route) => false, // This clears the navigation stack
+        );
       }
     } catch (e) {
       print("Error adding product: $e");
