@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/rental_history_service.dart';
 import 'package:gearcare/models/product_models.dart';
+import 'package:gearcare/pages/booking_confirmation.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
 import 'package:gearcare/models/rental_history_model.dart';
+import 'dart:math';
 
 class RentScreen extends StatefulWidget {
   final Product product;
@@ -21,6 +23,8 @@ class _RentScreenState extends State<RentScreen> {
   int _selectedDays = 1;
   bool _isLoading = false;
   final RentalHistoryService _rentalService = RentalHistoryService();
+  final TextEditingController _durationController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   double get _totalCost {
     final days = _endDate.difference(_startDate).inDays + 1;
     return widget.product.price * days * _quantity;
@@ -682,147 +686,172 @@ class _RentScreenState extends State<RentScreen> {
     );
   }
 
-  void _handleCodPayment() async {
-    // Simply use the existing rent functionality
-    _handleRent();
-  }
-
-  void _handleUpiPayment() async {
+  Future<void> _handleCodPayment() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Since we have issues with the UPI package, let's simulate a UPI payment for now
-      // In a real implementation, you would use the UPI package correctly
-      // This is a placeholder implementation
-
-      // Show a modal dialog to select a UPI app
+      // Show a dialog indicating processing
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Select UPI App'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildUpiAppOption(
-                    icon: Icons.payment,
-                    name: 'Google Pay',
-                    onTap: () {
-                      Navigator.pop(context);
-                      _simulateUpiPaymentProcess('Google Pay');
-                    },
-                  ),
-                  _buildUpiAppOption(
-                    icon: Icons.payment,
-                    name: 'PhonePe',
-                    onTap: () {
-                      Navigator.pop(context);
-                      _simulateUpiPaymentProcess('PhonePe');
-                    },
-                  ),
-                  _buildUpiAppOption(
-                    icon: Icons.payment,
-                    name: 'Paytm',
-                    onTap: () {
-                      Navigator.pop(context);
-                      _simulateUpiPaymentProcess('Paytm');
-                    },
-                  ),
-                ],
-              ),
-            ),
-      );
-    } catch (e) {
-      // Show error dialog for any exceptions
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 24),
-                    SizedBox(width: 8),
-                    Text('Error'),
-                  ],
-                ),
-                content: Text('Failed to process payment: $e'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text('OK'),
-                  ),
-                ],
-              ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Widget _buildUpiAppOption({
-    required IconData icon,
-    required String name,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.black),
-      title: Text(name),
-      onTap: onTap,
-    );
-  }
-
-  void _simulateUpiPaymentProcess(String appName) {
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Processing payment via $appName...'),
+                SizedBox(height: 20),
+                Text("Setting up your COD order..."),
               ],
             ),
-          ),
-    );
+          );
+        },
+      );
 
-    // Simulate payment process with a delay
-    Future.delayed(Duration(seconds: 2), () {
-      Navigator.pop(context); // Close loading dialog
+      // Simulate processing time
+      await Future.delayed(Duration(seconds: 1));
 
-      // Generate a transaction ID
-      final txnId = 'UPI${DateTime.now().millisecondsSinceEpoch}';
+      // Close the processing dialog
+      Navigator.of(context).pop();
 
-      // Proceed with rental process
-      _handleRent(paymentMethod: 'UPI ($appName)', transactionId: txnId);
-    });
+      // Generate transaction ID
+      String transactionId = 'COD-${DateTime.now().millisecondsSinceEpoch}';
+
+      // Navigate to booking confirmation
+      _handleSuccessfulOrder(transactionId, "Cash on Delivery");
+    } catch (e) {
+      // Close the loading dialog if it's open
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Payment Error"),
+            content: Text(
+              "There was an error processing your order: ${e.toString()}",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  void _handleRent({
-    String paymentMethod = 'COD',
-    String? transactionId,
-  }) async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _handleUpiPayment() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
 
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).primaryColor,
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                Text("Setting up UPI payment...", textAlign: TextAlign.center),
+              ],
+            ),
+          );
+        },
+      );
+
+      // Simulate payment processing
+      await Future.delayed(Duration(seconds: 2));
+
+      // Close the loading dialog
+      Navigator.pop(context);
+
+      // Generate a unique transaction ID
+      final String transactionId =
+          'UPI-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(1000)}';
+
+      // Show success dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Payment Initiated"),
+            content: Text(
+              "UPI payment has been initiated. Please complete the payment in your UPI app.\n\nTransaction ID: $transactionId",
+              style: TextStyle(height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _handleSuccessfulOrder(transactionId, "UPI");
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      // Close the loading dialog if open
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      // Show error
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Payment Error"),
+            content: Text(
+              "Failed to initiate UPI payment: ${e.toString()}",
+              style: TextStyle(height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleSuccessfulOrder(String transactionId, String paymentMethod) {
+    // Record the rental in the history
     try {
       // Calculate the duration in days
       final durationDays = _endDate.difference(_startDate).inDays + 1;
 
-      // Record the rental in the history
-      final rentalId = await _rentalService.recordRental(
+      // Record the rental (async but don't wait)
+      _rentalService.recordRental(
         widget.product,
         _startDate,
         _endDate,
@@ -830,96 +859,35 @@ class _RentScreenState extends State<RentScreen> {
         _totalCost,
       );
 
-      // Show success dialog
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                title: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 24),
-                    SizedBox(width: 8),
-                    Text('Success!'),
-                  ],
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'You have successfully rented ${widget.product.name} for $durationDays days.',
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Payment Method: $paymentMethod',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    if (transactionId != null) ...[
-                      SizedBox(height: 4),
-                      Text(
-                        'Transaction ID: $transactionId',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                    SizedBox(height: 12),
-                    Text(
-                      'You can view your rental details in the Rental History section.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop(); // Go back to home screen
-                    },
-                    child: Text(
-                      'OK',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-        );
-      }
+      // Navigate to booking confirmation
+      _handleBookingComplete(transactionId, paymentMethod);
     } catch (e) {
-      // Show error dialog
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Row(
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 24),
-                    SizedBox(width: 8),
-                    Text('Error'),
-                  ],
-                ),
-                content: Text('Failed to record rental: $e'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text('OK'),
-                  ),
-                ],
-              ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      print("Error recording rental: $e");
+      // Still proceed to booking confirmation even if saving fails
+      _handleBookingComplete(transactionId, paymentMethod);
     }
+  }
+
+  void _handleBookingComplete(String transactionId, String paymentMethod) {
+    // Update the UI to show a booking confirmation
+    final bookingId =
+        'BK-${DateTime.now().millisecondsSinceEpoch.toString().substring(0, 10)}';
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => BookingConfirmationScreen(
+              bookingId: bookingId,
+              transactionId: transactionId,
+              paymentMethod: paymentMethod,
+              gearName: widget.product.name,
+              rentalDuration: _endDate.difference(_startDate).inDays + 1,
+              totalPrice: _totalCost,
+              startDate: _startDate,
+              endDate: _endDate,
+            ),
+      ),
+    );
   }
 }

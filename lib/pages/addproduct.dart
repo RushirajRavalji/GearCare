@@ -637,10 +637,7 @@ class _AddproductState extends State<Addproduct> {
         );
       }
 
-      // Call the callback
-      widget.onProductAdded(product, _selectedContainer);
-
-      // Show success message
+      // Show success message and return to home with refresh
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -652,8 +649,15 @@ class _AddproductState extends State<Addproduct> {
             backgroundColor: Colors.green,
           ),
         );
-        // Pop back to previous screen
-        Navigator.pop(context);
+
+        // Navigate back to home and pass refresh flag
+        Navigator.of(context).popUntil((route) => route.isFirst);
+
+        // Add a slight delay before triggering a refresh
+        Future.delayed(Duration(milliseconds: 300), () {
+          // Trigger a refresh in the home page by calling the callback again
+          widget.onProductAdded(product, _selectedContainer);
+        });
       }
     } catch (e) {
       print("Error adding product: $e");

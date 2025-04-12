@@ -1,19 +1,28 @@
 import 'dart:async'; // Add this import for Timer
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:gearcare/data/data_manager.dart';
+import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+import 'package:gearcare/models/product_models.dart' hide ContainerType;
+import 'package:gearcare/pages/addproduct.dart';
+import 'package:gearcare/pages/categotry.dart';
+import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/theme.dart';
+import 'package:gearcare/widget/Base64ImageWidget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gearcare/pages/rentscreen.dart';
 import 'package:gearcare/pages/profile.dart';
-import 'package:gearcare/pages/menu.dart';
-import 'package:gearcare/pages/addproduct.dart';
-import 'package:gearcare/models/product_models.dart';
-import 'package:gearcare/widget/Base64ImageWidget.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gearcare/pages/category.dart';
+import 'package:gearcare/pages/searchfilter.dart';
+import 'package:gearcare/pages/productdetails.dart';
 import 'package:gearcare/localStorage/location_service.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:gearcare/theme.dart';
 import 'package:gearcare/pages/categotry.dart';
+import 'package:gearcare/pages/category.dart';
+import 'package:gearcare/pages/searchfilter.dart';
+import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+import 'package:gearcare/pages/productdetails.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -67,11 +76,43 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   // For auto-scroll timer
   Timer? _autoScrollTimer;
 
+  // DataManager instance
+  final DataManager _dataManager = DataManager();
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentPage);
     _loadProductsFromStorage();
+
+    // If we have preloaded data, use it immediately
+    if (_dataManager.featuredProducts != null &&
+        _dataManager.featuredProducts!.isNotEmpty) {
+      setState(() {
+        _upperProducts = _dataManager.featuredProducts!;
+      });
+    }
+
+    if (_dataManager.categoryProducts != null &&
+        _dataManager.categoryProducts!.isNotEmpty) {
+      setState(() {
+        _bottomProducts = _dataManager.categoryProducts!;
+        // Also set filtered products if we're searching
+        if (_isSearching) {
+          _filteredBottomProducts =
+              _bottomProducts
+                  .where(
+                    (product) => product.name.toLowerCase().contains(
+                      _searchController.text.toLowerCase(),
+                    ),
+                  )
+                  .toList();
+        }
+      });
+    }
+
+    // Still refresh products in background to ensure latest data
+    _refreshDataInBackground();
 
     // Initialize filtered products
     _filteredBottomProducts = _bottomProducts;
@@ -91,6 +132,37 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         _fetchCurrentLocation();
       });
     });
+  }
+
+  // Refresh data without blocking UI
+  Future<void> _refreshDataInBackground() async {
+    await _dataManager.refreshProductData();
+
+    if (mounted) {
+      setState(() {
+        // Update with fresh data if available
+        if (_dataManager.featuredProducts != null &&
+            _dataManager.featuredProducts!.isNotEmpty) {
+          _upperProducts = _dataManager.featuredProducts!;
+        }
+
+        if (_dataManager.categoryProducts != null &&
+            _dataManager.categoryProducts!.isNotEmpty) {
+          _bottomProducts = _dataManager.categoryProducts!;
+          // Also update filtered products if we're searching
+          if (_isSearching) {
+            _filteredBottomProducts =
+                _bottomProducts
+                    .where(
+                      (product) => product.name.toLowerCase().contains(
+                        _searchController.text.toLowerCase(),
+                      ),
+                    )
+                    .toList();
+          }
+        }
+      });
+    }
   }
 
   // Add flag to control whether setState is called
@@ -193,16 +265,48 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   // Function to add a new product to either upper or bottom container
-  void _addProduct(Product product, ContainerType containerType) {
+  Future<void> _addProduct(Product product, ContainerType containerType) async {
     setState(() {
       if (containerType == ContainerType.upper) {
-        _upperProducts.add(product);
+        // Check if product already exists (for edit case)
+        int existingIndex = _upperProducts.indexWhere(
+          (p) => p.id == product.id,
+        );
+        if (existingIndex >= 0) {
+          _upperProducts[existingIndex] = product;
+        } else {
+          _upperProducts.add(product);
+        }
       } else {
-        _bottomProducts.add(product);
+        // Check if product already exists (for edit case)
+        int existingIndex = _bottomProducts.indexWhere(
+          (p) => p.id == product.id,
+        );
+        if (existingIndex >= 0) {
+          _bottomProducts[existingIndex] = product;
+        } else {
+          _bottomProducts.add(product);
+        }
+      }
+
+      // Reset search results if we're searching
+      if (_isSearching) {
+        _filteredBottomProducts =
+            _bottomProducts
+                .where(
+                  (product) => product.name.toLowerCase().contains(
+                    _searchController.text.toLowerCase(),
+                  ),
+                )
+                .toList();
       }
     });
+
     // Save products to storage after adding a new one
-    _saveProductsToStorage();
+    await _saveProductsToStorage();
+
+    // Force refresh from storage to ensure consistency
+    await _loadProductsFromStorage();
   }
 
   @override
@@ -449,12 +553,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             child: Container(
               height: 50,
               decoration: BoxDecoration(
-                color: AppTheme.currentPrimaryColor,
+                color: searchBarBgColor,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   bottomLeft: Radius.circular(12),
-                  topRight: Radius.circular(0),
-                  bottomRight: Radius.circular(0),
                 ),
               ),
               child: TextField(
@@ -491,6 +593,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
+
           Container(
             width: 55,
             height: 50,

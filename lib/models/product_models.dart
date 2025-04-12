@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:gearcare/localStorage/FirebaseStorageService.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:uuid/uuid.dart';
 
@@ -8,7 +9,7 @@ class Product {
   id; // Changed from final to allow setting ID after Firestore document creation
   final String name;
   final double price;
-  final String description;
+  final String? description;
   final String imagePath; // This will store the base64 string
   bool isRented;
   String userId; // Added userId field to track who added the product
@@ -19,11 +20,11 @@ class Product {
     required this.id,
     required this.name,
     required this.price,
-    required this.description,
+    this.description,
     required this.imagePath,
     this.isRented = false,
-    this.userId = '', // Default empty string
-    this.containerType = '', // Default empty string
+    required this.userId,
+    required this.containerType,
   });
 
   // Create a copy of this product with updated values
@@ -72,11 +73,29 @@ class Product {
           (map['price'] is int)
               ? (map['price'] as int).toDouble()
               : (map['price'] ?? 0.0),
-      description: map['description'] ?? '',
+      description: map['description'],
       imagePath: map['imagePath'] ?? '',
       isRented: map['isRented'] ?? false,
       userId: map['userId'] ?? '',
       containerType: map['containerType'] ?? '',
+    );
+  }
+
+  // Create a Product from a Firestore document
+  factory Product.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    return Product(
+      id: doc.id,
+      name: data['name'] ?? '',
+      price:
+          (data['price'] is int)
+              ? (data['price'] as int).toDouble()
+              : (data['price'] ?? 0.0),
+      description: data['description'],
+      imagePath: data['imagePath'] ?? '',
+      userId: data['userId'] ?? '',
+      containerType: data['containerType'] ?? 'bottom',
     );
   }
 
@@ -107,3 +126,5 @@ class Product {
     return await storageService.loadProducts();
   }
 }
+
+enum ContainerType { upper, bottom }
