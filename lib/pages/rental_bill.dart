@@ -525,6 +525,7 @@ class _RentalBillScreenState extends State<RentalBillScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Company Name',
                           border: OutlineInputBorder(),
+                          enabled: false,
                         ),
                         validator:
                             (value) =>
@@ -538,6 +539,7 @@ class _RentalBillScreenState extends State<RentalBillScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Customer Name',
                           border: OutlineInputBorder(),
+                          enabled: false,
                         ),
                         validator:
                             (value) =>
