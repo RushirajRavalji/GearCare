@@ -9,17 +9,14 @@ class AppTheme {
   static const Color backgroundColor = Colors.white;
   static const Color textColor = Color(0xFF2B2D42);
   static const Color searchBarColor = Color(0xFFEEEEEE);
-
   // Additional colors
   static const Color primaryBlue = Color(0xFF2E576C);
   static const Color lightBlueColor = Color(0xFFD4EBFA);
   static const Color backgroundGrey = Color(0xFFF9FAFC);
-
   // Status colors - maintained for functionality
   static const Color activeColor = Color(0xFF4CAF50);
   static const Color completedColor = Color(0xFF2196F3);
   static const Color pendingColor = Color(0xFFFF9800);
-
   // UI element colors - simplified
   static const Color cardBackgroundColor = Colors.white;
   static const Color dividerColor = Color(0xFFEEEEEE);
@@ -27,37 +24,65 @@ class AppTheme {
   static const Color errorColor = Color(0xFFE53935);
   static const Color successColor = Color(0xFF4CAF50);
   static const Color warningColor = Color(0xFFFFC107);
-
   // Auxiliary UI colors
   static const Color bgColor = Color(0xFFF0F7FF);
   static const Color iconBgColor = Color(0x11C8CED2);
   static const Color subtextColor = Color(0xFF666666);
 
   // Core colors - Dark Mode
-  static const Color darkPrimaryColor = Color(0xFF1D3A47);
-  static const Color darkSecondaryColor = Color(0xFF2C2C2C);
-  static const Color darkAccentColor = Color(0xFFADB9CA);
-  static const Color darkBackgroundColor = Color(0xFF121212);
-  static const Color darkTextColor = Color(0xFFE0E0E0);
-  static const Color darkSearchBarColor = Color(0xFF333333);
+  static const Color darkPrimaryColor = Color(
+    0xFF2A4D5F,
+  ); // Slightly brighter than original
+  static const Color darkSecondaryColor = Color(
+    0xFF303030,
+  ); // Slightly lighter for better contrast
+  static const Color darkAccentColor = Color(
+    0xFFB8C5D6,
+  ); // Slightly brighter for better visibility
+  static const Color darkBackgroundColor = Color(
+    0xFF121212,
+  ); // Pure dark background
+  static const Color darkTextColor =
+      Colors.white; // Pure white text for better contrast
+  static const Color darkSearchBarColor = Color(
+    0xFF333333,
+  ); // Darker but distinct search bar
 
-  // Additional dark colors
-  static const Color darkPrimaryBlue = Color(0xFF1D3A47);
-  static const Color darkLightBlueColor = Color(0xFF1E3D4D);
-  static const Color darkBackgroundGrey = Color(0xFF1A1A1A);
+  // Additional dark colors - UPDATED
+  static const Color darkPrimaryBlue = Color(
+    0xFF2A4D5F,
+  ); // Matching primary color
+  static const Color darkLightBlueColor = Color(
+    0xFF203642,
+  ); // Slightly adjusted for visibility
+  static const Color darkBackgroundGrey = Color(0xFF1A1A1A); // Maintained
 
-  // UI element dark colors
-  static const Color darkCardBackgroundColor = Color(0xFF1E1E1E);
-  static const Color darkDividerColor = Color(0xFF383838);
-  static const Color darkShadowColor = Color(0x33000000);
-  static const Color darkErrorColor = Color(0xFFEF5350);
-  static const Color darkSuccessColor = Color(0xFF81C784);
-  static const Color darkWarningColor = Color(0xFFFFD54F);
+  // UI element dark colors - UPDATED
+  static const Color darkCardBackgroundColor = Color(
+    0xFF212121,
+  ); // Slightly lighter than background
+  static const Color darkDividerColor = Color(
+    0xFF404040,
+  ); // More visible dividers
+  static const Color darkShadowColor = Color(
+    0x40000000,
+  ); // More visible shadows
+  static const Color darkErrorColor = Color(
+    0xFFEF5350,
+  ); // Maintained vibrant red
+  static const Color darkSuccessColor = Color(0xFF81C784); // Maintained
+  static const Color darkWarningColor = Color(0xFFFFD54F); // Maintained
 
-  // Auxiliary UI dark colors
-  static const Color darkBgColor = Color(0xFF1A2A36);
-  static const Color darkIconBgColor = Color(0x33465A69);
-  static const Color darkSubtextColor = Color(0xFFAAAAAA);
+  // Auxiliary UI dark colors - UPDATED
+  static const Color darkBgColor = Color(
+    0xFF1D2F3A,
+  ); // Darker blue background matching primary
+  static const Color darkIconBgColor = Color(
+    0x40465A69,
+  ); // Slightly higher opacity for better visibility
+  static const Color darkSubtextColor = Color(
+    0xFFCCCCCC,
+  ); // Light gray for subtitles
 
   // Current theme mode
   static bool _isDarkMode = false;
@@ -71,7 +96,9 @@ class AppTheme {
   static Color get currentAccentColor =>
       _isDarkMode ? darkAccentColor : accentColor;
   static Color get currentBackgroundColor =>
-      _isDarkMode ? darkBackgroundColor : backgroundColor;
+      _isDarkMode
+          ? darkBackgroundColor
+          : const Color.fromARGB(244, 255, 255, 255);
   static Color get currentTextColor => _isDarkMode ? darkTextColor : textColor;
   static Color get currentSubtextColor =>
       _isDarkMode ? darkSubtextColor : subtextColor;
@@ -202,7 +229,7 @@ class AppTheme {
     ),
   );
 
-  // Dark theme
+  // Dark theme - UPDATED
   static final ThemeData _darkTheme = ThemeData(
     primaryColor: darkPrimaryColor,
     scaffoldBackgroundColor: darkBackgroundColor,
@@ -212,6 +239,10 @@ class AppTheme {
       error: darkErrorColor,
       background: darkBackgroundColor,
       surface: darkCardBackgroundColor,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onSurface: darkTextColor,
+      onBackground: darkTextColor,
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: darkPrimaryColor,
@@ -227,7 +258,8 @@ class AppTheme {
     iconTheme: const IconThemeData(color: darkTextColor),
     cardTheme: CardTheme(
       color: darkCardBackgroundColor,
-      elevation: 2,
+      elevation: 3, // Slightly increased elevation
+      shadowColor: darkShadowColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
     textTheme: const TextTheme(
@@ -258,7 +290,7 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: darkPrimaryColor,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 1, // Slight elevation for better visibility
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -283,7 +315,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: darkAccentColor),
+        borderSide: const BorderSide(color: darkAccentColor, width: 1.5),
       ),
       labelStyle: const TextStyle(color: darkAccentColor),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
@@ -307,6 +339,21 @@ class AppTheme {
         fontWeight: FontWeight.w500,
         fontSize: 16,
       ),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: darkCardBackgroundColor,
+      contentTextStyle: TextStyle(color: darkTextColor),
+      actionTextColor: darkAccentColor,
+    ),
+    dialogTheme: DialogTheme(
+      backgroundColor: darkCardBackgroundColor,
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: darkCardBackgroundColor,
+      modalBackgroundColor: darkCardBackgroundColor,
+      elevation: 5,
     ),
   );
 

@@ -328,9 +328,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               GestureDetector(
                 onTap: () {
                   AppTheme.toggleTheme().then((_) {
-                    setState(() {
-                      // Update UI after toggling theme
-                    });
+                    // Force rebuild the entire widget to apply theme changes
+                    setState(() {});
                   });
                 },
                 child: Container(
@@ -431,7 +430,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     }
   }
 
-  Widget _buildSearchBar(double screenWidth) {
+  // Build search bar with strong color override for dark mode
+  Widget _buildSearchBar(double width) {
+    // Use strongly contrasting colors in dark mode for better visibility
+    final Color searchBarBgColor =
+        AppTheme.isDarkMode
+            ? AppTheme.darkSearchBarColor
+            : AppTheme.searchBarColor;
+    final Color searchButtonColor = AppTheme.currentPrimaryColor;
+    final Color textColor = AppTheme.currentTextColor;
+    final Color hintColor = AppTheme.currentSubtextColor;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       child: Row(
@@ -440,7 +449,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             child: Container(
               height: 50,
               decoration: BoxDecoration(
-                color: AppTheme.currentSearchBarColor,
+                color: AppTheme.currentPrimaryColor,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   bottomLeft: Radius.circular(12),
@@ -470,20 +479,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 },
                 decoration: InputDecoration(
                   hintText: 'Search for gear to rent...',
-                  hintStyle: TextStyle(
-                    color: AppTheme.currentSubtextColor,
-                    fontSize: 14,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: AppTheme.currentSubtextColor,
-                  ),
+                  hintStyle: TextStyle(color: hintColor, fontSize: 14),
+                  prefixIcon: Icon(Icons.search, color: hintColor),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 15,
                   ),
                 ),
+                style: TextStyle(color: textColor, fontSize: 14),
               ),
             ),
           ),
@@ -491,7 +495,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             width: 55,
             height: 50,
             decoration: BoxDecoration(
-              color: AppTheme.currentPrimaryColor,
+              color: searchButtonColor,
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(12),
                 bottomRight: Radius.circular(12),
@@ -629,11 +633,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.currentCardBackgroundColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: AppTheme.currentShadowColor,
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -666,18 +670,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     children: [
                       Text(
                         product.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          color: Color(0xFF333333),
+                          color: AppTheme.currentTextColor,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 5),
                       Text(
                         "₹${product.price.toStringAsFixed(2)}/day",
-                        style: const TextStyle(
-                          color: Color(0xFF2E576C),
+                        style: TextStyle(
+                          color: AppTheme.currentPrimaryColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -723,11 +727,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppTheme.currentCardBackgroundColor,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2E576C).withOpacity(0.1),
+                    color: AppTheme.currentShadowColor,
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -735,7 +739,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ),
               child: Icon(
                 _categoryIcons[index],
-                color: const Color(0xFF2E576C),
+                color: AppTheme.currentPrimaryColor,
                 size: 28,
               ),
             ),
@@ -743,10 +747,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             Text(
               _circleItems[index],
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF333333),
+                color: AppTheme.currentTextColor,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -811,10 +815,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
+        color: AppTheme.currentCardBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppTheme.currentShadowColor,
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -850,7 +854,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   top: 10,
                   left: 10,
                   child: PopupMenuButton<String>(
-                    color: Colors.white,
+                    color: AppTheme.currentCardBackgroundColor,
                     elevation: 8,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -876,23 +880,36 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     },
                     itemBuilder:
                         (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 20),
-                                SizedBox(width: 10),
-                                Text('Edit'),
+                                Icon(
+                                  Icons.edit,
+                                  size: 20,
+                                  color: AppTheme.currentTextColor,
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Edit',
+                                  style: TextStyle(
+                                    color: AppTheme.currentTextColor,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, color: Colors.red, size: 20),
-                                SizedBox(width: 10),
-                                Text(
+                                const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
                                   'Delete',
                                   style: TextStyle(color: Colors.red),
                                 ),
@@ -906,9 +923,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(
+              decoration: BoxDecoration(
+                color: AppTheme.currentCardBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(16),
                 ),
               ),
@@ -920,10 +937,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     children: [
                       Text(
                         product.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Color(0xFF333333),
+                          color: AppTheme.currentTextColor,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -932,14 +949,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         children: [
                           Icon(
                             Icons.location_on,
-                            color: Colors.grey.shade600,
+                            color: AppTheme.currentSubtextColor,
                             size: 14,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             "Nearby Location",
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: AppTheme.currentSubtextColor,
                               fontSize: 12,
                             ),
                           ),
@@ -953,7 +970,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2E576C),
+                      color: AppTheme.currentPrimaryColor,
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
@@ -1234,10 +1251,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
+        color: AppTheme.currentCardBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppTheme.currentShadowColor,
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1246,20 +1263,24 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.add_box_outlined, size: 50, color: Colors.grey.shade400),
+          Icon(
+            Icons.add_box_outlined,
+            size: 50,
+            color: AppTheme.currentSubtextColor,
+          ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             "No recommendations yet",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.grey,
+              color: AppTheme.currentSubtextColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             "Add products to display here",
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 14, color: AppTheme.currentSubtextColor),
           ),
         ],
       ),
