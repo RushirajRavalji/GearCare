@@ -509,6 +509,10 @@ class _RentalBillScreenState extends State<RentalBillScreen> {
       appBar: AppBar(
         title: const Text('Generate Bill'),
         backgroundColor: AppTheme.backgroundColor,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppTheme.currentPrimaryColor),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SafeArea(
         child: LayoutBuilder(

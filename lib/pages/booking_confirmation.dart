@@ -34,9 +34,10 @@ class BookingConfirmationScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: AppTheme.currentPrimaryColor,
         title: Text('Booking Confirmation'),
         centerTitle: true,
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         child: Column(
