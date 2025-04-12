@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gearcare/localStorage/rental_history_service.dart';
 import 'package:gearcare/models/rental_history_model.dart';
 import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/pages/rental_bill.dart';
 import 'package:gearcare/theme.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
 import 'package:intl/intl.dart';
@@ -433,8 +434,8 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
                 Container(height: 1, color: Colors.grey[200]),
                 const SizedBox(height: 16),
                 // Action Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Status with Icon
                     Row(
@@ -459,28 +460,65 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen>
                         ),
                       ],
                     ),
-                    // Return Button (if active) or Return Date (if completed)
-                    if (rental.status == 'active')
-                      ElevatedButton.icon(
-                        onPressed: () => _showReturnDialog(rental),
-                        icon: const Icon(Icons.luggage_rounded, size: 18),
-                        label: const Text('Return Item'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
+                    const SizedBox(height: 16),
+                    // Buttons Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // View Bill Button (for all rentals)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        RentalBillScreen(rental: rental),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.receipt_long, size: 18),
+                          label: const Text('View Bill'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        // Return Button (if active)
+                        if (rental.status == 'active')
+                          ElevatedButton.icon(
+                            onPressed: () => _showReturnDialog(rental),
+                            icon: const Icon(Icons.luggage_rounded, size: 18),
+                            label: const Text('Return Item'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                          ),
+                      ],
+                    ),
+                    // Return Date (if completed)
                     if (rental.status == 'completed' &&
                         rental.returnDate != null)
-                      Flexible(
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
                         child: Row(
                           children: [
                             const Icon(
