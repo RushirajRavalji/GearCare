@@ -88,7 +88,7 @@ class _AddproductState extends State<Addproduct> {
         elevation: 0,
         backgroundColor: AppTheme.backgroundColor,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black),
+          icon: Icon(Icons.menu, color: AppTheme.currentPrimaryColor),
           onPressed:
               () => Navigator.push(
                 context,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/theme.dart';
 
 class RequestProduct extends StatefulWidget {
   const RequestProduct({super.key});
@@ -15,7 +16,7 @@ class _RequestProductState extends State<RequestProduct> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.menu_rounded, size: 26),
+          icon: Icon(Icons.menu_rounded, size: 26, color: Colors.white),
           onPressed:
               () => Navigator.push(
                 context,
@@ -37,7 +38,7 @@ class _RequestProductState extends State<RequestProduct> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                foregroundColor: Color(0xFF2E576C),
+                foregroundColor: AppTheme.currentPrimaryColor,
                 elevation: 3,
 
                 padding: const EdgeInsets.symmetric(
@@ -60,7 +61,7 @@ class _RequestProductState extends State<RequestProduct> {
           ),
         ],
         elevation: 0,
-        backgroundColor: Color(0xFF2E576C),
+        backgroundColor: AppTheme.currentPrimaryColor,
       ),
       body: Container(
         decoration: BoxDecoration(

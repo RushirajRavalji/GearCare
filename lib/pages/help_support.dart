@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/theme.dart';
 
 class HelpSupport extends StatefulWidget {
   const HelpSupport({super.key});
@@ -25,23 +26,21 @@ class _HelpSupportState extends State<HelpSupport> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.menu_rounded, size: 26),
-          onPressed:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CustomDrawer()),
-              ),
+          icon: Icon(Icons.menu_rounded, size: 26, color: Colors.white),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CustomDrawer()),
+            );
+          },
         ),
-        backgroundColor: Color(0xFF2E576C),
-        elevation: 0,
         title: const Text(
-          "Help & Support",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          'Help & Support',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        backgroundColor: AppTheme.currentPrimaryColor,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),

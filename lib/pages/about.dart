@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:gearcare/theme.dart';
 
 class About extends StatelessWidget {
   const About({super.key});
@@ -56,23 +57,20 @@ class About extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Color(0xFF2E576C),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded, size: 26),
-          onPressed:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CustomDrawer()),
-              ),
-        ),
         title: const Text(
-          "About",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          'About Us',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: AppTheme.currentPrimaryColor,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.menu_rounded, size: 26, color: Colors.white),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CustomDrawer()),
+            );
+          },
         ),
       ),
       body: SingleChildScrollView(

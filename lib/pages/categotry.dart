@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gearcare/pages/menu.dart';
+import 'package:gearcare/theme.dart';
 
 class Category extends StatefulWidget {
   final int? initialCategoryIndex;
@@ -162,10 +163,11 @@ class _CategoryState extends State<Category> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.isDarkMode ? Colors.black : Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: AppTheme.currentPrimaryColor,
         leading: IconButton(
-          icon: const Icon(Icons.menu_rounded, size: 26),
+          icon: Icon(Icons.menu_rounded, size: 26, color: Colors.white),
           onPressed:
               () => Navigator.push(
                 context,
@@ -181,7 +183,6 @@ class _CategoryState extends State<Category> {
             letterSpacing: 0.5,
           ),
         ),
-        backgroundColor: Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(

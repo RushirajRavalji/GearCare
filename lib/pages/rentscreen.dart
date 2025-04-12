@@ -4,6 +4,8 @@ import 'package:gearcare/models/product_models.dart';
 import 'package:gearcare/pages/menu.dart';
 import 'package:gearcare/widget/Base64ImageWidget.dart';
 import 'package:gearcare/models/rental_history_model.dart';
+import 'package:gearcare/pages/booking_confirmation.dart';
+import 'package:intl/intl.dart';
 
 class RentScreen extends StatefulWidget {
   final Product product;
@@ -830,69 +832,41 @@ class _RentScreenState extends State<RentScreen> {
         _totalCost,
       );
 
-      // Show success dialog
+      // Get the rental record
+      final RentalRecord rentalRecord = await _rentalService.getRentalById(
+        rentalId,
+      );
+
+      // Navigate to the booking confirmation screen
       if (mounted) {
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+        setState(() {
+          _isLoading = false;
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => BookingConfirmationScreen(
+                  product: widget.product,
+                  startDate: _startDate,
+                  endDate: _endDate,
+                  quantity: _quantity,
+                  totalCost: _totalCost,
+                  paymentMethod: paymentMethod,
+                  transactionId: transactionId,
+                  rentalRecord: rentalRecord,
                 ),
-                title: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 24),
-                    SizedBox(width: 8),
-                    Text('Success!'),
-                  ],
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'You have successfully rented ${widget.product.name} for $durationDays days.',
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Payment Method: $paymentMethod',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    if (transactionId != null) ...[
-                      SizedBox(height: 4),
-                      Text(
-                        'Transaction ID: $transactionId',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                    SizedBox(height: 12),
-                    Text(
-                      'You can view your rental details in the Rental History section.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop(); // Go back to home screen
-                    },
-                    child: Text(
-                      'OK',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          ),
         );
       }
     } catch (e) {
       // Show error dialog
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
         showDialog(
           context: context,
           builder:
@@ -913,12 +887,6 @@ class _RentScreenState extends State<RentScreen> {
                 ],
               ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }

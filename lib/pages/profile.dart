@@ -14,6 +14,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:gearcare/pages/rental_history.dart';
 import 'package:gearcare/models/rental_history_model.dart';
+import 'package:gearcare/pages/app_layout.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -811,27 +812,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
-        // Handle error or empty data by using demo data
+        // Check if there are any active rentals
+        bool hasActiveRentals =
+            snapshot.hasData && snapshot.data!.isNotEmpty && !snapshot.hasError;
+
+        // Get active rentals if available
         List<RentalRecord> activeRentals = [];
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-          activeRentals = _demoRentalHistory;
-        } else {
+        RentalRecord? latestRental;
+
+        // Variables for subscription details (only calculated if there are active rentals)
+        double totalDays = 0;
+        double remainingDays = 0;
+        double progress = 0;
+        double percentageRemaining = 0;
+
+        if (hasActiveRentals) {
           activeRentals = snapshot.data!;
           // Sort active rentals by rental date to get the most recent one
           activeRentals.sort((a, b) => b.rentalDate.compareTo(a.rentalDate));
+          latestRental = activeRentals.first;
+
+          // Calculate remaining time
+          final endDate = latestRental.rentalDate.add(
+            Duration(days: latestRental.duration),
+          );
+          final now = DateTime.now();
+          totalDays = latestRental.duration.toDouble();
+          remainingDays = endDate.difference(now).inDays.toDouble();
+          progress = (totalDays - remainingDays) / totalDays;
+          percentageRemaining = (1 - progress) * 100;
         }
-
-        final latestRental = activeRentals.first;
-
-        // Calculate remaining time
-        final endDate = latestRental.rentalDate.add(
-          Duration(days: latestRental.duration),
-        );
-        final now = DateTime.now();
-        final totalDays = latestRental.duration.toDouble();
-        final remainingDays = endDate.difference(now).inDays.toDouble();
-        final progress = (totalDays - remainingDays) / totalDays;
-        final percentageRemaining = (1 - progress) * 100;
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -851,202 +861,271 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    Icons.verified_user_outlined,
-                    color: AppTheme.currentPrimaryColor,
-                    size: 24,
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.verified_user_outlined,
+                        color: AppTheme.currentPrimaryColor,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "Subscription",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.currentTextColor,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Subscription",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.currentTextColor,
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RentalHistoryScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.currentSecondaryColor,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: Icon(
+                      Icons.history,
+                      color: AppTheme.currentPrimaryColor,
+                      size: 18,
+                    ),
+                    label: Text(
+                      "History",
+                      style: TextStyle(
+                        color: AppTheme.currentPrimaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RentalHistoryScreen(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.currentSecondaryColor,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                icon: Icon(
-                  Icons.history,
-                  color: AppTheme.currentPrimaryColor,
-                  size: 18,
-                ),
-                label: Text(
-                  "History",
-                  style: TextStyle(
-                    color: AppTheme.currentPrimaryColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.currentSecondaryColor,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          color: AppTheme.currentPrimaryColor,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          "Active Plan",
-                          style: TextStyle(
-                            color: AppTheme.currentPrimaryColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Container(
+
+              // Show different content based on whether there are active rentals
+              if (hasActiveRentals) ...[
+                // Active rental information
+                Row(
+                  children: [
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color:
-                            AppTheme.isDarkMode
-                                ? Colors.amber.shade900.withOpacity(0.3)
-                                : Colors.amber.shade50,
+                        color: AppTheme.currentSecondaryColor,
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.calendar_today_outlined,
-                            color:
-                                AppTheme.isDarkMode
-                                    ? Colors.amber.shade200
-                                    : Colors.amber.shade700,
+                            Icons.access_time,
+                            color: AppTheme.currentPrimaryColor,
                             size: 16,
                           ),
                           const SizedBox(width: 5),
-                          Flexible(
-                            child: Text(
-                              "${percentageRemaining.toStringAsFixed(1)}% Remaining",
-                              style: TextStyle(
-                                color:
-                                    AppTheme.isDarkMode
-                                        ? Colors.amber.shade200
-                                        : Colors.amber.shade700,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            "Active Plan",
+                            style: TextStyle(
+                              color: AppTheme.currentPrimaryColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Text(
-                "Time Remaining",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.currentSubtextColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                height: 12,
-                decoration: BoxDecoration(
-                  color:
-                      AppTheme.isDarkMode
-                          ? Colors.grey.shade800
-                          : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Stack(
-                  children: [
-                    Container(
-                      width:
-                          (w - 40) *
-                          (1 -
-                              progress), // Calculate width based on container width, not screen width
-                      height: 12,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.currentPrimaryColor.withOpacity(0.7),
-                            AppTheme.currentPrimaryColor,
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                        borderRadius: BorderRadius.circular(10),
+                        decoration: BoxDecoration(
+                          color:
+                              AppTheme.isDarkMode
+                                  ? Colors.amber.shade900.withOpacity(0.3)
+                                  : Colors.amber.shade50,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              color:
+                                  AppTheme.isDarkMode
+                                      ? Colors.amber.shade200
+                                      : Colors.amber.shade700,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+                                "${percentageRemaining.toStringAsFixed(1)}% Remaining",
+                                style: TextStyle(
+                                  color:
+                                      AppTheme.isDarkMode
+                                          ? Colors.amber.shade200
+                                          : Colors.amber.shade700,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      latestRental.productName,
+                const SizedBox(height: 20),
+                Text(
+                  "Time Remaining",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.currentSubtextColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color:
+                        AppTheme.isDarkMode
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width:
+                            (w - 40) *
+                            (1 -
+                                progress), // Calculate width based on container width, not screen width
+                        height: 12,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.currentPrimaryColor.withOpacity(0.7),
+                              AppTheme.currentPrimaryColor,
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        latestRental!.productName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.currentSubtextColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "${remainingDays.toInt()} days left",
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.currentSubtextColor,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.currentPrimaryColor,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
+                  ],
+                ),
+              ] else ...[
+                // Empty state
+                SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 60,
+                        color: AppTheme.currentSubtextColor.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No Active Rentals",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.currentTextColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Visit the store to rent equipment",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.currentSubtextColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => const AppLayout(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.currentPrimaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: Icon(Icons.shopping_bag_outlined, size: 18),
+                        label: Text("Browse Products"),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    "${remainingDays.toInt()} days left",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.currentPrimaryColor,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         );

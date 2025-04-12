@@ -74,6 +74,20 @@ class RentalHistoryService {
     }
   }
 
+  // Get rental by ID (returns RentalRecord instead of nullable RentalRecord?)
+  Future<RentalRecord> getRentalById(String rentalId) async {
+    try {
+      final doc = await _rentalsCollection.doc(rentalId).get();
+      if (doc.exists) {
+        return RentalRecord.fromFirestore(doc);
+      }
+      throw Exception('Rental record not found');
+    } catch (e) {
+      print('Error getting rental by ID: $e');
+      rethrow;
+    }
+  }
+
   // Add a new rental record
   Future<String> addRentalRecord(Product product, int durationDays) async {
     try {
